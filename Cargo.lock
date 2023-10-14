@@ -6,6 +6,7 @@ version = 3
 name = "agentnexus"
 version = "0.1.0"
 dependencies = [
+ "once_cell",
  "rhai",
 ]
 
