@@ -1,175 +1,46 @@
-//! Implementation of the Event Handler With State Pattern - JS Style
+use std::error::Error;
 
-#[cfg(any(feature = "no_function", feature = "no_object"))]
-pub fn main() {
-    panic!("This example does not run under 'no_function' or 'no_object'.")
+mod openai_chat;
+use openai_chat::OpenAIChat;
+use serde_json::json;
+
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+    let mut chat = OpenAIChat::new();
+
+    let current_weather_args = json!({
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "The city and state, e.g. San Francisco, CA",
+                    },
+                    "unit": { "type": "string", "enum": ["celsius", "fahrenheit"] },
+                },
+                "required": ["location"],
+            });
+
+    chat.add_function("get_current_weather".to_string(), 
+                      "Get the current weather in a given location.".to_string(),
+                      current_weather_args);
+
+    let (fn_name, fn_args) = chat.create_chat_request("What's the weather like in Boston?").await?;
+
+    println!("Function name: {}", fn_name);
+    println!("Function arguments: {}", fn_args);
+
+    Ok(())
 }
 
-#[cfg(not(feature = "no_function"))]
-#[cfg(not(feature = "no_object"))]
-pub fn main() {
-    use rhai::{CallFnOptions, Dynamic, Engine, Map, Scope, AST};
-    use std::io::{stdin, stdout, Write};
-    use rhai::packages::Package;
-    use rhai_rand::RandomPackage;
+fn get_current_weather(location: &str, unit: &str) -> serde_json::Value {
+    let weather_info = serde_json::json!({
+            "location": location,
+            "temperature": "72",
+            "unit": unit,
+            "forecast": ["sunny", "windy"]
+    });
 
-    const SCRIPT_FILE: &str = "event_handler_js/script.rhai";
+    weather_info
 
-    #[derive(Debug)]
-    struct Handler {
-        pub engine: Engine,
-        pub scope: Scope<'static>,
-        pub states: Dynamic,
-        pub ast: AST,
-    }
-
-    fn print_scope(scope: &Scope) {
-        for (i, (name, constant, value)) in scope.iter_raw().enumerate() {
-            #[cfg(not(feature = "no_closure"))]
-            let value_is_shared = if value.is_shared() { " (shared)" } else { "" };
-            #[cfg(feature = "no_closure")]
-            let value_is_shared = "";
-
-            println!(
-                "[{}] {}{}{} = {:?}",
-                i + 1,
-                if constant { "const " } else { "" },
-                name,
-                value_is_shared,
-                *value.read_lock::<Dynamic>().unwrap(),
-            )
-        }
-        println!();
-    }
-
-    println!("Events Handler Example - JS Style");
-    println!("==================================");
-
-    let mut input = String::new();
-
-    // Read script file
-    print!("Script file [{}]: ", SCRIPT_FILE);
-    stdout().flush().expect("flush stdout");
-
-    input.clear();
-
-    stdin().read_line(&mut input).expect("read input");
-
-    let path = match input.trim() {
-        "" => SCRIPT_FILE,
-        path => path,
-    };
-
-    // Create Engine
-    let mut engine = Engine::new();
-
-    engine.register_global_module(RandomPackage::new().as_shared_module());
-
-    // Use an object map to hold state
-    let mut states = Map::new();
-
-    // Default states can be added
-    states.insert("bool_state".into(), Dynamic::FALSE);
-
-    // Convert the object map into 'Dynamic'
-    let mut states: Dynamic = states.into();
-
-    // Create a custom 'Scope' to hold state
-    let mut scope = Scope::new();
-
-    // Add any system-provided state into the custom 'Scope'.
-    // Constants can be used to optimize the script.
-    scope.push_constant("MY_CONSTANT", 42_i64);
-
-    // Compile the handler script.
-    println!("> Loading script file: {path}");
-
-    let ast = match engine.compile_file_with_scope(&scope, path.into()) {
-        Ok(ast) => ast,
-        Err(err) => {
-            eprintln!("! Error: {err}");
-            println!("Cannot continue. Bye!");
-            return;
-        }
-    };
-
-    println!("> Script file loaded.");
-    println!();
-    println!("quit      = exit program");
-    println!("scope     = print scope");
-    println!("states    = print states");
-    println!("event arg = run function with argument");
-    println!();
-
-    // Run the 'init' function to initialize the state, retaining variables.
-
-    let options = CallFnOptions::new()
-        .eval_ast(false)
-        .bind_this_ptr(&mut states);
-
-    let result = engine.call_fn_with_options::<()>(options, &mut scope, &ast, "init", ());
-
-    if let Err(err) = result {
-        eprintln!("! {err}")
-    }
-
-    // Create handler instance
-    let mut handler = Handler {
-        engine,
-        scope,
-        states,
-        ast,
-    };
-
-    // Events loop
-    loop {
-        print!("event> ");
-        stdout().flush().expect("flush stdout");
-
-        // Read event
-        input.clear();
-        stdin().read_line(&mut input).expect("read input");
-
-        let mut fields = input.trim().splitn(2, ' ');
-
-        let event = fields.next().expect("event").trim();
-        let arg_ = fields.next().unwrap_or("").to_string();
-
-        let argmap = handler.engine.parse_json(&arg_, true).unwrap_or(Map::new());
-        let arg = Dynamic::from_map(argmap);
-
-        match event {
-            "quit" => break,
-
-            "scope" => {
-                print_scope(&handler.scope);
-                continue;
-            }
-
-            "states" => {
-                println!("{:?}", handler.states);
-                println!();
-                continue;
-            }
-
-            // Map all other events to function calls
-            _ => {
-                let engine = &handler.engine;
-                let scope = &mut handler.scope;
-                let ast = &handler.ast;
-                let options = CallFnOptions::new()
-                    .eval_ast(false)
-                    .bind_this_ptr(&mut handler.states);
-
-                let result = engine.call_fn_with_options::<i64>(options, scope, ast, event, (arg,));
-                    
-                match result {
-                    Ok(value) => println!("{value}"),
-                    Err(err) => eprintln!("! {err}")
-                }
-            }
-        }
-    }
-
-    println!("Bye!");
 }
