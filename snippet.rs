@@ -1,0 +1,1 @@
+let arg = engine.parse_json(&arg_, false).unwrap_or(Dynamic::UNIT);
