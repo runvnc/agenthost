@@ -9,6 +9,7 @@ use async_openai::{
     }
 };
 
+
 use tiktoken_rs::{CoreBPE, cl100k_base};
 
 static BPE: OnceCell<CoreBPE> = OnceCell::new();
@@ -42,6 +43,13 @@ impl ChatMessage {
 
 pub struct ChatLog {
     messages: Vec<ChatMessage>,
+}
+
+pub fn sys_msg(text: String) -> Res<ChatCompletionRequestMessage> {
+    ChatCompletionRequestMessageArgs::default()
+        .role(Role::System)
+        .content(text.as_str())
+        .build()?
 }
 
 

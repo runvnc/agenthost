@@ -1,5 +1,7 @@
 fn init() {
     this.sys = "You are a dungeon master.";
+    this.msgHeader = "Relevant state:\n\n";
+
     this.relevant = ["location", "health"];
 
     this.health = "fine";

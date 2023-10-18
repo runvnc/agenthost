@@ -1,4 +1,3 @@
-use std::error::Error;
 use std::io::{stdout, Write};
 
 use async_openai::{
@@ -15,7 +14,13 @@ use async_openai::{
 use async_openai::config::OpenAIConfig;
 use futures::StreamExt;
 
+use std::error::Error;
+
+type Res<T> = Result<T, Box<dyn Error>>;
+
+
 pub struct OpenAIChat {
+    model: String,
     client: Client<OpenAIConfig>,
     functions: Vec<ChatCompletionFunctions>,
 }
@@ -29,9 +34,9 @@ impl OpenAIChat {
         }
     }
 
-    pub async fn send_request(&self, String: model, 
-            messages: &Vec<ChatCompletionRequestMessage>,
-            functions: &Vec<ChatCompletionFunctions> ) -> Result<(String, String), Box<dyn Error>> {
+    pub async fn send_request(&self, model: String, 
+            messages: Vec<ChatCompletionRequestMessage>,
+            functions: Vec<ChatCompletionFunctions> ) -> Res<(String, String)> {
         let request = CreateChatCompletionRequestArgs::default()
             .model(model)
             .messages(messages)
