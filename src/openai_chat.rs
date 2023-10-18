@@ -1,6 +1,5 @@
 use std::error::Error;
 use std::io::{stdout, Write};
-use tiktoken_rs::{get_chat_completion_max_tokens, ChatCompletionRequestMessage};
 
 use async_openai::{
     types::{
@@ -31,7 +30,7 @@ impl OpenAIChat {
     }
 
     pub async fn send_request(&self, String: model, 
-            messages: &Vec<ChatCompletionRequestMessage>
+            messages: &Vec<ChatCompletionRequestMessage>,
             functions: &Vec<ChatCompletionFunctions> ) -> Result<(String, String), Box<dyn Error>> {
         let request = CreateChatCompletionRequestArgs::default()
             .model(model)

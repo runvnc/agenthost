@@ -72,6 +72,7 @@ impl ChatLog {
 }
 
 pub fn init() {
+    println!("chat_log: initializing tokenizer..");
     BPE.set(cl100k_base().unwrap()).unwrap();
 }
 

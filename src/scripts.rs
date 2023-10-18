@@ -2,12 +2,13 @@ use rhai::{CallFnOptions, Dynamic, Engine, Map, Scope, AST};
 use std::io::{stdin, stdout, Write};
 use rhai::packages::Package;
 use rhai_rand::RandomPackage;
+use std::error::Error;
+
 
 type Res<T> = Result<T, Box<dyn Error>>;
 
-
 #[derive(Debug)]
-struct Handler {
+pub struct Handler {
     pub engine: Engine,
     pub scope: Scope<'static>,
     pub states: Dynamic,
@@ -36,7 +37,7 @@ fn print_scope(scope: &Scope) {
 
 #[cfg(not(feature = "no_function"))]
 #[cfg(not(feature = "no_object"))]
-pub fn init(path: &str) -> Res<&Handler>  {
+pub fn init(path: &str) -> Res<Handler>  {
     print!("Script file [{}]: ", path);
     stdout().flush().expect("flush stdout");
 
@@ -44,7 +45,7 @@ pub fn init(path: &str) -> Res<&Handler>  {
 
     engine.register_global_module(RandomPackage::new().as_shared_module());
 
-    let mut states = Map::new();
+    let states = Map::new();
     let mut states: Dynamic = states.into();
 
     let mut scope = Scope::new();
@@ -56,7 +57,7 @@ pub fn init(path: &str) -> Res<&Handler>  {
         Err(err) => {
             eprintln!("! Error: {err}");
             println!("Cannot continue. Bye!");
-            return;
+            return Err("Compilation failed.".into());
         }
     };
 
@@ -70,17 +71,17 @@ pub fn init(path: &str) -> Res<&Handler>  {
         eprintln!("! {err}")
     }
 
-    let mut handler = Handler {
+    let handler = Handler {
         engine,
         scope,
         states,
         ast,
     };
 
-    handler
+    Ok(handler)
 }
 
-pub fn call_function(handler: &Handler, func: &str, args_json: &str) {
+pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) {
     let argmap = handler.engine.parse_json(&args_json, true).unwrap_or(Map::new());
     let arg = Dynamic::from_map(argmap);
 
