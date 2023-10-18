@@ -1,10 +1,21 @@
 use std::error::Error;
 
+mod chatlog;
+use chatlog::init;
+
+/*
 mod openai_chat;
 use openai_chat::OpenAIChat;
 use serde_json::json;
+*/
 
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+    init();
+    Ok(())
+}
 
+/*
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let mut chat = OpenAIChat::new();
@@ -43,4 +54,4 @@ fn get_current_weather(location: &str, unit: &str) -> serde_json::Value {
 
     weather_info
 
-}
+} */

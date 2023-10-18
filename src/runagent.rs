@@ -1,3 +1,19 @@
+//! Implementation of the Event Handler With State Pattern - JS Style
+
+// load the script
+// run init
+// extract the sys and relevant
+
+// construct the message
+// send the message to openai
+// if user response, output it
+//
+// if there is a function call
+// execute the function call inside the script
+// then take the output and
+// add it to messages and send to openai
+//
+
 #[cfg(any(feature = "no_function", feature = "no_object"))]
 pub fn main() {
     panic!("This example does not run under 'no_function' or 'no_object'.")

@@ -1,10 +1,12 @@
 use std::error::Error;
 use std::io::{stdout, Write};
+use tiktoken_rs::{get_chat_completion_max_tokens, ChatCompletionRequestMessage};
 
 use async_openai::{
     types::{
         ChatCompletionRequestMessageArgs,
         ChatCompletionFunctions,
+        ChatCompletionRequestMessage,
         ChatCompletionFunctionsArgs,
         CreateChatCompletionRequestArgs, Role,
     },
@@ -20,32 +22,21 @@ pub struct OpenAIChat {
 }
 
 impl OpenAIChat {
-    pub fn new() -> Self {
+    pub fn new(model: String) -> Self {
         Self {
+            model,
             client: Client::new(),
             functions: Vec::<ChatCompletionFunctions>::new(),
         }
     }
 
-    pub fn add_function(&mut self, name: String, descr: String, args: serde_json::Value) {
-        let fnargs = ChatCompletionFunctionsArgs::default()
-            .name(name)
-            .description(descr)
-            .parameters(args)
-            .build().unwrap();
-        self.functions.push(fnargs);
-    }
-
-
-    pub async fn create_chat_request(&self, user_message: &str) -> Result<(String, String), Box<dyn Error>> {
+    pub async fn send_request(&self, String: model, 
+            messages: &Vec<ChatCompletionRequestMessage>
+            functions: &Vec<ChatCompletionFunctions> ) -> Result<(String, String), Box<dyn Error>> {
         let request = CreateChatCompletionRequestArgs::default()
-            .max_tokens(512u16)
-            .model("gpt-3.5-turbo-0613")
-            .messages([ChatCompletionRequestMessageArgs::default()
-                .role(Role::User)
-                .content(user_message)
-                .build()?])
-            .functions(self.functions.clone())
+            .model(model)
+            .messages(messages)
+            .functions(functions)
             .function_call("auto")
             .build()?;
 
