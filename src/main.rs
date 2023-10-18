@@ -3,12 +3,21 @@ use std::error::Error;
 mod chatlog;
 use chatlog::{ChatLog};
 
-/*
+mod scripts;
+use scripts::{init, call_function};
+
 mod openai_chat;
 use openai_chat::OpenAIChat;
 use serde_json::json;
-*/
 
+
+#[cfg(any(feature = "no_function", feature = "no_object"))]
+pub fn main() {
+    panic!("This example does not run under 'no_function' or 'no_object'.")
+}
+
+#[cfg(not(feature = "no_function"))]
+#[cfg(not(feature = "no_object"))]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     chatlog::init();
@@ -18,7 +27,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/*
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let mut chat = OpenAIChat::new();
@@ -47,14 +55,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn get_current_weather(location: &str, unit: &str) -> serde_json::Value {
-    let weather_info = serde_json::json!({
-            "location": location,
-            "temperature": "72",
-            "unit": unit,
-            "forecast": ["sunny", "windy"]
-    });
-
-    weather_info
-
-} */
+//fn get_current_weather(location: &str, unit: &str) -> serde_json::Value {
+//    let weather_info = serde_json::json!({
+//            "location": location,
+//  }
