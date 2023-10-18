@@ -31,12 +31,12 @@ impl ChatMessage {
       Self { message, length }
     }
 
-    pub fn calc_length(&mut self) -> usize {
+    pub fn calc_length(&mut self) {
         let tokens = BPE.get().expect("No tokenizer").encode_with_special_tokens(
             &(self.message.content.as_deref().unwrap_or(""))
         );
 
-        tokens.len()
+        self.length = tokens.len()
     }
 }
 
@@ -50,13 +50,15 @@ impl ChatLog {
       Self { messages: Vec::<ChatMessage>::new() }
     }
 
-    pub fn add_user_message(&mut self, text: String) -> Res<()> {
+    pub fn add_user_message(&mut self, text: String) -> Res<usize> {
        let msg = ChatCompletionRequestMessageArgs::default()
                 .role(Role::User)
                 .content(text)
                 .build()?;
-       self.messages.push(ChatMessage::new(msg));
-       Ok(())
+       let chatmsg = ChatMessage::new(msg);
+       let length = chatmsg.length;
+       self.messages.push(chatmsg);
+       Ok(length)
     }
 
     pub fn add_agent_message(&mut self, text: String) -> Res<()> {
@@ -71,8 +73,6 @@ impl ChatLog {
 
 pub fn init() {
     BPE.set(cl100k_base().unwrap()).unwrap();
-    let mut chat = ChatLog::new();
-    let _ = chat.add_user_message("hello".to_string());
 }
 
 /*

@@ -1,7 +1,7 @@
 use std::error::Error;
 
 mod chatlog;
-use chatlog::init;
+use chatlog::{ChatLog};
 
 /*
 mod openai_chat;
@@ -11,7 +11,10 @@ use serde_json::json;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    init();
+    chatlog::init();
+    let mut chat = ChatLog::new();
+    let msg_len = chat.add_user_message("hello, how are you?".to_string())?;
+    println!("Message token length: {}", msg_len);
     Ok(())
 }
 
