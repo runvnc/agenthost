@@ -1,16 +1,22 @@
 use std::error::Error;
 
 mod chatlog;
-use chatlog::{ChatLog};
+use chatlog::{ChatLog, sys_msg};
 
 mod scripts;
 use scripts::{init, call_function};
 
 mod openai_chat;
-use openai_chat::OpenAIChat;
+use openai_chat::{OpenAIChat, chat_fn};
 use serde_json::json;
 
-fn test_args() -> serde_json::json {
+use async_openai::types::ChatCompletionRequestMessage;
+use async_openai::types::ChatCompletionFunctions;
+
+mod shorthands;
+use shorthands::*;
+
+fn test_args() -> serde_json::Value {
     json!({
                 "type": "object",
                 "properties": {
@@ -21,28 +27,31 @@ fn test_args() -> serde_json::json {
                     "unit": { "type": "string", "enum": ["celsius", "fahrenheit"] },
                 },
                 "required": ["location"],
-    });
+    })
 }
 
 #[cfg(not(feature = "no_function"))]
 #[cfg(not(feature = "no_object"))]
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Res<()> {
     println!("AgentHost 0.1 Startup..");
     chatlog::init();
     let mut chat = ChatLog::new();
-    let msg_len = chat.add_user_message("hello, how are you?".to_string())?;
+    let msg_len = chat.add_user_message(s!("hello, how are you?"))?;
     println!("Message token length: {}", msg_len);
 
-    let mut chat = OpenAIChat::new();
+    let mut chat = OpenAIChat::new(s!("gpt-3.5-turbo"));
     
-    Vec<Chat> chatlog::sys_msg("You are a dungeon master.");
+    let mut msgs = Vec::<ChatCompletionRequestMessage>::new();
+    let mut functions = Vec::<ChatCompletionFunctions>::new();
+    functions.push(chat_fn(s!("get_weather"), s!("Get weather report"), test_args())?);
+
+    msgs.push(sys_msg(s!("You are a dungeon master."))?);
      
-    let (fn_name, fn_args) = chat.send_request("What's the weather like in Boston?").await?;
+    let (fn_name, fn_args) = chat.send_request(msgs, functions).await?;
 
     println!("Function name: {}", fn_name);
     println!("Function arguments: {}", fn_args);
-
  
     let mut handler = scripts::init("script.rhai")?;
     call_function(&mut handler, "rollDice", "{ \"sides\": 20 }"); 

@@ -25,6 +25,17 @@ pub struct OpenAIChat {
     functions: Vec<ChatCompletionFunctions>,
 }
 
+pub fn chat_fn(func_name: String, descr: String, params: serde_json::Value) ->
+  Res<ChatCompletionFunctions> {
+    Ok( 
+        ChatCompletionFunctionsArgs::default()
+         .name(func_name)
+         .description(descr)
+         .parameters(params)
+         .build()?
+    )
+}
+
 impl OpenAIChat {
     pub fn new(model: String) -> Self {
         Self {
@@ -34,11 +45,11 @@ impl OpenAIChat {
         }
     }
 
-    pub async fn send_request(&self, model: String, 
+    pub async fn send_request(&self, 
             messages: Vec<ChatCompletionRequestMessage>,
             functions: Vec<ChatCompletionFunctions> ) -> Res<(String, String)> {
         let request = CreateChatCompletionRequestArgs::default()
-            .model(model)
+            .model(&self.model)
             .messages(messages)
             .functions(functions)
             .function_call("auto")
