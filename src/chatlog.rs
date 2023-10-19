@@ -14,7 +14,9 @@ use tiktoken_rs::{CoreBPE, cl100k_base};
 
 static BPE: OnceCell<CoreBPE> = OnceCell::new();
 
-type Res<T> = Result<T, Box<dyn Error>>;
+//mod shorthands;
+use crate::shorthands::*;
+
 
 pub struct ChatMessage {
     pub message: ChatCompletionRequestMessage,
@@ -45,39 +47,44 @@ pub struct ChatLog {
     messages: Vec<ChatMessage>,
 }
 
-pub fn sys_msg(text: String) -> Res<ChatCompletionRequestMessage> {
-    Ok(
-        ChatCompletionRequestMessageArgs::default()
+pub fn sys_msg(text: String) -> Res<ChatMessage> {
+    let msg = ChatCompletionRequestMessageArgs::default()
         .role(Role::System)
         .content(text.as_str())
-        .build()?
-    )
+        .build()?;
+    Ok( ChatMessage::new(msg) )
 }
 
+pub fn user_msg(text: String) -> Res<ChatMessage> {
+   let msg = ChatCompletionRequestMessageArgs::default()
+        .role(Role::User)
+        .content(text)
+        .build()?;
+   Ok( ChatMessage::new(msg) )
+}
+
+pub fn agent_msg(text: String) -> Res<ChatMessage> {
+   let msg = ChatCompletionRequestMessageArgs::default()
+            .role(Role::Assistant)
+            .content(text)
+            .build()?;
+   Ok( ChatMessage::new(msg) )
+}
 
 impl ChatLog {
     pub fn new() -> Self {
       Self { messages: Vec::<ChatMessage>::new() }
     }
 
-    pub fn add_user_message(&mut self, text: String) -> Res<usize> {
-       let msg = ChatCompletionRequestMessageArgs::default()
-                .role(Role::User)
-                .content(text)
-                .build()?;
-       let chatmsg = ChatMessage::new(msg);
-       let length = chatmsg.length;
-       self.messages.push(chatmsg);
-       Ok(length)
+    pub fn add(&mut self, msg: ChatMessage) {
+        self.messages.push(msg)
     }
 
-    pub fn add_agent_message(&mut self, text: String) -> Res<()> {
-       let msg = ChatCompletionRequestMessageArgs::default()
-                .role(Role::Assistant)
-                .content(text)
-                .build()?;
-       self.messages.push(ChatMessage::new(msg));
-       Ok(())
+    pub fn to_request_msgs(&mut self) -> Res<Vec<ChatCompletionRequestMessage>> {
+       Ok( self.messages.iter()
+           .map(|msg| msg.message.clone())
+           .collect::<Vec<_>>() 
+        )
     }
 }
 

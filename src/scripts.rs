@@ -3,9 +3,10 @@ use std::io::{stdin, stdout, Write};
 use rhai::packages::Package;
 use rhai_rand::RandomPackage;
 use std::error::Error;
+use serde;
+use serde_json;
 
-
-type Res<T> = Result<T, Box<dyn Error>>;
+use crate::shorthands::*;
 
 #[derive(Debug)]
 pub struct Handler {
@@ -15,13 +16,15 @@ pub struct Handler {
     pub ast: AST,
 }
 
-fn print_scope(scope: &Scope) {
+pub fn print_scope_ex(scope: &Scope) {
+    println!("Hello from print_scope_ex!");
+    /*
     for (i, (name, constant, value)) in scope.iter_raw().enumerate() {
         #[cfg(not(feature = "no_closure"))]
         let value_is_shared = if value.is_shared() { " (shared)" } else { "" };
         #[cfg(feature = "no_closure")]
         let value_is_shared = "";
-
+        println!("Name = {}", name);
         println!(
             "[{}] {}{}{} = {:?}",
             i + 1,
@@ -30,7 +33,7 @@ fn print_scope(scope: &Scope) {
             value_is_shared,
             *value.read_lock::<Dynamic>().unwrap(),
         )
-    }
+    } */
     println!();
 }
 
@@ -79,6 +82,10 @@ pub fn init(path: &str) -> Res<Handler>  {
     };
 
     Ok(handler)
+}
+
+pub fn get_actions(handler: &mut Handler) -> Res<String> {
+  Ok( serde_json::to_string(&handler.states)?)
 }
 
 pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) {

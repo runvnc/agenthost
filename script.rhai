@@ -9,8 +9,12 @@ fn init() {
 
     this.actions = #{
         rollDice: #{
-            descr: "Roll a N-sided die",
-            params: #{ sides: #{ type: "integer", descr: "num sides" }}
+            type: "object",
+            description: "Roll a N-sided die",
+            properties: #{ 
+                sides: #{ type: "integer",
+                          description: "num sides" }
+            }
         }
     };
 }

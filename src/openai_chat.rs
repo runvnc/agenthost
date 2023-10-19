@@ -16,8 +16,7 @@ use futures::StreamExt;
 
 use std::error::Error;
 
-type Res<T> = Result<T, Box<dyn Error>>;
-
+use crate::shorthands::*;
 
 pub struct OpenAIChat {
     model: String,
