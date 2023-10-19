@@ -1,10 +1,13 @@
-use rhai::{CallFnOptions, Dynamic, Engine, Map, Scope, AST};
+use rhai::{CallFnOptions, Dynamic, Engine, 
+           Map, Scope, AST, format_map_as_json};
 use std::io::{stdin, stdout, Write};
 use rhai::packages::Package;
 use rhai_rand::RandomPackage;
 use std::error::Error;
 use serde;
 use serde_json;
+use anyhow::{Result, anyhow};
+
 
 use crate::shorthands::*;
 
@@ -13,6 +16,7 @@ pub struct Handler {
     pub engine: Engine,
     pub scope: Scope<'static>,
     pub states: Dynamic,
+    pub states_map: rhai::Map,
     pub ast: AST,
 }
 
@@ -40,7 +44,7 @@ pub fn print_scope_ex(scope: &Scope) {
 
 #[cfg(not(feature = "no_function"))]
 #[cfg(not(feature = "no_object"))]
-pub fn init(path: &str) -> Res<Handler>  {
+pub fn init(path: &str) -> Result<Handler>  {
     print!("Script file [{}]: ", path);
     stdout().flush().expect("flush stdout");
 
@@ -48,8 +52,8 @@ pub fn init(path: &str) -> Res<Handler>  {
 
     engine.register_global_module(RandomPackage::new().as_shared_module());
 
-    let states = Map::new();
-    let mut states: Dynamic = states.into();
+    let mut states_map = Map::new();
+    let mut states: Dynamic = states_map.into();
 
     let mut scope = Scope::new();
 
@@ -60,7 +64,7 @@ pub fn init(path: &str) -> Res<Handler>  {
         Err(err) => {
             eprintln!("! Error: {err}");
             println!("Cannot continue. Bye!");
-            return Err("Compilation failed.".into());
+            return Err(anyhow!("Compilation failed."));
         }
     };
 
@@ -78,21 +82,25 @@ pub fn init(path: &str) -> Res<Handler>  {
         engine,
         scope,
         states,
+        states_map,
         ast,
     };
 
     Ok(handler)
 }
 
-pub fn get_actions(handler: &mut Handler) -> Res<String> {
-  Ok( serde_json::to_string(&handler.states)?)
+pub fn get_actions(handler: &mut Handler) -> Result<rhai::Map> {
+    let actions = handler.states_map.get("actions")
+        .ok_or(anyhow!("Could not read actions"));
+    actions?.try_cast::<rhai::Map>()
+        .ok_or(anyhow!("Actions not a Map"))
 }
 
 pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) {
     let argmap = handler.engine.parse_json(&args_json, true).unwrap_or(Map::new());
     let arg = Dynamic::from_map(argmap);
 
-    println!("{:?}", handler.states);
+    //println!("{:?}", handler.states);
 
     let engine = &handler.engine;
     let scope = &mut handler.scope;

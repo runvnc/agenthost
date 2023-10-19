@@ -1,4 +1,5 @@
 use std::io::{stdout, Write};
+use anyhow::{Result, anyhow};
 
 use async_openai::{
     types::{
@@ -25,7 +26,7 @@ pub struct OpenAIChat {
 }
 
 pub fn chat_fn(func_name: String, descr: String, params: serde_json::Value) ->
-  Res<ChatCompletionFunctions> {
+  Result<ChatCompletionFunctions> {
     Ok( 
         ChatCompletionFunctionsArgs::default()
          .name(func_name)
@@ -46,7 +47,7 @@ impl OpenAIChat {
 
     pub async fn send_request(&self, 
             messages: Vec<ChatCompletionRequestMessage>,
-            functions: Vec<ChatCompletionFunctions> ) -> Res<(String, String)> {
+            functions: Vec<ChatCompletionFunctions> ) -> Result<(String, String)> {
         let request = CreateChatCompletionRequestArgs::default()
             .model(&self.model)
             .messages(messages)
@@ -89,6 +90,6 @@ impl OpenAIChat {
             stdout().flush()?;
         }
 
-        Err("No function call found".into())
+        Err(anyhow!("No function call found"))
     }
 }

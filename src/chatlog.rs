@@ -1,5 +1,7 @@
 use std::error::Error;
 use once_cell::sync::OnceCell;
+use anyhow::{Result,anyhow};
+
 
 use async_openai::{
     types::{
@@ -47,7 +49,7 @@ pub struct ChatLog {
     messages: Vec<ChatMessage>,
 }
 
-pub fn sys_msg(text: String) -> Res<ChatMessage> {
+pub fn sys_msg(text: String) -> Result<ChatMessage> {
     let msg = ChatCompletionRequestMessageArgs::default()
         .role(Role::System)
         .content(text.as_str())
@@ -55,7 +57,7 @@ pub fn sys_msg(text: String) -> Res<ChatMessage> {
     Ok( ChatMessage::new(msg) )
 }
 
-pub fn user_msg(text: String) -> Res<ChatMessage> {
+pub fn user_msg(text: String) -> Result<ChatMessage> {
    let msg = ChatCompletionRequestMessageArgs::default()
         .role(Role::User)
         .content(text)
@@ -63,7 +65,7 @@ pub fn user_msg(text: String) -> Res<ChatMessage> {
    Ok( ChatMessage::new(msg) )
 }
 
-pub fn agent_msg(text: String) -> Res<ChatMessage> {
+pub fn agent_msg(text: String) -> Result<ChatMessage> {
    let msg = ChatCompletionRequestMessageArgs::default()
             .role(Role::Assistant)
             .content(text)
@@ -80,7 +82,7 @@ impl ChatLog {
         self.messages.push(msg)
     }
 
-    pub fn to_request_msgs(&mut self) -> Res<Vec<ChatCompletionRequestMessage>> {
+    pub fn to_request_msgs(&mut self) -> Result<Vec<ChatCompletionRequestMessage>> {
        Ok( self.messages.iter()
            .map(|msg| msg.message.clone())
            .collect::<Vec<_>>() 
