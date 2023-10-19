@@ -7,7 +7,8 @@ use std::error::Error;
 use serde;
 use serde_json;
 use anyhow::{Result, anyhow};
-
+use std::sync::RwLock;
+use std::sync::Arc;
 
 use crate::shorthands::*;
 
@@ -16,7 +17,6 @@ pub struct Handler {
     pub engine: Engine,
     pub scope: Scope<'static>,
     pub states: Dynamic,
-    pub states_map: rhai::Map,
     pub ast: AST,
 }
 
@@ -53,8 +53,8 @@ pub fn init(path: &str) -> Result<Handler>  {
     engine.register_global_module(RandomPackage::new().as_shared_module());
 
     let mut states_map = Map::new();
-    let mut states: Dynamic = states_map.into();
-
+    let mut states_dyn: Dynamic = states_map.into();
+    let mut states = (states_dyn.into_shared());
     let mut scope = Scope::new();
 
     println!("> Loading script file: {path}");
@@ -82,7 +82,6 @@ pub fn init(path: &str) -> Result<Handler>  {
         engine,
         scope,
         states,
-        states_map,
         ast,
     };
 
@@ -90,9 +89,11 @@ pub fn init(path: &str) -> Result<Handler>  {
 }
 
 pub fn get_actions(handler: &mut Handler) -> Result<rhai::Map> {
-    let actions = handler.states_map.get("actions")
-        .ok_or(anyhow!("Could not read actions"));
-    actions?.try_cast::<rhai::Map>()
+    let states_map = handler.states.clone().try_cast::<rhai::Map>()
+        .ok_or(anyhow!("Could not access states as map."))?;
+    let actions = states_map.get("actions")
+        .ok_or(anyhow!("Could not read actions"))?;
+    actions.clone().try_cast::<rhai::Map>()
         .ok_or(anyhow!("Actions not a Map"))
 }
 

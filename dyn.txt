@@ -1,0 +1,10 @@
+pub fn into_shared(self) -> Self
+Turn the Dynamic value into a shared Dynamic value backed by an Rc<RefCell<Dynamic>> or Arc<RwLock<Dynamic>> depending on the sync feature.
+
+Not available under no_closure.
+
+Shared Dynamic values are relatively cheap to clone as they simply increment the reference counts.
+
+Shared Dynamic values can be converted seamlessly to and from ordinary Dynamic values.
+
+If the Dynamic value is already shared, this method returns itself.
