@@ -10,7 +10,7 @@ use anyhow::{Result, anyhow};
 use std::sync::RwLock;
 use std::sync::Arc;
 
-use crate::shorthands::*;
+use crate::{s, try_cast_map};
 
 #[derive(Debug)]
 pub struct Handler {
@@ -89,12 +89,9 @@ pub fn init(path: &str) -> Result<Handler>  {
 }
 
 pub fn get_actions(handler: &mut Handler) -> Result<rhai::Map> {
-    let states_map = handler.states.clone().try_cast::<rhai::Map>()
-        .ok_or(anyhow!("Could not access states as map."))?;
-    let actions = states_map.get("actions")
-        .ok_or(anyhow!("Could not read actions"))?;
-    actions.clone().try_cast::<rhai::Map>()
-        .ok_or(anyhow!("Actions not a Map"))
+    let states_map = try_cast_map!(handler.states, "Could not access states as map.")?;
+    let actions = states_map.get("actions").ok_or(anyhow!("Could not read actions"))?;
+    try_cast_map!(actions, "Could not read actions as map")
 }
 
 pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) {

@@ -55,9 +55,13 @@ async fn main() -> Result<()> {
  
     let mut handler = scripts::init("script.rhai")?;
     print_scope_ex(&handler.scope);
-    let actions = format_map_as_json(&get_actions(&mut handler)?);
-    println!("Actions found in script: {}", actions);
+    let actions = get_actions(&mut handler)?;
+    println!("Actions found in script: {}", 
+             format_map_as_json(&actions));
 
+    for (fn_name, info_map) in &actions {
+        println!("Found function: {}", fn_name);
+    }
     call_function(&mut handler, "rollDice", "{ \"sides\": 20 }"); 
 
     Ok(())
