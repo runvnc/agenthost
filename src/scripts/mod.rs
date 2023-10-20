@@ -115,7 +115,7 @@ pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) ->
         
     let output = match result {
         Ok(result) => format!("{:?}", result),
-        Err(err) => format!("Error: {err}")
+        Err(err) => format!("{:?}", err)
     };
     Ok( output )
 }

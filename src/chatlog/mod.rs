@@ -1,8 +1,7 @@
-//use smartstring::alias::String;
-
 use std::error::Error;
 use once_cell::sync::OnceCell;
 use anyhow::{Result,anyhow};
+use termion::{color, style};
 
 
 use async_openai::{
@@ -125,7 +124,7 @@ impl ChatLog {
                 break;
            }
         };
-        println!("({} of {} max tokens", tokens, max_tokens);
+        println!("{}({} of {} max tokens)", style::Reset,tokens, max_tokens);
         Ok( msgs )
     }
 }
