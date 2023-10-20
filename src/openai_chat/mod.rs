@@ -48,7 +48,7 @@ impl OpenAIChat {
 
     pub async fn send_request(&self, 
             messages: Vec<ChatCompletionRequestMessage>,
-            functions: Vec<ChatCompletionFunctions> ) -> Result<(String, String)> {
+            functions: Vec<ChatCompletionFunctions> ) -> Result<(String, String, String)> {
         let request = CreateChatCompletionRequestArgs::default()
             .model(&*self.model)
             .messages(messages)
@@ -68,17 +68,18 @@ impl OpenAIChat {
                 Ok(response) => {
                     for chat_choice in response.choices {
                         if let Some(fn_call) = &chat_choice.delta.function_call {
-                            writeln!(lock, "function_call: {:?}", fn_call).unwrap();
                             if let Some(name) = &fn_call.name {
                                 fn_name = name.clone();
+                                write!(lock, "{}", name).unwrap();
                             }
                             if let Some(args) = &fn_call.arguments {
                                 fn_args.push_str(args);
+                                write!(lock, "{}", args).unwrap();
                             }
                         }
                         if let Some(finish_reason) = &chat_choice.finish_reason {
                             if finish_reason == "function_call" {
-                                return Ok((fn_name, fn_args));
+                                return Ok((text, fn_name, fn_args));
                             }
                         } else if let Some(content) = &chat_choice.delta.content {
                             text.push_str(content);

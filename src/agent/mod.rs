@@ -4,7 +4,7 @@ use std::error::Error;
 use anyhow::{Result, anyhow};
 
 use crate::chatlog;
-use crate::chatlog::{ChatLog, sys_msg, user_msg, agent_msg};
+use crate::chatlog::{ChatLog, sys_msg, user_msg, agent_msg, fn_call_msg, fn_result_msg};
 use rhai::{format_map_as_json};
 use crate::scripts::{init, Handler, print_scope_ex, get_actions, call_function};
 
@@ -65,16 +65,18 @@ pub fn startup() -> Result<Agent> {
 
 use std::io::{self, Write};
 use tokio::io::AsyncReadExt;
+use termion::{color, style};
+
 
 pub async fn run(agent: &mut Agent) -> Result<()> {
     println!("Run agent..");
 
     let mut input = String::new();
-    let user_input = true;
+    let mut user_input = true;
 
     loop {
-        if (user_input) {
-            print!("> ");
+        if user_input {
+            print!("{}> {}", color::Fg(color::LightCyan), color::Fg(color::Yellow));
             io::stdout().flush().unwrap();
             io::stdin().read_line(&mut input).unwrap();
             agent.log.add(user_msg(&input)?);
@@ -82,27 +84,26 @@ pub async fn run(agent: &mut Agent) -> Result<()> {
         user_input = true;
 
         let msgs = agent.log.to_request_msgs()?;
+        println!("{}", color::Fg(color::White));
 
         let (text, fn_name, fn_args) = agent.chat.send_request(
             msgs.clone(), 
             agent.functions.clone()
         ).await?;
 
-        println!();
+        println!("{}", style::Reset);
 
         if fn_name != "" { 
-            println!("Function name: {}", fn_name);
-            println!("Function arguments: {}", fn_args);
-
-            agent.log.add(fn_call_msg(fn_name, fn_args));
+            agent.log.add(fn_call_msg(&fn_name, &fn_args)?);
             
             let output = call_function(&mut agent.handler, 
                                        fn_name.as_str(),
-                                       fn_args.as_str()); 
-            agent.log.add(fn_result_msg(fn_name, output));
+                                       fn_args.as_str())?; 
+            println!("Call result: {}", output);
+            agent.log.add(fn_result_msg(&fn_name, &output)?);
             user_input = false;
         } else {
-            agent.log.add(agent_msg(text)?);
+            agent.log.add(agent_msg(&text)?);
         }
         input.clear();
     }

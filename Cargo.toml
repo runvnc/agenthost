@@ -15,6 +15,7 @@ rhai-rand = "0.1.5"
 serde = "1.0.189"
 serde_json = "1.0.107"
 smartstring = "1.0.1"
+termion = "2.0.1"
 tiktoken-rs = "0.5.4"
 tokio = { version = "1.33.0", features = [ "full" ] }
 

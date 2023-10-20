@@ -9,6 +9,7 @@ use async_openai::{
     types::{
         ChatCompletionRequestMessageArgs,
         ChatCompletionRequestMessage,
+        FunctionCall,
         Role,
     }
 };
@@ -67,7 +68,7 @@ pub fn user_msg(text: &String) -> Result<ChatMessage> {
    Ok( ChatMessage::new(msg) )
 }
 
-pub fn agent_msg(text: String) -> Result<ChatMessage> {
+pub fn agent_msg(text: &String) -> Result<ChatMessage> {
    let msg = ChatCompletionRequestMessageArgs::default()
             .role(Role::Assistant)
             .content(text)
@@ -75,19 +76,23 @@ pub fn agent_msg(text: String) -> Result<ChatMessage> {
    Ok( ChatMessage::new(msg) )
 }
 
-pub fn fn_call_msg(fn_name: String, args_json:String) -> Result<ChatMessage> {
+pub fn fn_call_msg(fn_name: &String, args_json:&String) -> Result<ChatMessage> {
    let msg = ChatCompletionRequestMessageArgs::default()
             .role(Role::Assistant)
-            .function_call(fn_name, args_json)
-            .build()?;
+            .function_call(
+                FunctionCall{ 
+                    name: fn_name.to_string(),
+                    arguments: args_json.to_string()
+                }
+            ).build()?;
    Ok( ChatMessage::new(msg) )
 }
 
-pub fn fn_result_msg(fn_name: String, result:String) -> Result<ChatMessage> {
+pub fn fn_result_msg(fn_name: &String, result:&String) -> Result<ChatMessage> {
    let msg = ChatCompletionRequestMessageArgs::default()
             .role(Role::Function)
             .name(fn_name)
-            .content(fn_name, result)
+            .content(result)
             .build()?;
    Ok( ChatMessage::new(msg) )
 }
