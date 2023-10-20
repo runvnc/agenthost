@@ -28,25 +28,27 @@ pub struct Agent {
 
 impl Agent {
     pub fn new(functions: Vec::<ChatCompletionFunctions>, 
-        log: ChatLog, chat:OpenAIChat, 
+        log: ChatLog, chat:OpenAIChat,
+        model: &String,
         handler: Handler) -> Self {
-        Self { functions, log, chat, handler }
+        Self { functions, model, log, chat, handler }
     }
 }
 
 #[cfg(not(feature = "no_function"))]
 #[cfg(not(feature = "no_object"))]
-pub fn startup() -> Result<Agent> {
+pub fn startup(sys_msg: &String, script_path: &String, 
+               model: &String) -> Result<Agent> {
     println!("AgentHost 0.1 Startup..");
     chatlog::init();
 
     let mut log = ChatLog::new();
-    let mut chat = OpenAIChat::new(s!("gpt-3.5-turbo"));
+    let mut chat = OpenAIChat::new(model);
     
-    log.add(sys_msg(&s!("You are a dungeon master."))?);
+    log.add(sys_msg(&sys_msg))?);
     let mut functions = Vec::<ChatCompletionFunctions>::new();
 
-    let mut handler = scripts::init("scripts/script.rhai")?;
+    let mut handler = scripts::init(script_path.as_str())?;
 
     call_function(&mut handler, "expand_actions", "{}");
     let actions = get_actions(&mut handler)?;
@@ -59,7 +61,7 @@ pub fn startup() -> Result<Agent> {
         functions.push(chat_fn(fn_name.to_string(), description, info_json)?); 
         println!("Found function: {}", fn_name);
     }
-    Ok( Agent::new(functions, log, chat, handler) )
+    Ok( Agent::new(functions, model, log, chat, handler) )
 }
 
 
@@ -83,7 +85,7 @@ pub async fn run(agent: &mut Agent) -> Result<()> {
         }
         user_input = true;
 
-        let msgs = agent.log.to_request_msgs()?;
+        let msgs = agent.log.to_request_msgs(agent.model.as_str())?;
         println!("{}", color::Fg(color::White));
 
         let (text, fn_name, fn_args) = agent.chat.send_request(
@@ -104,6 +106,7 @@ pub async fn run(agent: &mut Agent) -> Result<()> {
             user_input = false;
         } else {
             agent.log.add(agent_msg(&text)?);
+            println!();
         }
         input.clear();
     }
