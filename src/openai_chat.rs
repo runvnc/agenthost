@@ -1,3 +1,5 @@
+//use smartstring::alias::String;
+
 use std::io::{stdout, Write};
 use anyhow::{Result, anyhow};
 
@@ -49,7 +51,7 @@ impl OpenAIChat {
             messages: Vec<ChatCompletionRequestMessage>,
             functions: Vec<ChatCompletionFunctions> ) -> Result<(String, String)> {
         let request = CreateChatCompletionRequestArgs::default()
-            .model(&self.model)
+            .model(&*self.model)
             .messages(messages)
             .functions(functions)
             .function_call("auto")
