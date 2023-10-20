@@ -70,32 +70,40 @@ pub async fn run(agent: &mut Agent) -> Result<()> {
     println!("Run agent..");
 
     let mut input = String::new();
+    let user_input = true;
 
     loop {
-        print!("> ");
-        io::stdout().flush().unwrap();
-        io::stdin().read_line(&mut input).unwrap();
-        agent.log.add(user_msg(&input)?);
+        if (user_input) {
+            print!("> ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut input).unwrap();
+            agent.log.add(user_msg(&input)?);
+        }
+        user_input = true;
 
         let msgs = agent.log.to_request_msgs()?;
-        let (fn_name, fn_args) = agent.chat.send_request(
+
+        let (text, fn_name, fn_args) = agent.chat.send_request(
             msgs.clone(), 
             agent.functions.clone()
         ).await?;
 
         println!();
+
         if fn_name != "" { 
             println!("Function name: {}", fn_name);
             println!("Function arguments: {}", fn_args);
 
+            agent.log.add(fn_call_msg(fn_name, fn_args));
+            
             let output = call_function(&mut agent.handler, 
                                        fn_name.as_str(),
                                        fn_args.as_str()); 
-
+            agent.log.add(fn_result_msg(fn_name, output));
+            user_input = false;
+        } else {
+            agent.log.add(agent_msg(text)?);
         }
-
-        //agent.log.add(agent_msg(outp)?);
-
         input.clear();
     }
 }

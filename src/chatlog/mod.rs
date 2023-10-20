@@ -75,6 +75,24 @@ pub fn agent_msg(text: String) -> Result<ChatMessage> {
    Ok( ChatMessage::new(msg) )
 }
 
+pub fn fn_call_msg(fn_name: String, args_json:String) -> Result<ChatMessage> {
+   let msg = ChatCompletionRequestMessageArgs::default()
+            .role(Role::Assistant)
+            .function_call(fn_name, args_json)
+            .build()?;
+   Ok( ChatMessage::new(msg) )
+}
+
+pub fn fn_result_msg(fn_name: String, result:String) -> Result<ChatMessage> {
+   let msg = ChatCompletionRequestMessageArgs::default()
+            .role(Role::Function)
+            .name(fn_name)
+            .content(fn_name, result)
+            .build()?;
+   Ok( ChatMessage::new(msg) )
+}
+
+
 impl ChatLog {
     pub fn new() -> Self {
       Self { messages: Vec::<ChatMessage>::new() }
