@@ -26,6 +26,14 @@ pub struct Agent {
     handler: Handler 
 }
 
+impl Agent {
+    pub fn new(functions: Vec::<ChatCompletionFunctions>, 
+        log: ChatLog, chat:OpenAIChat, 
+        handler: Handler) -> Self {
+        Self { functions, log, chat, handler }
+    }
+}
+
 #[cfg(not(feature = "no_function"))]
 #[cfg(not(feature = "no_object"))]
 pub fn startup() -> Result<Agent> {
@@ -38,7 +46,7 @@ pub fn startup() -> Result<Agent> {
     log.add(sys_msg(&s!("You are a dungeon master."))?);
     let mut functions = Vec::<ChatCompletionFunctions>::new();
 
-    let mut handler = scripts::init("script.rhai")?;
+    let mut handler = scripts::init("scripts/script.rhai")?;
 
     call_function(&mut handler, "expand_actions", "{}");
     let actions = get_actions(&mut handler)?;
@@ -51,8 +59,7 @@ pub fn startup() -> Result<Agent> {
         functions.push(chat_fn(fn_name.to_string(), description, info_json)?); 
         println!("Found function: {}", fn_name);
     }
-
-    Agent::new(functions, log, chat, handler)
+    Ok( Agent::new(functions, log, chat, handler) )
 }
 
 
@@ -60,7 +67,10 @@ use std::io::{self, Write};
 use tokio::io::AsyncReadExt;
 
 pub async fn run(agent: &mut Agent) -> Result<()> {
+    println!("Run agent..");
+
     let mut input = String::new();
+
     loop {
         print!("> ");
         io::stdout().flush().unwrap();
@@ -68,12 +78,21 @@ pub async fn run(agent: &mut Agent) -> Result<()> {
         agent.log.add(user_msg(&input)?);
 
         let msgs = agent.log.to_request_msgs()?;
-        let (fn_name, fn_args) = agent.chat.send_request(msgs, &agent.functions).await?;
+        let (fn_name, fn_args) = agent.chat.send_request(
+            msgs.clone(), 
+            agent.functions.clone()
+        ).await?;
 
-        println!("Function name: {}", fn_name);
-        println!("Function arguments: {}", fn_args);
+        println!();
+        if fn_name != "" { 
+            println!("Function name: {}", fn_name);
+            println!("Function arguments: {}", fn_args);
 
-        call_function(&mut agent.handler, fn_name.as_str(), fn_args.as_str()); 
+            let output = call_function(&mut agent.handler, 
+                                       fn_name.as_str(),
+                                       fn_args.as_str()); 
+
+        }
 
         //agent.log.add(agent_msg(outp)?);
 

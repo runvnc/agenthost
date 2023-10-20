@@ -60,7 +60,7 @@ pub fn init(path: &str) -> Result<Handler>  {
 
     println!("> Loading script file: {path} with utils.rhai appended");
    
-    let with_utils = cat_files(path, "utils.rhai")?;
+    let with_utils = cat_files(path, "scripts/utils.rhai")?;
 
     let ast = match engine.compile_with_scope(&scope, with_utils.as_str()) {
         Ok(ast) => ast,
@@ -78,7 +78,7 @@ pub fn init(path: &str) -> Result<Handler>  {
     let result = engine.call_fn_with_options::<()>(options, &mut scope, &ast, "init", ());
 
     if let Err(err) = result {
-        eprintln!("! {err}")
+        eprintln!("Script init() error: {err}")
     }
 
     let handler = Handler {
@@ -97,7 +97,8 @@ pub fn get_actions(handler: &mut Handler) -> Result<rhai::Map> {
     dyn_map!(actions, "Could not read actions as map")
 }
 
-pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) {
+pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) ->
+        Result<String> {
     let argmap = handler.engine.parse_json(&args_json, true).unwrap_or(Map::new());
     let arg = Dynamic::from_map(argmap);
 
@@ -110,10 +111,11 @@ pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) {
         .eval_ast(false)
         .bind_this_ptr(&mut handler.states);
 
-    let result = engine.call_fn_with_options::<i64>(options, scope, ast, func, (arg,));
+    let result = engine.call_fn_with_options::<Dynamic>(options, scope, ast, func, (arg,));
         
-    match result {
-        Ok(value) => println!("{value}"),
-        Err(err) => eprintln!("! {err}")
-    }
+    let output = match result {
+        Ok(result) => format!("{:?}", result),
+        Err(err) => format!("Error: {err}")
+    };
+    Ok( output )
 }

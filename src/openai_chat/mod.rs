@@ -20,11 +20,11 @@ use futures::StreamExt;
 use std::error::Error;
 
 use crate::shorthands::*;
+use crate::s;
 
 pub struct OpenAIChat {
     model: String,
-    client: Client<OpenAIConfig>,
-    functions: Vec<ChatCompletionFunctions>,
+    client: Client<OpenAIConfig>
 }
 
 pub fn chat_fn(func_name: String, descr: String, params: serde_json::Value) ->
@@ -42,14 +42,13 @@ impl OpenAIChat {
     pub fn new(model: String) -> Self {
         Self {
             model,
-            client: Client::new(),
-            functions: Vec::<ChatCompletionFunctions>::new(),
+            client: Client::new()
         }
     }
 
     pub async fn send_request(&self, 
-            messages: &Vec<ChatCompletionRequestMessage>,
-            functions: &Vec<ChatCompletionFunctions> ) -> Result<(String, String)> {
+            messages: Vec<ChatCompletionRequestMessage>,
+            functions: Vec<ChatCompletionFunctions> ) -> Result<(String, String)> {
         let request = CreateChatCompletionRequestArgs::default()
             .model(&*self.model)
             .messages(messages)
@@ -93,6 +92,6 @@ impl OpenAIChat {
             stdout().flush()?;
         }
 
-        Err(anyhow!("No function call found"))
+        Ok( ( s!(""),s!("") ) )
     }
 }

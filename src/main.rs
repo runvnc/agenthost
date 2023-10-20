@@ -14,8 +14,8 @@ use agent::{startup, run};
 #[cfg(not(feature = "no_object"))]
 #[tokio::main]
 async fn main() -> Result<()> {
-    let agent = startup();
-    run(agent);
+    let mut agent = startup()?;
+    run(&mut agent).await?;
     Ok(())
 }
 
