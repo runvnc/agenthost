@@ -107,11 +107,26 @@ impl ChatLog {
         self.messages.push(msg)
     }
 
-    pub fn to_request_msgs(&mut self) -> Result<Vec<ChatCompletionRequestMessage>> {
-       Ok( self.messages.iter()
-           .map(|msg| msg.message.clone())
-           .collect::<Vec<_>>() 
-        )
+
+    pub fn to_request_msgs(&mut self, model: &str) -> Result<Vec<ChatCompletionRequestMessage>> {
+        let i:i32 = 0;
+        let max_tokens = match model {
+            "gpt-3.5-turbo" => 3000,
+            other           => 7000
+        };
+        let msgs: mut Vec<ChatCompletionRequestMessage> = [ self.messages[0] ];
+        let tokens = self.messages[0].length;
+
+        self.messages.iter.rev()
+           .map(|msg| {
+               tokens += msg.length; 
+               if tokens <= max_tokens {
+                    msgs.insert(1, msg.message.clone());
+               } else {
+                    break;
+               }
+           });
+        msgs;
     }
 }
 
