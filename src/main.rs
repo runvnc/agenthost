@@ -71,7 +71,7 @@ async fn main() -> Result<()> {
     println!("Function name: {}", fn_name);
     println!("Function arguments: {}", fn_args);
  
-    //call_function(&mut handler, "rollDice", "{ \"sides\": 20 }"); 
+    call_function(&mut handler, fn_name.as_str(), fn_args.as_str()); 
 
     Ok(())
 }
