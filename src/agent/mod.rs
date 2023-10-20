@@ -3,26 +3,23 @@ use smartstring::alias::String as SmartString;
 use std::error::Error;
 use anyhow::{Result, anyhow};
 
-mod cat;
-
-mod shorthands;
-mod chatlog;
-mod scripts;
-mod openai_chat;
-
-use chatlog::{ChatLog, sys_msg, user_msg, agent_msg};
+use crate::chatlog;
+use crate::chatlog::{ChatLog, sys_msg, user_msg, agent_msg};
 use rhai::{format_map_as_json};
-use scripts::{init, Handler, print_scope_ex, get_actions, call_function};
+use crate::scripts::{init, Handler, print_scope_ex, get_actions, call_function};
 
-use openai_chat::{OpenAIChat, chat_fn};
+use crate::scripts;
+
+use crate::openai_chat::{OpenAIChat, chat_fn};
 use serde_json::{json, Value};
 
 use async_openai::types::ChatCompletionRequestMessage;
 use async_openai::types::ChatCompletionFunctions;
 
-use shorthands::*;
+use crate::shorthands::*;
+use crate::{s, dyn_str, dyn_map};
 
-struct Agent {
+pub struct Agent {
     functions: Vec::<ChatCompletionFunctions>,
     log: ChatLog,
     chat: OpenAIChat,
@@ -31,22 +28,20 @@ struct Agent {
 
 #[cfg(not(feature = "no_function"))]
 #[cfg(not(feature = "no_object"))]
-pub fn startup() {
+pub fn startup() -> Result<Agent> {
     println!("AgentHost 0.1 Startup..");
     chatlog::init();
 
     let mut log = ChatLog::new();
     let mut chat = OpenAIChat::new(s!("gpt-3.5-turbo"));
     
-    log.add(sys_msg(s!("You are a dungeon master."))?);
+    log.add(sys_msg(&s!("You are a dungeon master."))?);
     let mut functions = Vec::<ChatCompletionFunctions>::new();
 
     let mut handler = scripts::init("script.rhai")?;
-    print_scope_ex(&handler.scope);
+
     call_function(&mut handler, "expand_actions", "{}");
     let actions = get_actions(&mut handler)?;
-    println!("Actions found in script: {}", 
-             format_map_as_json(&actions));
     
     for (fn_name, info) in &actions {
         let info_map = dyn_map!(info, "")?;
@@ -64,20 +59,23 @@ pub fn startup() {
 use std::io::{self, Write};
 use tokio::io::AsyncReadExt;
 
-pub async fn loop() {
+pub async fn run(agent: &mut Agent) -> Result<()> {
     let mut input = String::new();
     loop {
         print!("> ");
         io::stdout().flush().unwrap();
-        io::stdin().read_line(&mut input).await.unwrap();
-        log.add(user_msg(s!("Hello. Please roll a d8."))?);
+        io::stdin().read_line(&mut input).unwrap();
+        agent.log.add(user_msg(&input)?);
 
-        let (fn_name, fn_args) = chat.send_request(log.to_request_msgs()?, functions).await?;
+        let msgs = agent.log.to_request_msgs()?;
+        let (fn_name, fn_args) = agent.chat.send_request(msgs, &agent.functions).await?;
 
         println!("Function name: {}", fn_name);
         println!("Function arguments: {}", fn_args);
 
-        call_function(&mut handler, fn_name.as_str(), fn_args.as_str()); 
+        call_function(&mut agent.handler, fn_name.as_str(), fn_args.as_str()); 
+
+        //agent.log.add(agent_msg(outp)?);
 
         input.clear();
     }

@@ -51,7 +51,7 @@ pub struct ChatLog {
     messages: Vec<ChatMessage>,
 }
 
-pub fn sys_msg(text: String) -> Result<ChatMessage> {
+pub fn sys_msg(text: &String) -> Result<ChatMessage> {
     let msg = ChatCompletionRequestMessageArgs::default()
         .role(Role::System)
         .content(text.as_str())
@@ -59,7 +59,7 @@ pub fn sys_msg(text: String) -> Result<ChatMessage> {
     Ok( ChatMessage::new(msg) )
 }
 
-pub fn user_msg(text: String) -> Result<ChatMessage> {
+pub fn user_msg(text: &String) -> Result<ChatMessage> {
    let msg = ChatCompletionRequestMessageArgs::default()
         .role(Role::User)
         .content(text)

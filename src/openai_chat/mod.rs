@@ -48,8 +48,8 @@ impl OpenAIChat {
     }
 
     pub async fn send_request(&self, 
-            messages: Vec<ChatCompletionRequestMessage>,
-            functions: Vec<ChatCompletionFunctions> ) -> Result<(String, String)> {
+            messages: &Vec<ChatCompletionRequestMessage>,
+            functions: &Vec<ChatCompletionFunctions> ) -> Result<(String, String)> {
         let request = CreateChatCompletionRequestArgs::default()
             .model(&*self.model)
             .messages(messages)
