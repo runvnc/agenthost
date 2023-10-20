@@ -125,6 +125,7 @@ impl ChatLog {
                 break;
            }
         };
+        println!("({} of {} max tokens", tokens, max_tokens);
         Ok( msgs )
     }
 }
