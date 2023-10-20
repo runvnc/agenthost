@@ -10,7 +10,7 @@ use anyhow::{Result, anyhow};
 use std::sync::RwLock;
 use std::sync::Arc;
 
-use crate::{s, dyn_map};
+use crate::{s, dyn_map, dyn_str};
 use crate::cat::{cat_files};
 
 #[derive(Debug)]
@@ -96,6 +96,12 @@ pub fn get_actions(handler: &mut Handler) -> Result<rhai::Map> {
     let actions = states_map.get("actions").ok_or(anyhow!("Could not read actions"))?;
     dyn_map!(actions, "Could not read actions as map")
 }
+
+pub fn get_sys_msg(handler: &mut Handler) -> Result<String> {
+    let states_map = dyn_map!(handler.states, "Could not access states as map.")?;
+    dyn_str!(states_map, "sys")     
+}
+
 
 pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) ->
         Result<String> {

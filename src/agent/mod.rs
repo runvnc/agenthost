@@ -6,7 +6,7 @@ use anyhow::{Result, anyhow};
 use crate::chatlog;
 use crate::chatlog::{ChatLog, sys_msg, user_msg, agent_msg, fn_call_msg, fn_result_msg};
 use rhai::{format_map_as_json};
-use crate::scripts::{init, Handler, print_scope_ex, get_actions, call_function};
+use crate::scripts::{init, Handler, print_scope_ex, get_actions, get_sys_msg, call_function};
 
 use crate::scripts;
 
@@ -38,18 +38,18 @@ impl Agent {
 
 #[cfg(not(feature = "no_function"))]
 #[cfg(not(feature = "no_object"))]
-pub fn startup(sys: &String, script_path: &str, 
+pub fn startup(script_path: &str, 
                model: &str) -> Result<Agent> {
     println!("AgentHost 0.1 Startup..");
     chatlog::init();
 
     let mut log = ChatLog::new();
     let mut chat = OpenAIChat::new(model.to_string());
-    
+    let mut handler = scripts::init(script_path)?;
+   
+    let sys = get_sys_msg(&mut handler)?.to_string();
     log.add(sys_msg(&sys)?);
     let mut functions = Vec::<ChatCompletionFunctions>::new();
-
-    let mut handler = scripts::init(script_path)?;
 
     call_function(&mut handler, "expand_actions", "{}");
     let actions = get_actions(&mut handler)?;
@@ -85,7 +85,7 @@ pub async fn run(agent: &mut Agent) -> Result<()> {
             agent.log.add(user_msg(&input)?);
         }
         user_input = true;
-
+        println!();
         let msgs = agent.log.to_request_msgs(agent.model.as_str())?;
         println!("{}", color::Fg(color::White));
 

@@ -16,8 +16,7 @@ use shorthands::*;
 #[cfg(not(feature = "no_object"))]
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut agent = startup(&s!("You are a dungeon master"),
-                            "scripts/script.rhai",
+    let mut agent = startup("scripts/script.rhai",
                             "gpt-3.5-turbo")?;
     run(&mut agent).await?;
     Ok(())
