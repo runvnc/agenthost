@@ -6,15 +6,10 @@ fn init() {
 
     this.health = "fine";
     this.score = 0;
-
     this.actions = #{
         rollDice: #{
-            type: "object",
-            description: "Roll a N-sided die",
-            properties: #{ 
-                sides: #{ type: "integer",
-                          description: "num sides" }
-            }
+            descr: "Roll a N-sided die",
+            params: #{ sides: #{ type: "integer", descr: "num sides" }}
         }
     };
 }

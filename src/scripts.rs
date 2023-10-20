@@ -11,6 +11,7 @@ use std::sync::RwLock;
 use std::sync::Arc;
 
 use crate::{s, dyn_map};
+use crate::cat::{cat_files};
 
 #[derive(Debug)]
 pub struct Handler {
@@ -57,9 +58,11 @@ pub fn init(path: &str) -> Result<Handler>  {
     let mut states = (states_dyn.into_shared());
     let mut scope = Scope::new();
 
-    println!("> Loading script file: {path}");
+    println!("> Loading script file: {path} with utils.rhai appended");
+   
+    let with_utils = cat_files(path, "utils.rhai")?;
 
-    let ast = match engine.compile_file_with_scope(&scope, path.into()) {
+    let ast = match engine.compile_with_scope(&scope, with_utils.as_str()) {
         Ok(ast) => ast,
         Err(err) => {
             eprintln!("! Error: {err}");

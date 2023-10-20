@@ -12,7 +12,7 @@ mod openai_chat;
 
 use chatlog::{ChatLog, sys_msg, user_msg, agent_msg};
 use rhai::{format_map_as_json};
-use scripts::{init, print_scope_ex, get_actions, call_function};
+use scripts::{init, Handler, print_scope_ex, get_actions, call_function};
 
 use openai_chat::{OpenAIChat, chat_fn};
 use serde_json::{json, Value};
@@ -22,10 +22,16 @@ use async_openai::types::ChatCompletionFunctions;
 
 use shorthands::*;
 
+struct Agent {
+    functions: Vec::<ChatCompletionFunctions>,
+    log: ChatLog,
+    chat: OpenAIChat,
+    handler: Handler 
+}
+
 #[cfg(not(feature = "no_function"))]
 #[cfg(not(feature = "no_object"))]
-#[tokio::main]
-async fn main() -> Result<()> {
+pub fn startup() {
     println!("AgentHost 0.1 Startup..");
     chatlog::init();
 
@@ -41,7 +47,7 @@ async fn main() -> Result<()> {
     let actions = get_actions(&mut handler)?;
     println!("Actions found in script: {}", 
              format_map_as_json(&actions));
-         
+    
     for (fn_name, info) in &actions {
         let info_map = dyn_map!(info, "")?;
         let description = dyn_str!(info_map, "description")?;
@@ -51,16 +57,29 @@ async fn main() -> Result<()> {
         println!("Found function: {}", fn_name);
     }
 
-    log.add(user_msg(s!("Hello. Please roll a d8."))?);
-
-    let (fn_name, fn_args) = chat.send_request(log.to_request_msgs()?, functions).await?;
-
-    println!("Function name: {}", fn_name);
-    println!("Function arguments: {}", fn_args);
+    Agent::new(functions, log, chat, handler)
+}
 
 
-    call_function(&mut handler, fn_name.as_str(), fn_args.as_str()); 
+use std::io::{self, Write};
+use tokio::io::AsyncReadExt;
 
-    Ok(())
+pub async fn loop() {
+    let mut input = String::new();
+    loop {
+        print!("> ");
+        io::stdout().flush().unwrap();
+        io::stdin().read_line(&mut input).await.unwrap();
+        log.add(user_msg(s!("Hello. Please roll a d8."))?);
+
+        let (fn_name, fn_args) = chat.send_request(log.to_request_msgs()?, functions).await?;
+
+        println!("Function name: {}", fn_name);
+        println!("Function arguments: {}", fn_args);
+
+        call_function(&mut handler, fn_name.as_str(), fn_args.as_str()); 
+
+        input.clear();
+    }
 }
 
