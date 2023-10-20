@@ -22,6 +22,7 @@ use crate::{s, dyn_str, dyn_map};
 pub struct Agent {
     functions: Vec::<ChatCompletionFunctions>,
     log: ChatLog,
+    model: &String,
     chat: OpenAIChat,
     handler: Handler 
 }
@@ -37,18 +38,18 @@ impl Agent {
 
 #[cfg(not(feature = "no_function"))]
 #[cfg(not(feature = "no_object"))]
-pub fn startup(sys_msg: &String, script_path: &String, 
-               model: &String) -> Result<Agent> {
+pub fn startup(sys: &String, script_path: &str, 
+               model: &str) -> Result<Agent> {
     println!("AgentHost 0.1 Startup..");
     chatlog::init();
 
     let mut log = ChatLog::new();
-    let mut chat = OpenAIChat::new(model);
+    let mut chat = OpenAIChat::new(model.to_string());
     
-    log.add(sys_msg(&sys_msg))?);
+    log.add(sys_msg(&sys)?);
     let mut functions = Vec::<ChatCompletionFunctions>::new();
 
-    let mut handler = scripts::init(script_path.as_str())?;
+    let mut handler = scripts::init(script_path)?;
 
     call_function(&mut handler, "expand_actions", "{}");
     let actions = get_actions(&mut handler)?;
@@ -61,7 +62,7 @@ pub fn startup(sys_msg: &String, script_path: &String,
         functions.push(chat_fn(fn_name.to_string(), description, info_json)?); 
         println!("Found function: {}", fn_name);
     }
-    Ok( Agent::new(functions, model, log, chat, handler) )
+    Ok( Agent::new(functions, log, chat, model, handler) )
 }
 
 
