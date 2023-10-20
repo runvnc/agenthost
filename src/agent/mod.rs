@@ -22,7 +22,7 @@ use crate::{s, dyn_str, dyn_map};
 pub struct Agent {
     functions: Vec::<ChatCompletionFunctions>,
     log: ChatLog,
-    model: &String,
+    model: String,
     chat: OpenAIChat,
     handler: Handler 
 }
@@ -30,7 +30,7 @@ pub struct Agent {
 impl Agent {
     pub fn new(functions: Vec::<ChatCompletionFunctions>, 
         log: ChatLog, chat:OpenAIChat,
-        model: &String,
+        model: String,
         handler: Handler) -> Self {
         Self { functions, model, log, chat, handler }
     }
@@ -62,7 +62,7 @@ pub fn startup(sys: &String, script_path: &str,
         functions.push(chat_fn(fn_name.to_string(), description, info_json)?); 
         println!("Found function: {}", fn_name);
     }
-    Ok( Agent::new(functions, log, chat, model, handler) )
+    Ok( Agent::new(functions, log, chat, model.to_string(), handler) )
 }
 
 

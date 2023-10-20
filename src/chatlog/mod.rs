@@ -114,19 +114,18 @@ impl ChatLog {
             "gpt-3.5-turbo" => 3000,
             other           => 7000
         };
-        let msgs: mut Vec<ChatCompletionRequestMessage> = [ self.messages[0] ];
-        let tokens = self.messages[0].length;
+        let mut msgs: Vec<ChatCompletionRequestMessage> = vec![ self.messages[0].message.clone() ];
+        let mut tokens = self.messages[0].length;
 
-        self.messages.iter.rev()
-           .map(|msg| {
-               tokens += msg.length; 
-               if tokens <= max_tokens {
-                    msgs.insert(1, msg.message.clone());
-               } else {
-                    break;
-               }
-           });
-        msgs;
+        for msg in self.messages.iter().rev() {
+           tokens += msg.length; 
+           if tokens <= max_tokens {
+                msgs.insert(1, msg.message.clone());
+           } else {
+                break;
+           }
+        };
+        Ok( msgs )
     }
 }
 
