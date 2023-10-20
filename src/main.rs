@@ -54,15 +54,18 @@ async fn main() -> Result<()> {
     let actions = get_actions(&mut handler)?;
     println!("Actions found in script: {}", 
              format_map_as_json(&actions));
-
+    
     for (fn_name, info) in &actions {
         let info_map = dyn_map!(info, "")?;
         let description = dyn_str!(info_map, "description")?;
-        let info_json = serde_json::Value::String(format_map_as_json(&info_map));
+        let info_json = json!(&info_map);
+        println!("descr={} json={}", description, info_json);
         functions.push(chat_fn(fn_name.to_string(), description, info_json)?); 
         println!("Found function: {}", fn_name);
     }
-     
+    println!("test_args: {}", test_args());
+    functions.push(chat_fn(s!("get_weather"), s!("Get the current weather"), test_args())?);
+
     let (fn_name, fn_args) = chat.send_request(log.to_request_msgs()?, functions).await?;
 
     println!("Function name: {}", fn_name);

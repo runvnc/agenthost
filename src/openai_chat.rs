@@ -84,7 +84,8 @@ impl OpenAIChat {
                             write!(lock, "{}", content).unwrap();
                         }
                     }
-                }
+                },
+                
                 Err(err) => {
                     writeln!(lock, "error: {err}").unwrap();
                 }
