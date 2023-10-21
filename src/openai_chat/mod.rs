@@ -1,15 +1,14 @@
 //use smartstring::alias::String;
 
 use std::io::{stdout, Write};
-use anyhow::{Result, anyhow};
+use anyhow::{Result};
 
 use async_openai::{
     types::{
-        ChatCompletionRequestMessageArgs,
         ChatCompletionFunctions,
         ChatCompletionRequestMessage,
         ChatCompletionFunctionsArgs,
-        CreateChatCompletionRequestArgs, Role,
+        CreateChatCompletionRequestArgs,
     },
     Client,
 };
@@ -19,7 +18,7 @@ use futures::StreamExt;
 
 use std::error::Error;
 
-use crate::shorthands::*;
+
 use crate::s;
 
 pub struct OpenAIChat {

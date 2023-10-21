@@ -1,23 +1,20 @@
-use smartstring::alias::String as SmartString;
-
-use std::error::Error;
 use anyhow::{Result, anyhow};
 
 use crate::chatlog;
 use crate::chatlog::{ChatLog, sys_msg, user_msg, agent_msg, fn_call_msg, fn_result_msg};
-use rhai::{format_map_as_json};
-use crate::scripts::{init, Handler, print_scope_ex, get_actions, get_relevant_state, get_sys_msg, call_function};
+
+use crate::scripts::{Handler, get_actions, get_relevant_state, get_sys_msg, call_function};
 
 use crate::scripts;
 
 use crate::openai_chat::{OpenAIChat, chat_fn};
-use serde_json::{json, Value};
+use serde_json::{json};
 
-use async_openai::types::ChatCompletionRequestMessage;
+
 use async_openai::types::ChatCompletionFunctions;
 
-use crate::shorthands::*;
-use crate::{s, dyn_str, dyn_map};
+
+use crate::{dyn_str, dyn_map};
 
 pub struct Agent {
     functions: Vec::<ChatCompletionFunctions>,
@@ -44,7 +41,7 @@ pub fn startup(script_path: &str,
     chatlog::init();
 
     let mut log = ChatLog::new();
-    let mut chat = OpenAIChat::new(model.to_string());
+    let chat = OpenAIChat::new(model.to_string());
     let mut handler = scripts::init(script_path)?;
    
     let sys = get_sys_msg(&mut handler)?.to_string();
@@ -67,7 +64,7 @@ pub fn startup(script_path: &str,
 
 
 use std::io::{self, Write};
-use tokio::io::AsyncReadExt;
+
 use termion::{color, style};
 
 

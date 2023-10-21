@@ -1,16 +1,12 @@
 use rhai::{CallFnOptions, Dynamic, Engine,
-           Map, Scope, AST, format_map_as_json};
-use std::io::{stdin, stdout, Write};
+           Map, Scope, AST};
+use std::io::{stdout, Write};
 use rhai::packages::Package;
 use rhai_rand::RandomPackage;
-use std::error::Error;
-use serde;
-use serde_json;
-use anyhow::{Result, anyhow};
-use std::sync::RwLock;
-use std::sync::Arc;
 
-use crate::{s, dyn_map, dyn_str};
+use anyhow::{Result, anyhow};
+
+use crate::{dyn_map, dyn_str};
 use crate::cat::{cat_files};
 
 #[derive(Debug)]
@@ -21,7 +17,6 @@ pub struct Handler {
     pub ast: AST,
 }
 
-use std::{env, fs::File, io::Read, path::Path, process::exit};
 
 /*
 fn eprint_error(input: &str, mut err: EvalAltResult) {
@@ -56,7 +51,7 @@ fn eprint_error(input: &str, mut err: EvalAltResult) {
     }
 } */
 
-pub fn print_scope_ex(scope: &Scope) {
+pub fn print_scope_ex(_scope: &Scope) {
     println!("Hello from print_scope_ex!");
     /*
     for (i, (name, constant, value)) in scope.iter_raw().enumerate() {
@@ -88,9 +83,9 @@ pub fn init(path: &str) -> Result<Handler>  {
 
     engine.register_global_module(RandomPackage::new().as_shared_module());
 
-    let mut states_map = Map::new();
-    let mut states_dyn: Dynamic = states_map.into();
-    let mut states = (states_dyn.into_shared());
+    let states_map = Map::new();
+    let states_dyn: Dynamic = states_map.into();
+    let mut states = states_dyn.into_shared();
     let mut scope = Scope::new();
 
     println!("> Loading script file: {path} with utils.rhai appended");

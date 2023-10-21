@@ -1,5 +1,5 @@
-use std::error::Error;
-use anyhow::{Result, anyhow};
+
+use anyhow::{Result};
 
 mod cat;
 mod shorthands;
@@ -10,7 +10,7 @@ mod agent;
 
 use agent::{startup, run};
 
-use shorthands::*;
+
 
 #[cfg(not(feature = "no_function"))]
 #[cfg(not(feature = "no_object"))]

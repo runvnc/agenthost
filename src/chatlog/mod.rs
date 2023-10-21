@@ -1,7 +1,7 @@
-use std::error::Error;
+
 use once_cell::sync::OnceCell;
-use anyhow::{Result,anyhow};
-use termion::{color, style};
+use anyhow::{Result};
+use termion::{style};
 
 
 use async_openai::{
@@ -19,7 +19,7 @@ use tiktoken_rs::{CoreBPE, cl100k_base};
 static BPE: OnceCell<CoreBPE> = OnceCell::new();
 
 //mod shorthands;
-use crate::shorthands::*;
+
 
 
 pub struct ChatMessage {
@@ -111,10 +111,10 @@ impl ChatLog {
     }
 
     pub fn to_request_msgs(&mut self, model: &str) -> Result<Vec<ChatCompletionRequestMessage>> {
-        let i:i32 = 0;
+        let _i:i32 = 0;
         let max_tokens = match model {
             "gpt-3.5-turbo" => 3000,
-            other           => 7000
+            _other           => 7000
         };
         let mut msgs: Vec<ChatCompletionRequestMessage> = vec![ self.messages[0].message.clone() ];
         let mut tokens = self.messages[0].length;
