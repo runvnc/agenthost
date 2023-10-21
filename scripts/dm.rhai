@@ -2,7 +2,7 @@ fn init() {
     this.sys = "You are a dungeon master. Introduce yourself to the player.";
     this.msgHeader = "Relevant state:\n\n";
 
-    this.relevant = ["user", "hp", "xp", "inventory"];
+    this.relevant = ["user", "hp", "xp", "inventory", "gold"];
 
     this.hp = 10;
     this.xp = 0;
@@ -48,6 +48,6 @@ fn modifyInventory(args) {
     }
 }
 
-fn evalExitStep() {
-    if this.health <= 0 { "gameOver" } else { () }
+fn evalExitStage() {
+    if this.hp <= 0 { "gameOver" } else { () }
 }
