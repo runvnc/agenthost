@@ -1,5 +1,5 @@
 use rhai::{CallFnOptions, Dynamic, Engine,
-           Map, Scope, AST};
+           EvalAltResult, Position, Map, Scope, AST};
 use std::io::{stdout, Write};
 use rhai::packages::Package;
 use rhai_rand::RandomPackage;
@@ -15,10 +15,22 @@ pub struct Handler {
     pub scope: Scope<'static>,
     pub states: Dynamic,
     pub ast: AST,
+    pub script: String
 }
 
+use regex::Regex;
 
-/*
+fn extract_line_and_position(s: &str) -> Option<rhai::Position> {
+    let re = Regex::new(r"\(line (\d+), position (\d+)\)").unwrap();
+    if let Some(caps) = re.captures(s) {
+        let line = caps.get(1)?.as_str().parse::<u16>().ok()?;
+        let pos = caps.get(2)?.as_str().parse::<u16>().ok()?;
+        Some(rhai::Position::new(line, pos))
+    } else {
+        None
+    }
+}
+
 fn eprint_error(input: &str, mut err: EvalAltResult) {
     fn eprint_line(lines: &[&str], pos: Position, err_msg: &str) {
         let line = pos.line().unwrap();
@@ -40,16 +52,21 @@ fn eprint_error(input: &str, mut err: EvalAltResult) {
     let lines: Vec<_> = input.lines().collect();
 
     // Print error
-    let pos = err.take_position();
+    let pos = err.position();
 
     if pos.is_none() {
-        // No position
-        eprintln!("{err}");
+        let temp = format!("{err}");
+        let pos_str = temp.as_str();
+        if let Some(p) = extract_line_and_position(pos_str) {
+            eprint_line(&lines, p, &err.to_string());
+        } else {
+            eprintln!("No position found in error.");
+            eprintln!("{err}");
+        }
     } else {
-        // Specific position
         eprint_line(&lines, pos, &err.to_string())
     }
-} */
+}
 
 pub fn print_scope_ex(_scope: &Scope) {
     println!("Hello from print_scope_ex!");
@@ -116,6 +133,7 @@ pub fn init(path: &str) -> Result<Handler>  {
         scope,
         states,
         ast,
+        script: with_utils
     };
 
     Ok(handler)
@@ -154,7 +172,11 @@ pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) ->
         
     let output = match result {
         Ok(result) => format!("{:?}", result),
-        Err(err) => format!("{:?}", err)
+        Err(err) => {
+            eprint_error(&handler.script, *err);
+            "Error".to_string()
+            //format!("{:?}", err)
+        }
     };
     Ok( output )
 }

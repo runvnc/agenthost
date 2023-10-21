@@ -108,6 +108,7 @@ impl ChatLog {
 
     pub fn change_sys_msg(&mut self, msg: ChatMessage) {
         self.messages[0] = msg;
+        println!("System message changed to {:?}", self.messages[0].message.content);
     }
 
     pub fn to_request_msgs(&mut self, model: &str) -> Result<Vec<ChatCompletionRequestMessage>> {

@@ -25,9 +25,12 @@ fn expand_actions(ignore) {
 };
 
 fn get_relevant(ignore) {
-    let obj = {};
+    let obj = #{};
     for field in this.relevant {
-      obj[field] = this.field;
+      obj[field] = this[field];
     };
     obj 
-}
+};
+
+print(get_relevant(""))
+
