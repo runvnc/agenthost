@@ -107,6 +107,11 @@ pub async fn run(agent: &mut Agent) -> Result<()> {
                                        fn_args.as_str())?; 
             println!("Call result: {}", output);
             agent.log.add(fn_result_msg(&fn_name, &output)?);
+
+            //let next_step = call_function( evalExitStep )
+            // if next_step != () then load another script
+            // and pass in state
+            //
             user_input = false;
         } else {
             agent.log.add(agent_msg(&text)?);
