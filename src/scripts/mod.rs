@@ -15,7 +15,8 @@ pub struct Handler {
     pub scope: Scope<'static>,
     pub states: Dynamic,
     pub ast: AST,
-    pub script: String
+    pub script: String,
+    pub dir: String
 }
 
 use regex::Regex;
@@ -68,32 +69,24 @@ fn eprint_error(input: &str, mut err: EvalAltResult) {
     }
 }
 
-pub fn print_scope_ex(_scope: &Scope) {
-    println!("Hello from print_scope_ex!");
-    /*
-    for (i, (name, constant, value)) in scope.iter_raw().enumerate() {
-        #[cfg(not(feature = "no_closure"))]
-        let value_is_shared = if value.is_shared() { " (shared)" } else { "" };
-        #[cfg(feature = "no_closure")]
-        let value_is_shared = "";
-        println!("Name = {}", name);
-        println!(
-            "[{}] {}{}{} = {:?}",
-            i + 1,
-            if constant { "const " } else { "" },
-            name,
-            value_is_shared,
-            *value.read_lock::<Dynamic>().unwrap(),
-        )
-    } */
-    println!();
-}
 
+use std::path::Path;
+use std::ffi::OsStr;
+
+fn get_directory(file_path: &str) -> String {
+    let path = Path::new(file_path);
+    match path.parent() {
+        Some(dir_path) => dir_path.to_str().unwrap_or("scripts").to_string(),
+        None => String::from("scripts"),
+    }
+}
 
 #[cfg(not(feature = "no_function"))]
 #[cfg(not(feature = "no_object"))]
 pub fn init(path: &str) -> Result<Handler>  {
-    print!("Script file [{}]: ", path);
+    let dir = get_directory(path);
+
+    print!("Script file: {}  directory: {}", path, dir);
     stdout().flush().expect("flush stdout");
 
     let mut engine = Engine::new();
@@ -133,11 +126,28 @@ pub fn init(path: &str) -> Result<Handler>  {
         scope,
         states,
         ast,
-        script: with_utils
+        script: with_utils,
+        dir
     };
 
     Ok(handler)
 }
+
+/*
+pub fn goto_stage(handler: &mut Handler, stage: &str) {
+    println!("> Loading script file: {path} with utils.rhai appended");
+   
+    let with_utils = cat_files(path, "scripts/utils.rhai")?;
+
+    let ast = match engine.compile_with_scope(&scope, with_utils.as_str()) {
+        Ok(ast) => ast,
+        Err(err) => {
+            eprintln!("! Error: {err}");
+            println!("Cannot continue. Bye!");
+            return Err(anyhow!("Compilation failed."));
+        }
+    };
+} */
 
 pub fn get_actions(handler: &mut Handler) -> Result<rhai::Map> {
     let states_map = dyn_map!(handler.states, "Could not access states as map.")?;

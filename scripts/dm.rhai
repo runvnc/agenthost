@@ -1,9 +1,31 @@
+fn renderSysMsg(data) {
+`
+You are a dungeon master. Don't forget to introduce yourself to the player.
+
+Timestamp: ${data.timestamp}
+
+Username: ${this.user}
+
+HP: ${this.hp}
+
+XP: ${this.xp}
+
+Gold: ${this.gold}
+
+Inventory:
+${this.inventory.reduce(|l| l + this + "\n", "")}
+`;
+}
+
+fn renderUserMsg(text, data) {
+    `[${data.timestamp}]:  ${text}`;
+}
+
+fn evalExitStage() {
+    if this.hp <= 0 { "gameOver" } else { () }
+}
+
 fn init() {
-    this.sys = "You are a dungeon master. Introduce yourself to the player.";
-    this.msgHeader = "Relevant state:\n\n";
-
-    this.relevant = ["user", "hp", "xp", "inventory", "gold"];
-
     this.hp = 10;
     this.xp = 0;
     this.user = #{ name: "jason" };
@@ -48,6 +70,4 @@ fn modifyInventory(args) {
     }
 }
 
-fn evalExitStage() {
-    if this.hp <= 0 { "gameOver" } else { () }
-}
+

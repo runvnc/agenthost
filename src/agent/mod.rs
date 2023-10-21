@@ -9,9 +9,10 @@ use crate::scripts;
 
 use crate::openai_chat::{OpenAIChat, chat_fn};
 use serde_json::{json};
-
+use chrono::{Utc, DateTime};
 
 use async_openai::types::ChatCompletionFunctions;
+use std::collections::HashMap;
 
 
 use crate::{dyn_str, dyn_map};
@@ -63,6 +64,7 @@ pub fn startup(script_path: &str,
 }
 
 
+
 use std::io::{self, Write};
 
 use termion::{color, style};
@@ -83,10 +85,14 @@ pub async fn run(agent: &mut Agent, mut user_input:bool) -> Result<()> {
         user_input = true;
         println!();
 
-        let mut sys = get_sys_msg(&mut agent.handler)?.to_string();
-        sys += "Relevant state:\n";
-        sys += get_relevant_state(&mut agent.handler)?.as_str();
-        agent.log.change_sys_msg(sys_msg(&sys)?);
+        let mut data:HashMap<String, String> = HashMap::new();
+        let timestamp_str = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f UTC").to_string();
+        data.insert("timestamp".into(), timestamp_str);
+        let json = json!(data);
+        let json_str = json.as_str().ok_or("{}").unwrap();
+        let sys_str = call_function(&mut agent.handler, "renderSysMsg", json_str)?;
+
+        agent.log.change_sys_msg(sys_msg(&sys_str)?);
  
         let msgs = agent.log.to_request_msgs(agent.model.as_str())?;
         println!("{}", color::Fg(color::White));
@@ -107,7 +113,10 @@ pub async fn run(agent: &mut Agent, mut user_input:bool) -> Result<()> {
             println!("Call result: {}", output);
             agent.log.add(fn_result_msg(&fn_name, &output)?);
 
-            //let next_step = call_function( evalExitStep )
+            //let next_step = call_function( &mut agent.handler, "evalExitStep", "{}" );
+            //if next_step != "()" {
+            //    gotoStage(&mut agent.handler, next_step).await?;
+            //}
             // if next_step != () then load another script
             // and pass in state
             //
