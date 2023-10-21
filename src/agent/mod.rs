@@ -6,7 +6,7 @@ use anyhow::{Result, anyhow};
 use crate::chatlog;
 use crate::chatlog::{ChatLog, sys_msg, user_msg, agent_msg, fn_call_msg, fn_result_msg};
 use rhai::{format_map_as_json};
-use crate::scripts::{init, Handler, print_scope_ex, get_actions, get_sys_msg, call_function};
+use crate::scripts::{init, Handler, print_scope_ex, get_actions, get_relevant_state, get_sys_msg, call_function};
 
 use crate::scripts;
 
@@ -86,6 +86,12 @@ pub async fn run(agent: &mut Agent) -> Result<()> {
         }
         user_input = true;
         println!();
+
+        let mut sys = get_sys_msg(&mut agent.handler)?.to_string();
+        sys += "Relevant state:\n";
+        sys += get_relevant_state(&mut agent.handler)?.as_str();
+        agent.log.change_sys_msg(sys_msg(&sys)?);
+ 
         let msgs = agent.log.to_request_msgs(agent.model.as_str())?;
         println!("{}", color::Fg(color::White));
 

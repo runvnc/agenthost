@@ -23,3 +23,11 @@ fn expand_actions(ignore) {
     }
     this.actions = new_structure;
 };
+
+fn get_relevant(ignore) {
+    let obj = {};
+    for field in this.relevant {
+      obj[field] = this.field;
+    };
+    obj 
+}

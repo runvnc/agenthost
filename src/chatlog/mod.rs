@@ -106,6 +106,9 @@ impl ChatLog {
         self.messages.push(msg)
     }
 
+    pub fn change_sys_msg(&mut self, msg: ChatMessage) {
+        self.messages[0] = msg;
+    }
 
     pub fn to_request_msgs(&mut self, model: &str) -> Result<Vec<ChatCompletionRequestMessage>> {
         let i:i32 = 0;

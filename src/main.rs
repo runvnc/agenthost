@@ -16,8 +16,8 @@ use shorthands::*;
 #[cfg(not(feature = "no_object"))]
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut agent = startup("scripts/script.rhai",
-                            "gpt-3.5-turbo")?;
+    let mut agent = startup("scripts/dm.rhai",
+                            "gpt-4")?;
     run(&mut agent).await?;
     Ok(())
 }

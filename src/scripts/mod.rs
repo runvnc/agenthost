@@ -1,4 +1,4 @@
-use rhai::{CallFnOptions, Dynamic, Engine, 
+use rhai::{CallFnOptions, Dynamic, Engine,
            Map, Scope, AST, format_map_as_json};
 use std::io::{stdin, stdout, Write};
 use rhai::packages::Package;
@@ -20,6 +20,41 @@ pub struct Handler {
     pub states: Dynamic,
     pub ast: AST,
 }
+
+use std::{env, fs::File, io::Read, path::Path, process::exit};
+
+/*
+fn eprint_error(input: &str, mut err: EvalAltResult) {
+    fn eprint_line(lines: &[&str], pos: Position, err_msg: &str) {
+        let line = pos.line().unwrap();
+        let line_no = format!("{line}: ");
+
+        eprintln!("{line_no}{}", lines[line - 1]);
+
+        for (i, err_line) in err_msg.to_string().lines().enumerate() {
+            // Display position marker
+            println!(
+                "{0:>1$}{err_line}",
+                if i > 0 { "| " } else { "^ " },
+                line_no.len() + pos.position().unwrap() + 1,
+            );
+        }
+        eprintln!();
+    }
+
+    let lines: Vec<_> = input.lines().collect();
+
+    // Print error
+    let pos = err.take_position();
+
+    if pos.is_none() {
+        // No position
+        eprintln!("{err}");
+    } else {
+        // Specific position
+        eprint_line(&lines, pos, &err.to_string())
+    }
+} */
 
 pub fn print_scope_ex(scope: &Scope) {
     println!("Hello from print_scope_ex!");
@@ -102,6 +137,9 @@ pub fn get_sys_msg(handler: &mut Handler) -> Result<String> {
     dyn_str!(states_map, "sys")     
 }
 
+pub fn get_relevant_state(handler: &mut Handler) -> Result<String> {
+    call_function(handler, "get_relevant", "{}")
+}
 
 pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) ->
         Result<String> {
