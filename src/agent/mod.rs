@@ -13,9 +13,9 @@ use chrono::{Utc, DateTime};
 
 use async_openai::types::ChatCompletionFunctions;
 use std::collections::HashMap;
+use serde_json::Value;
 
-
-use crate::{dyn_str, dyn_map};
+use crate::{s, dyn_str, dyn_map};
 
 pub struct Agent {
     functions: Vec::<ChatCompletionFunctions>,
@@ -45,8 +45,6 @@ pub fn startup(script_path: &str,
     let chat = OpenAIChat::new(model.to_string());
     let mut handler = scripts::init(script_path)?;
    
-    let sys = get_sys_msg(&mut handler)?.to_string();
-    log.add(sys_msg(&sys)?);
     let mut functions = Vec::<ChatCompletionFunctions>::new();
 
     call_function(&mut handler, "expand_actions", "{}");
@@ -89,10 +87,16 @@ pub async fn run(agent: &mut Agent, mut user_input:bool) -> Result<()> {
         let timestamp_str = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f UTC").to_string();
         data.insert("timestamp".into(), timestamp_str);
         let json = json!(data);
-        let json_str = json.as_str().ok_or("{}").unwrap();
-        let sys_str = call_function(&mut agent.handler, "renderSysMsg", json_str)?;
+        println!("json is {}", json);
 
-        agent.log.change_sys_msg(sys_msg(&sys_str)?);
+        let json_str = &json.to_string();
+        let sys_str = call_function(&mut agent.handler, "renderSysMsg", json_str)?;
+        let value: Value = serde_json::from_str(sys_str.as_str()).unwrap();
+        let sys_str_ = value.to_string();
+
+        println!("json_str: {}  System message string: {}", json_str, sys_str_);
+
+        agent.log.change_sys_msg(sys_msg(&sys_str_)?);
  
         let msgs = agent.log.to_request_msgs(agent.model.as_str())?;
         println!("{}", color::Fg(color::White));

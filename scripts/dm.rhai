@@ -13,7 +13,12 @@ XP: ${this.xp}
 Gold: ${this.gold}
 
 Inventory:
-${this.inventory.reduce(|l| l + this + "\n", "")}
+${  let l = "";
+    for i in this.inventory { 
+        l += i;
+    }; 
+    l
+}
 `;
 }
 
