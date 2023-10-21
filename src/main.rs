@@ -18,7 +18,7 @@ use agent::{startup, run};
 async fn main() -> Result<()> {
     let mut agent = startup("scripts/dm.rhai",
                             "gpt-4")?;
-    run(&mut agent).await?;
+    run(&mut agent, false).await?;
     Ok(())
 }
 

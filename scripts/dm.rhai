@@ -1,20 +1,34 @@
 fn init() {
-    this.sys = "You are a dungeon master.";
+    this.sys = "You are a dungeon master. Introduce yourself to the player.";
     this.msgHeader = "Relevant state:\n\n";
 
-    this.relevant = ["health", "score"];
+    this.relevant = ["user", "hp", "xp", "inventory"];
 
     this.hp = 10;
-    this.score = 0;
+    this.xp = 0;
+    this.user = #{ name: "jason" };
+    this.gold = 100;
+
+    this.inventory = ["torch"];
+
     this.actions = #{
         rollDice: #{
             descr: "Roll a N-sided die",
             params: #{ sides: #{ type: "integer", descr: "num sides" }}
         },
-        changeHitPoints: #{
-            descr: "Modify player hit points",
-            params: #{ delta: #{ type: "integer", descr: "HP change, can be negative" }}
+        modifyStat: #{
+            descr: "Increment/decrement numeric stat such as hp, xp, etc.",
+            params: #{
+                stat: #{ type: "string", descr: "Which stat to change" },
+                delta: #{ type: "integer", descr: "Change, can be negative" }
+            }
+        },
+        modifyInventory: #{
+            descr: "Add or remove items from player inventory",
+            params: #{ operation: #{ type: "string", descr: "add or remove" },
+                       itemName: #{ type: "string", descr: "name of item" } }
         }
+
     };
 }
 
@@ -22,8 +36,16 @@ fn rollDice(args) {
     rand(1..args.sides);
 }
 
-fn changeHitPoints(args) {
-    this.hp += args.delta;
+fn modifyStat(args) {
+    this[args.stat] += args.delta;
+}
+
+fn modifyInventory(args) {
+    if args.operation == "add" {
+        this.inventory += args.itemName;
+    } else {
+        this.inventory.retain( |i| i != args.itemName );
+    }
 }
 
 fn evalExitStep() {

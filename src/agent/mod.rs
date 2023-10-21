@@ -68,11 +68,10 @@ use std::io::{self, Write};
 use termion::{color, style};
 
 
-pub async fn run(agent: &mut Agent) -> Result<()> {
+pub async fn run(agent: &mut Agent, mut user_input:bool) -> Result<()> {
     println!("Run agent..");
 
     let mut input = String::new();
-    let mut user_input = true;
 
     loop {
         if user_input {
