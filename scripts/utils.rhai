@@ -32,5 +32,11 @@ fn get_relevant(ignore) {
     obj 
 };
 
-print(get_relevant(""))
+fn show_fields(from, fields) {
+    let obj = #{};
+    for field in fields {
+      obj[field] = from[field];
+    };
+    obj.to_json()     
+}
 

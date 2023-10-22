@@ -3,7 +3,7 @@ use anyhow::{Result, anyhow};
 use crate::chatlog;
 use crate::chatlog::{ChatLog, sys_msg, user_msg, agent_msg, fn_call_msg, fn_result_msg};
 
-use crate::scripts::{Handler, get_actions, get_relevant_state, get_sys_msg, call_function};
+use crate::scripts::{Handler, get_actions, goto_stage, call_function};
 
 use crate::scripts;
 
@@ -67,10 +67,27 @@ use std::io::{self, Write};
 
 use termion::{color, style};
 
-pub async fn goto_stage(agent: &mut Agent, stage: &String) -> Result<()> {
+pub async fn next_stage(agent: &mut Agent, stage: &String) -> Result<()> {
     println!();
     println!("Goto stage: {}", stage);
     println!();
+
+    goto_stage(&mut agent.handler, stage);
+    let mut functions = Vec::<ChatCompletionFunctions>::new();
+
+    call_function(&mut agent.handler, "expand_actions", "{}");
+    let actions = get_actions(&mut agent.handler)?;
+    
+    for (fn_name, info) in &actions {
+        let info_map = dyn_map!(info, "")?;
+        let description = dyn_str!(info_map, "description")?;
+        let info_json = json!(&info_map);
+        println!("descr={} json={}", description, info_json);
+        functions.push(chat_fn(fn_name.to_string(), description, info_json)?); 
+        println!("Found function: {}", fn_name);
+    }
+    agent.functions = functions;
+
     Ok(())
 }
 
@@ -120,10 +137,15 @@ pub async fn run(agent: &mut Agent, mut user_input:bool) -> Result<()> {
             println!("Call result: {}", output);
             agent.log.add(fn_result_msg(&fn_name, &output)?);
 
-            let next_step_ = call_function( &mut agent.handler, "evalExitStep", "{}" )?;
+            let next_step_ = call_function( &mut agent.handler, "evalExitStage", "{}" )?;
             let next_step = json_str!(next_step_);
-            if next_step != "()" {
-                goto_stage(agent, &next_step).await?;
+            if next_step.contains("Function not found") {
+                println!("Missing evalExitStage");
+            } else {
+                println!("evalExitStage result: *{}*", next_step);
+                if next_step != "" && next_step != "()" {
+                    next_stage(agent, &next_step).await?;
+                 }
             }
            //  if next_step != () then load another script
             // and pass in state

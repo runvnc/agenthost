@@ -69,7 +69,6 @@ fn eprint_error(input: &str, mut err: EvalAltResult) {
     }
 }
 
-
 use std::path::Path;
 use std::ffi::OsStr;
 
@@ -90,6 +89,7 @@ pub fn init(path: &str) -> Result<Handler>  {
     stdout().flush().expect("flush stdout");
 
     let mut engine = Engine::new();
+    engine.set_max_map_size(200);
 
     engine.register_global_module(RandomPackage::new().as_shared_module());
 
@@ -133,13 +133,13 @@ pub fn init(path: &str) -> Result<Handler>  {
     Ok(handler)
 }
 
-/*
-pub fn goto_stage(handler: &mut Handler, stage: &str) {
+pub fn goto_stage(handler: &mut Handler, stage: &str) -> Result<()> {
+    let path = handler.dir.as_str().to_owned() + "/" + stage+".rhai";
     println!("> Loading script file: {path} with utils.rhai appended");
    
-    let with_utils = cat_files(path, "scripts/utils.rhai")?;
+    let with_utils = cat_files(path.as_str(), "scripts/utils.rhai")?;
 
-    let ast = match engine.compile_with_scope(&scope, with_utils.as_str()) {
+    let ast = match handler.engine.compile_with_scope(&handler.scope, with_utils.as_str()) {
         Ok(ast) => ast,
         Err(err) => {
             eprintln!("! Error: {err}");
@@ -147,7 +147,20 @@ pub fn goto_stage(handler: &mut Handler, stage: &str) {
             return Err(anyhow!("Compilation failed."));
         }
     };
-} */
+
+    let options = CallFnOptions::new()
+        .eval_ast(false)
+        .bind_this_ptr(&mut handler.states);
+
+    let result = handler.engine.call_fn_with_options::<()>(options, &mut handler.scope, &ast, "init", ());
+
+    if let Err(err) = result {
+        eprintln!("Script init() error: {err}")
+    }
+
+    handler.ast = ast;
+    Ok( () )
+} 
 
 pub fn get_actions(handler: &mut Handler) -> Result<rhai::Map> {
     let states_map = dyn_map!(handler.states, "Could not access states as map.")?;

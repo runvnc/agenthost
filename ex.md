@@ -1,1 +1,0 @@
-In Rust, the data structure most similar to an object or map in JavaScript is `HashMap`. A `HashMap` stores a collection of key-value pairs, where each key maps to exactly one value. Keys must be unique, similar to the properties of an object in JavaScript.

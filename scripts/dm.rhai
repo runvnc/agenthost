@@ -9,28 +9,17 @@ Timestamp: ${data.timestamp}
 
 Username: ${this.user}
 
-HP: ${this.HP}
-
-XP: ${this.XP}
-
-Gold: ${this.Gold}
-
-Inventory:
-${  let l = "";
-    for i in this.inventory { 
-        l += "- " + i;
-    }; 
-    l
-}
+${show_fields(this, ["HP", "XP", "Gold", "inventory"])}
 `;
+
 }
 
 fn renderUserMsg(text, data) {
     `[${data.timestamp}]:  ${text}`;
 }
 
-fn evalExitStage() {
-    if this.hp <= 0 { "gameOver" } else { () }
+fn evalExitStage(ignore) {
+    if this.HP <= 0 { "gameover" } else { () }
 }
 
 fn init() {
