@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
                 self.log.add(user_msg(&input)?);
             }
   */
-    agent.run(false).await?;
+    agent.run_some(None).await?;
     Ok(())
 }
 

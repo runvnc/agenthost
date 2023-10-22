@@ -33,13 +33,16 @@ impl Agent {
         let mut log = ChatLog::new();
         let chat = OpenAIChat::new(model.to_string());
         let mut handler = scripts::init(script_path)?;
-      
-        let mut functions = self.load_actions();
+    
+        let mut instance = Self{ functions: Vec::<ChatCompletionFunctions>::new(),
+                              model: model.to_string(), log, chat, handler };
 
-        Ok( Self { functions, model: model.to_string(), log, chat, handler } )
+        instance.functions = instance.load_actions()?;
+
+        Ok( instance )
     }
 
-    fn load_actions(&mut self) -> Result<Vec::<ChatCompletionFunctions> {
+    fn load_actions(&mut self) -> Result<Vec::<ChatCompletionFunctions>> {
         let mut functions = Vec::<ChatCompletionFunctions>::new();
 
         call_function(&mut self.handler, "expand_actions", "{}");
@@ -56,12 +59,12 @@ impl Agent {
 
     pub async fn next_stage(&mut self, stage: &String) -> Result<()> {
         goto_stage(&mut self.handler, stage);
-        self.functions = self.load_actions();
+        self.functions = self.load_actions()?;
         Ok( () )
     }
 
     pub fn call_ret_string(&mut self, fn_name: &str, args_json: &str) -> Result<String> {
-        let res_json = call_function(&mut self.handler, fn_name, args_json)
+        let res_json = call_function(&mut self.handler, fn_name, args_json)?;
         let str_ = json_str!(res_json);
         Ok( str_ )
     }
@@ -70,11 +73,11 @@ impl Agent {
         call_function(&mut self.handler, fn_name, args_json)
     }
 
-    pub fn process_fn_call(fn_name: &str, args_json: &str) -> Result<()> {
-        self.log.add(fn_call_msg(&fn_name, &fn_args)?);
+    pub async fn process_fn_call(&mut self, fn_name: &str, fn_args: &str) -> Result<()> {
+        self.log.add(fn_call_msg(&fn_name.to_string(), &fn_args.to_string())?);
                     
-        let output = self.call(fn_name.as_str(), fn_args.as_str())?; 
-        self.log.add(fn_result_msg(&fn_name, &output)?);
+        let output = self.call(fn_name, fn_args)?; 
+        self.log.add(fn_result_msg(&fn_name.to_string(), &output.to_string())?);
 
         let next_step = self.call_ret_string("evalExitStage", "{}" )?;
         if next_step.contains("Function not found") {
@@ -104,11 +107,9 @@ impl Agent {
     }
 
     pub async fn run_some(&mut self, input: Option<&str>) -> Result<()> {
-        let mut input = String::new();
-
         loop {
-            if let input_str = Some(input) {
-                self.log.add(user_msg(&input_str)?);
+            if let Some(input_str) = input {
+                self.log.add(user_msg(&input_str.to_string())?);
             }
 
             self.update_sys_msg();
@@ -121,12 +122,13 @@ impl Agent {
             ).await?;
 
             if fn_name != "" {
-                self.process_fn_call(&fn_name, &fn_args)?;
+                self.process_fn_call(&fn_name, &fn_args).await?;
             } else {
                 self.log.add(agent_msg(&text)?);
                 break;
             }
         }
+        Ok( () )
     }
 }
 
