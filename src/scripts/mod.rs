@@ -1,6 +1,8 @@
 use rhai::{CallFnOptions, Dynamic, Engine,
            EvalAltResult, Position, Map, Scope, AST};
 use std::io::{stdout, Write};
+use std::path::{Path, PathBuf};
+
 use rhai::packages::Package;
 use rhai_rand::RandomPackage;
 
@@ -8,6 +10,8 @@ use anyhow::{Result, anyhow};
 
 use crate::{dyn_map, dyn_str};
 use crate::cat::{cat_files};
+use rhai_fs::FilesystemPackage;
+
 
 #[derive(Debug)]
 pub struct Handler {
@@ -69,7 +73,6 @@ fn eprint_error(input: &str, mut err: EvalAltResult) {
     }
 }
 
-use std::path::Path;
 use std::ffi::OsStr;
 
 fn get_directory(file_path: &str) -> String {
@@ -85,13 +88,19 @@ fn get_directory(file_path: &str) -> String {
 pub fn init(path: &str) -> Result<Handler>  {
     let dir = get_directory(path);
 
-    print!("Script file: {}  directory: {}", path, dir);
     stdout().flush().expect("flush stdout");
 
     let mut engine = Engine::new();
     engine.set_max_map_size(200);
 
     engine.register_global_module(RandomPackage::new().as_shared_module());
+
+    let package = FilesystemPackage::new();
+    package.register_into_engine(&mut engine);
+
+    //std::env::set_current_dir(Path::new(env!("CARGO_MANIFEST_DIR")).join("examples")).unwrap();
+
+    engine.register_fn("path", sandboxed_path);
 
     let states_map = Map::new();
     let states_dyn: Dynamic = states_map.into();
@@ -203,3 +212,19 @@ pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) ->
     };
     Ok( output )
 }
+
+fn sandboxed_path(str_path: &str) -> Result<PathBuf, Box<EvalAltResult>> {
+    let root_path = PathBuf::from("sandbox").canonicalize().unwrap();
+    let mut path = PathBuf::from(str_path);
+
+    if path.is_relative() {
+        path = root_path.join(path);
+    }
+
+    match path.canonicalize() {
+        Ok(p) => p.starts_with(root_path).then(|| path),
+        Err(e) => return Err(e.to_string().into()),
+    }
+    .ok_or_else(|| "Path out of bounds".into())
+}
+

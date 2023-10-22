@@ -47,8 +47,10 @@ fn init() {
             params: #{ operation: #{ type: "string", descr: "add or remove" },
                        itemName: #{ type: "string", descr: "name of item" } }
         }
-
     };
+
+    let welcome = open_file(path("welcome.txt")); 
+    print(welcome.read_string());
 }
 
 fn rollDice(args) {

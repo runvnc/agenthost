@@ -54,9 +54,9 @@ pub fn startup(script_path: &str,
         let info_map = dyn_map!(info, "")?;
         let description = dyn_str!(info_map, "description")?;
         let info_json = json!(&info_map);
-        println!("descr={} json={}", description, info_json);
+        //println!("descr={} json={}", description, info_json);
         functions.push(chat_fn(fn_name.to_string(), description, info_json)?); 
-        println!("Found function: {}", fn_name);
+        //println!("Found function: {}", fn_name);
     }
     Ok( Agent::new(functions, log, chat, model.to_string(), handler) )
 }
@@ -68,9 +68,9 @@ use std::io::{self, Write};
 use termion::{color, style};
 
 pub async fn next_stage(agent: &mut Agent, stage: &String) -> Result<()> {
-    println!();
-    println!("Goto stage: {}", stage);
-    println!();
+    //println!();
+    //println!("Goto stage: {}", stage);
+    //println!();
 
     goto_stage(&mut agent.handler, stage);
     let mut functions = Vec::<ChatCompletionFunctions>::new();
@@ -82,9 +82,9 @@ pub async fn next_stage(agent: &mut Agent, stage: &String) -> Result<()> {
         let info_map = dyn_map!(info, "")?;
         let description = dyn_str!(info_map, "description")?;
         let info_json = json!(&info_map);
-        println!("descr={} json={}", description, info_json);
+        //println!("descr={} json={}", description, info_json);
         functions.push(chat_fn(fn_name.to_string(), description, info_json)?); 
-        println!("Found function: {}", fn_name);
+        //println!("Found function: {}", fn_name);
     }
     agent.functions = functions;
 
@@ -92,7 +92,7 @@ pub async fn next_stage(agent: &mut Agent, stage: &String) -> Result<()> {
 }
 
 pub async fn run(agent: &mut Agent, mut user_input:bool) -> Result<()> {
-    println!("Run agent..");
+    //println!("Run agent..");
 
     let mut input = String::new();
 
@@ -110,7 +110,6 @@ pub async fn run(agent: &mut Agent, mut user_input:bool) -> Result<()> {
         let timestamp_str = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f UTC").to_string();
         data.insert("timestamp".into(), timestamp_str);
         let json = json!(data);
-        println!("json is {}", json);
 
         let json_string = &json.to_string();
         let sys_str = call_function(&mut agent.handler, "renderSysMsg", json_string)?;
@@ -134,22 +133,19 @@ pub async fn run(agent: &mut Agent, mut user_input:bool) -> Result<()> {
             let output = call_function(&mut agent.handler, 
                                        fn_name.as_str(),
                                        fn_args.as_str())?; 
-            println!("Call result: {}", output);
+            //println!("Call result: {}", output);
             agent.log.add(fn_result_msg(&fn_name, &output)?);
 
             let next_step_ = call_function( &mut agent.handler, "evalExitStage", "{}" )?;
             let next_step = json_str!(next_step_);
             if next_step.contains("Function not found") {
-                println!("Missing evalExitStage");
+                //println!("Missing evalExitStage");
             } else {
-                println!("evalExitStage result: *{}*", next_step);
+                //println!("evalExitStage result: *{}*", next_step);
                 if next_step != "" && next_step != "()" {
                     next_stage(agent, &next_step).await?;
                  }
             }
-           //  if next_step != () then load another script
-            // and pass in state
-            //
             user_input = false;
         } else {
             agent.log.add(agent_msg(&text)?);
