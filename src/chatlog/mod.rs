@@ -113,7 +113,7 @@ impl ChatLog {
             self.messages.push(msg);
         }
         let content: String = self.messages[0].message.content.as_ref().expect("The value is None").to_string();
-        println!("System message changed to:\n{}", content);
+        //println!("System message changed to:\n{}", content);
     }
 
     pub fn to_request_msgs(&mut self, model: &str) -> Result<Vec<ChatCompletionRequestMessage>> {

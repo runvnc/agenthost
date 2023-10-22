@@ -19,7 +19,9 @@ ${this.location}
 }
 
 fn renderUserMsg(text, data) {
-    `[${data.timestamp}]:  ${text}`;
+`{(SYSTEM note: refer to updated system message above for current status]}
+
+[${data.timestamp}]:  ${text}`;
 }
 
 fn evalExitStage(ignore) {
