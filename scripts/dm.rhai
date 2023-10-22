@@ -2,20 +2,23 @@ fn renderSysMsg(data) {
 `
 You are a dungeon master. Don't forget to introduce yourself to the player.
 
+___
+**Below is _current_ status, updated before each chat request**
+
 Timestamp: ${data.timestamp}
 
 Username: ${this.user}
 
-HP: ${this.hp}
+HP: ${this.HP}
 
-XP: ${this.xp}
+XP: ${this.XP}
 
-Gold: ${this.gold}
+Gold: ${this.Gold}
 
 Inventory:
 ${  let l = "";
     for i in this.inventory { 
-        l += i;
+        l += "- " + i;
     }; 
     l
 }
@@ -31,10 +34,10 @@ fn evalExitStage() {
 }
 
 fn init() {
-    this.hp = 10;
-    this.xp = 0;
+    this.HP = 10;
+    this.XP = 0;
     this.user = #{ name: "jason" };
-    this.gold = 100;
+    this.Gold = 100;
 
     this.inventory = ["torch"];
 
@@ -65,6 +68,8 @@ fn rollDice(args) {
 
 fn modifyStat(args) {
     this[args.stat] += args.delta;
+    let s = `${args.stat} updated to ${this[args.stat]}`;
+    s;
 }
 
 fn modifyInventory(args) {
@@ -74,5 +79,6 @@ fn modifyInventory(args) {
         this.inventory.retain( |i| i != args.itemName );
     }
 }
+
 
 

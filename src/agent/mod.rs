@@ -92,9 +92,7 @@ pub async fn run(agent: &mut Agent, mut user_input:bool) -> Result<()> {
         let json_str = &json.to_string();
         let sys_str = call_function(&mut agent.handler, "renderSysMsg", json_str)?;
         let value: Value = serde_json::from_str(sys_str.as_str()).unwrap();
-        let sys_str_ = value.to_string();
-
-        println!("json_str: {}  System message string: {}", json_str, sys_str_);
+        let sys_str_ = value.as_str().unwrap_or("").to_string();
 
         agent.log.change_sys_msg(sys_msg(&sys_str_)?);
  

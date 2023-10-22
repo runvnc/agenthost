@@ -107,8 +107,13 @@ impl ChatLog {
     }
 
     pub fn change_sys_msg(&mut self, msg: ChatMessage) {
-        self.messages[0] = msg;
-        println!("System message changed to {:?}", self.messages[0].message.content);
+        if self.messages.len() > 0 {
+            self.messages[0] = msg;
+        } else {
+            self.messages.push(msg);
+        }
+        let content: String = self.messages[0].message.content.as_ref().expect("The value is None").to_string();
+        println!("System message changed to:\n{}", content);
     }
 
     pub fn to_request_msgs(&mut self, model: &str) -> Result<Vec<ChatCompletionRequestMessage>> {
