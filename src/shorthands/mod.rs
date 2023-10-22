@@ -1,7 +1,3 @@
-
-
-
-
 #[macro_export]
 macro_rules! s {
     ($s:expr) => { $s.to_string() }
@@ -25,3 +21,12 @@ macro_rules! dyn_str {
     };
 }
 
+#[macro_export]
+macro_rules! json_str {
+    ($sys_str:expr) => {
+        match serde_json::from_str::<Value>($sys_str.as_str()) {
+            Ok(value) => value.as_str().unwrap_or("").to_string(),
+            Err(_) => String::new(),
+        }
+    };
+}

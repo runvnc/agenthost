@@ -15,7 +15,7 @@ use async_openai::types::ChatCompletionFunctions;
 use std::collections::HashMap;
 use serde_json::Value;
 
-use crate::{s, dyn_str, dyn_map};
+use crate::{s, json_str, dyn_str, dyn_map};
 
 pub struct Agent {
     functions: Vec::<ChatCompletionFunctions>,
@@ -67,6 +67,12 @@ use std::io::{self, Write};
 
 use termion::{color, style};
 
+pub async fn goto_stage(agent: &mut Agent, stage: &String) -> Result<()> {
+    println!();
+    println!("Goto stage: {}", stage);
+    println!();
+    Ok(())
+}
 
 pub async fn run(agent: &mut Agent, mut user_input:bool) -> Result<()> {
     println!("Run agent..");
@@ -89,10 +95,9 @@ pub async fn run(agent: &mut Agent, mut user_input:bool) -> Result<()> {
         let json = json!(data);
         println!("json is {}", json);
 
-        let json_str = &json.to_string();
-        let sys_str = call_function(&mut agent.handler, "renderSysMsg", json_str)?;
-        let value: Value = serde_json::from_str(sys_str.as_str()).unwrap();
-        let sys_str_ = value.as_str().unwrap_or("").to_string();
+        let json_string = &json.to_string();
+        let sys_str = call_function(&mut agent.handler, "renderSysMsg", json_string)?;
+        let sys_str_ = json_str!(sys_str);
 
         agent.log.change_sys_msg(sys_msg(&sys_str_)?);
  
@@ -115,11 +120,12 @@ pub async fn run(agent: &mut Agent, mut user_input:bool) -> Result<()> {
             println!("Call result: {}", output);
             agent.log.add(fn_result_msg(&fn_name, &output)?);
 
-            //let next_step = call_function( &mut agent.handler, "evalExitStep", "{}" );
-            //if next_step != "()" {
-            //    gotoStage(&mut agent.handler, next_step).await?;
-            //}
-            // if next_step != () then load another script
+            let next_step_ = call_function( &mut agent.handler, "evalExitStep", "{}" )?;
+            let next_step = json_str!(next_step_);
+            if next_step != "()" {
+                goto_stage(agent, &next_step).await?;
+            }
+           //  if next_step != () then load another script
             // and pass in state
             //
             user_input = false;
