@@ -133,13 +133,13 @@ impl ChatLog {
                 break;
            }
         };
-        println!("{}({} of {} max tokens)", style::Reset,tokens, max_tokens);
+        //println!("{}({} of {} max tokens)", style::Reset,tokens, max_tokens);
         Ok( msgs )
     }
 }
 
 pub fn init() {
-    println!("chat_log: initializing tokenizer..");
+    //println!("chat_log: initializing tokenizer..");
     BPE.set(cl100k_base().unwrap()).unwrap();
 }
 

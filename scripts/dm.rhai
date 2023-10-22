@@ -10,6 +10,10 @@ Timestamp: ${data.timestamp}
 Username: ${this.user}
 
 ${show_fields(this, ["HP", "XP", "Gold", "inventory"])}
+Current location:
+
+${this.location}
+
 `;
 
 }
@@ -29,6 +33,7 @@ fn init() {
     this.Gold = 100;
 
     this.inventory = ["torch"];
+    this.location = "";
 
     this.actions = #{
         rollDice: #{
@@ -46,11 +51,18 @@ fn init() {
             descr: "Add or remove items from player inventory",
             params: #{ operation: #{ type: "string", descr: "add or remove" },
                        itemName: #{ type: "string", descr: "name of item" } }
+        },
+        move: #{
+            descr: "Move the player to a new location.",
+            params: #{ location: #{ type: "string", descr: "The id of the location" } }
         }
+
     };
 
     let welcome = open_file(path("welcome.txt")); 
     print(welcome.read_string());
+
+    this.call(move, #{ location: "town_square" });
 }
 
 fn rollDice(args) {
@@ -71,5 +83,9 @@ fn modifyInventory(args) {
     }
 }
 
+fn move(args) {
+    let loc = open_file(path("locations/"+args.location+".txt")); 
+    this.location = loc.read_string();
+}
 
 

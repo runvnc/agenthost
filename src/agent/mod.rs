@@ -118,14 +118,14 @@ pub async fn run(agent: &mut Agent, mut user_input:bool) -> Result<()> {
         agent.log.change_sys_msg(sys_msg(&sys_str_)?);
  
         let msgs = agent.log.to_request_msgs(agent.model.as_str())?;
-        println!("{}", color::Fg(color::White));
+        print!("{}", color::Fg(color::White));
 
         let (text, fn_name, fn_args) = agent.chat.send_request(
             msgs.clone(), 
             agent.functions.clone()
         ).await?;
 
-        println!("{}", style::Reset);
+        print!("{}", style::Reset);
 
         if fn_name != "" { 
             agent.log.add(fn_call_msg(&fn_name, &fn_args)?);
