@@ -1,3 +1,4 @@
+#![allow(warnings)]
 use anyhow::{Result, anyhow};
 
 use crate::chatlog;
@@ -15,27 +16,47 @@ use async_openai::types::ChatCompletionFunctions;
 use std::collections::HashMap;
 use serde_json::Value;
 
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use crate::connector::*;
+
+use tokio::sync::mpsc;
+
 use crate::{s, json_str, dyn_str, dyn_map};
+
+pub enum AgentMessage {
+    Fragment(String),
+    Complete(String),
+    FunctionCall { 
+        name: String, 
+        params: Vec<String>, 
+        result: String 
+    }
+}
+
 
 pub struct Agent {
     functions: Vec::<ChatCompletionFunctions>,
     log: ChatLog,
     model: String,
+    interrupt_receiver: Arc<Mutex<mpsc::Receiver<()>>>, 
     chat: OpenAIChat,
     handler: Handler 
 }
 
 impl Agent {
-    pub fn new(script_path: &str, model: &str) -> Result<Self> {
+    pub fn new(script_path: String, 
+              interrupt_receiver: Arc<Mutex<mpsc::Receiver<()>>>) -> Result<Self> {
         println!("AgentHost 0.1 Startup..");
         chatlog::init();
-
+        let model = "gpt-4".to_string();
         let mut log = ChatLog::new();
-        let chat = OpenAIChat::new(model.to_string());
-        let mut handler = scripts::init(script_path)?;
+        let chat = OpenAIChat::new(model);
+        let mut handler = scripts::init(&script_path)?;
     
         let mut instance = Self{ functions: Vec::<ChatCompletionFunctions>::new(),
-                              model: model.to_string(), log, chat, handler };
+                              model, 
+                              interrupt_receiver, log, chat, handler };
 
         instance.functions = instance.load_actions()?;
 
@@ -106,7 +127,8 @@ impl Agent {
         Ok( () )
     }
 
-    pub async fn run_some(&mut self, input: Option<&str>) -> Result<()> {
+    pub async fn run_some(&mut self, input: Option<&str>, 
+                          connector: &Connector) -> Result<()> {
         loop {
             if let Some(input_str) = input {
                 self.log.add(user_msg(&input_str.to_string())?);
