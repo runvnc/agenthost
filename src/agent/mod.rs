@@ -18,11 +18,12 @@ use serde_json::Value;
 
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use crate::connector::*;
 
 use tokio::sync::mpsc;
 
 use crate::{s, json_str, dyn_str, dyn_map};
+
+//unsafe impl Send for Agent {}
 
 pub enum AgentMessage {
     Fragment(String),
@@ -34,29 +35,42 @@ pub enum AgentMessage {
     }
 }
 
+{
+    let (tx_script, rx_master) = std::sync::mpsc::channel();
+    // Channel: Master -> Script
+    let (tx_master, rx_script) = std::sync::mpsc::channel();
+
+    // Create Engine
+    let mut engine = Engine::new();
+    let mut agent = Agent::new("scripts/dm.rhai".to_string()).unwrap();
+     engine.register_fn("get", move || rx_script.recv().unwrap())
+           .register_fn("put", move |v: i64| tx_script.send(v).unwrap());
+
+    agent.run_some(Some(msg.clone().as_str())).await.unwrap();
+}
 
 pub struct Agent {
     functions: Vec::<ChatCompletionFunctions>,
     log: ChatLog,
     model: String,
-    interrupt_receiver: Arc<Mutex<mpsc::Receiver<()>>>, 
-    chat: OpenAIChat,
+//    chat: OpenAIChat,
     handler: Handler 
 }
 
 impl Agent {
-    pub fn new(script_path: String, 
-              interrupt_receiver: Arc<Mutex<mpsc::Receiver<()>>>) -> Result<Self> {
+    pub fn new(script_path: String) -> Result<Self> {
         println!("AgentHost 0.1 Startup..");
         chatlog::init();
         let model = "gpt-4".to_string();
         let mut log = ChatLog::new();
-        let chat = OpenAIChat::new(model);
+        let chat = OpenAIChat::new(model.clone());
         let mut handler = scripts::init(&script_path)?;
-    
+
         let mut instance = Self{ functions: Vec::<ChatCompletionFunctions>::new(),
-                              model, 
-                              interrupt_receiver, log, chat, handler };
+                              model, log, handler };
+
+        //let mut instance = Self{ functions: Vec::<ChatCompletionFunctions>::new(),
+        //                      model, log, chat, handler };
 
         instance.functions = instance.load_actions()?;
 
@@ -127,8 +141,9 @@ impl Agent {
         Ok( () )
     }
 
-    pub async fn run_some(&mut self, input: Option<&str>, 
-                          connector: &Connector) -> Result<()> {
+    pub async fn run_some(&mut self, input: Option<&str>) -> Result<()> {
+        println!("OK");
+        /*
         loop {
             if let Some(input_str) = input {
                 self.log.add(user_msg(&input_str.to_string())?);
@@ -149,7 +164,7 @@ impl Agent {
                 self.log.add(agent_msg(&text)?);
                 break;
             }
-        }
+        } */
         Ok( () )
     }
 }

@@ -6,7 +6,7 @@ use std::io::Read;
 
 use anyhow::{Result};
 
-mod connector;
+//mod connector;
 mod cat;
 mod shorthands;
 mod chatlog;
@@ -21,7 +21,8 @@ use api::server;
 #[cfg(not(feature = "no_object"))]
 #[tokio::main]
 async fn main() -> Result<()> {
-    api::server()
+    api::server().await;
+    Ok( () )
 }
 
 
