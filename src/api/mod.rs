@@ -9,6 +9,7 @@ use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use warp::{sse::Event, Filter};
 use rhai::{Engine};
+use tokio::runtime::Runtime;
 
 use crate::agent::Agent;
 
@@ -70,15 +71,26 @@ async fn handle_msg(my_id: usize, msg:String, users: Users) -> Result<impl warp:
     // Channel: Master -> Script
     let (tx_master, rx_script) = std::sync::mpsc::channel();
 
-    // Create Engine
-    let mut engine = Engine::new();
-    let mut agent = Agent::new("scripts/dm.rhai".to_string()).unwrap();
-     engine.register_fn("get", move || rx_script.recv().unwrap())
-           .register_fn("put", move |v: i64| tx_script.send(v).unwrap());
+    let tx = users.lock().unwrap().get(&my_id);
 
-    agent.run_some(Some(msg.clone().as_str())).await.unwrap();
+    std::thread::spawn( move || {
+        let rt = Runtime::new().unwrap();
 
-    // This is the main processing thread
+        let mut engine = Engine::new();
+        let mut agent = Agent::new("scripts/dm.rhai".to_string()).unwrap();
+         engine.register_fn("get", move || rx_script.recv().unwrap())
+            .register_fn("put", move |v: i64| tx_script.send(v).unwrap());
+
+        rt.block_on(agent.run_some(Some(msg.clone().as_str()), tx));
+    });
+
+    /*users.lock().unwrap().retain(|uid, tx| {
+        if my_id == *uid {
+            true
+        } else {
+            tx.send(Message::Reply(new_msg.clone())).is_ok()
+        }
+    }); */
 
     println!("Starting main loop...");
 
@@ -103,13 +115,13 @@ static NEXT_USER_ID: AtomicUsize = AtomicUsize::new(1);
 
 /// Message variants.
 #[derive(Debug)]
-enum Message {
+pub enum Message {
     UserId(usize),
     Reply(String),
 }
 
 #[derive(Debug)]
-struct NotUtf8;
+pub struct NotUtf8;
 impl warp::reject::Reject for NotUtf8 {}
 
 /// Our state of currently connected users.

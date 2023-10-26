@@ -23,6 +23,8 @@ use tokio::sync::mpsc;
 
 use crate::{s, json_str, dyn_str, dyn_map};
 
+use crate::api::{Message};
+
 //unsafe impl Send for Agent {}
 
 pub enum AgentMessage {
@@ -33,20 +35,6 @@ pub enum AgentMessage {
         params: Vec<String>, 
         result: String 
     }
-}
-
-{
-    let (tx_script, rx_master) = std::sync::mpsc::channel();
-    // Channel: Master -> Script
-    let (tx_master, rx_script) = std::sync::mpsc::channel();
-
-    // Create Engine
-    let mut engine = Engine::new();
-    let mut agent = Agent::new("scripts/dm.rhai".to_string()).unwrap();
-     engine.register_fn("get", move || rx_script.recv().unwrap())
-           .register_fn("put", move |v: i64| tx_script.send(v).unwrap());
-
-    agent.run_some(Some(msg.clone().as_str())).await.unwrap();
 }
 
 pub struct Agent {
@@ -67,7 +55,7 @@ impl Agent {
         let mut handler = scripts::init(&script_path)?;
 
         let mut instance = Self{ functions: Vec::<ChatCompletionFunctions>::new(),
-                              model, log, handler };
+                              log, model, handler };
 
         //let mut instance = Self{ functions: Vec::<ChatCompletionFunctions>::new(),
         //                      model, log, chat, handler };
@@ -141,16 +129,21 @@ impl Agent {
         Ok( () )
     }
 
-    pub async fn run_some(&mut self, input: Option<&str>) -> Result<()> {
+    pub async fn run_some(&mut self, 
+                          input: Option<&str>
+                          mpsc::UnboundedSender<Message>) -> Result<()> {
         println!("OK");
-        /*
         loop {
             if let Some(input_str) = input {
                 self.log.add(user_msg(&input_str.to_string())?);
             }
 
             self.update_sys_msg();
+            println!("Added message and updated sys log.");
+            tx.send(Message::Reply("Testing")).unwrap();
 
+ 
+            /*
             let msgs = self.log.to_request_msgs(self.model.as_str())?;
 
             let (text, fn_name, fn_args) = self.chat.send_request(
@@ -163,8 +156,9 @@ impl Agent {
             } else {
                 self.log.add(agent_msg(&text)?);
                 break;
-            }
-        } */
+            } */
+            break;
+        }
         Ok( () )
     }
 }
