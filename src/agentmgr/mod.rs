@@ -2,19 +2,22 @@ use std::collections::HashMap;
 use std::sync::{mpsc, Mutex};
 use std::thread;
 use tokio::runtime::Runtime;
+use crate::agent::Agent;
+use std::sync::Arc;
 
+#[derive(Debug)]
 pub struct AgentManager {
-    cache: Mutex<HashMap<i32, (mpsc::Sender<String>, mpsc::Receiver<String>)>>,
+    cache: Arc<Mutex<HashMap<usize, (mpsc::Sender<String>, mpsc::Receiver<String>)>>>,
 }
 
-pub impl AgentManager {
-    fn new() -> Self {
+impl AgentManager {
+    pub fn new() -> Self {
         AgentManager {
-            cache: Mutex::new(HashMap::new()),
+            cache: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
-    fn get_or_create_agent(&self, id: i32, script_path: String) -> (mpsc::Sender<String>, mpsc::Receiver<String>) {
+    pub fn get_or_create_agent(&self, id: usize, script_path: String) -> (mpsc::Sender<String>, mpsc::Receiver<String>) {
         let mut cache = self.cache.lock().unwrap();
 
         if let Some((sender, reply_receiver)) = cache.get(&id) {

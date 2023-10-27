@@ -1,5 +1,5 @@
 #![allow(warnings)]
-use anyhow::{Result, anyhow};
+use anyhow::{Result, Context, anyhow};
 
 use crate::chatlog;
 use crate::chatlog::{ChatLog, sys_msg, user_msg, agent_msg, fn_call_msg, fn_result_msg};
@@ -142,13 +142,13 @@ impl Agent {
         //    self.reply_sender.send(format!("Received: {}", message)).unwrap();
 
         loop {
-            if let Ok(input_str) = self.receiver.recv() {
-                self.log.add(user_msg(&input_str.to_string())?);
-            }
+            let input_str = self.receiver.recv().await.context("error")?; 
+            self.log.add(user_msg(&input_str.to_string())?);
+            
 
             self.update_sys_msg();
             println!("Added message and updated sys log.");
-            self.reply_sender.send(format!("Received: {}", message)).unwrap();
+            self.reply_sender.send(format!("Received: {}", input_str)).await?;
             // tx.send(api::Message::Reply("Testing".to_string())).unwrap();
  
             /*

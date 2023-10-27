@@ -13,6 +13,7 @@ mod chatlog;
 mod scripts;
 mod openai_chat;
 mod agent;
+mod agentmgr;
 mod api;
 
 use api::server;

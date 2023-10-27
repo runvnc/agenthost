@@ -14,6 +14,8 @@ use tokio::runtime::Runtime;
 use crate::agent::Agent;
 use crate::agentmgr::AgentManager;
 
+use crate::{s};
+
 pub async fn server() {
     pretty_env_logger::init();
 
@@ -23,7 +25,8 @@ pub async fn server() {
     // Turn our "state" into a new Filter...
     let users = warp::any().map(move || users.clone());
     let manager = AgentManager::new();
- 
+    let manager = warp::any().map(move || manager.clone());
+
     // POST /chat -> send message
     let chat_send = warp::path("chat")
         .and(warp::post())
@@ -37,6 +40,7 @@ pub async fn server() {
             }),
         )
         .and(users.clone())
+        .and(manager.clone())
         .and_then(handle_msg);
         
    // GET /chat -> messages stream
@@ -58,7 +62,8 @@ pub async fn server() {
     warp::serve(routes).run(([0, 0, 0, 0], 3132)).await;
 }
 
-async fn handle_msg(my_id: usize, msg:String, users: Users) -> Result<impl warp::Reply, Infallible> {
+async fn handle_msg(my_id: usize, msg:String, users: Users,
+                    manager: AgentManager) -> Result<impl warp::Reply, Infallible> {
     //user_message(my_id, msg.clone(), &users);
 
     //let (tx_script, rx_master, tx_master, rx_script) = AgentMgr::get_agent_channels(my_id);
@@ -76,9 +81,9 @@ async fn handle_msg(my_id: usize, msg:String, users: Users) -> Result<impl warp:
    // let users_lock = users.lock().unwrap();
     //let tx = users_lock.get(&my_id).unwrap().clone();
 
-    let (sender, reply_receiver) = manager.get_or_create_agent(&my_id);
+    let (sender, reply_receiver) = manager.get_or_create_agent(my_id, s!("scripts/dm.rhai"));
 
-    sender.send(&msg).unwrap();
+    sender.send(msg).unwrap();
 
     // make this a loop
     let reply = reply_receiver.recv().unwrap();
