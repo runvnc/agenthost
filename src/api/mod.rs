@@ -81,14 +81,14 @@ async fn handle_msg(my_id: usize, msg:String, users: Users,
    // let users_lock = users.lock().unwrap();
     //let tx = users_lock.get(&my_id).unwrap().clone();
 
-    let (sender, reply_receiver) = manager.get_or_create_agent(my_id, s!("scripts/dm.rhai"));
+    let (sender, mut reply_receiver) = manager.get_or_create_agent(my_id, s!("scripts/dm.rhai"));
 
-    sender.send(msg).unwrap();
+    sender.send(msg).await.unwrap();
 
     // make this a loop
-    let reply = reply_receiver.recv().unwrap();
+    let reply = reply_receiver.recv().await.unwrap();
  
-   Ok( "ok" )
+    Ok( "ok" )
 }
  
 /// Our global unique user id counter.
