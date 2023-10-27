@@ -3,11 +3,11 @@ use std::sync::{mpsc, Mutex};
 use std::thread;
 use tokio::runtime::Runtime;
 
-struct AgentManager {
+pub struct AgentManager {
     cache: Mutex<HashMap<i32, (mpsc::Sender<String>, mpsc::Receiver<String>)>>,
 }
 
-impl AgentManager {
+pub impl AgentManager {
     fn new() -> Self {
         AgentManager {
             cache: Mutex::new(HashMap::new()),
@@ -37,18 +37,5 @@ impl AgentManager {
         cache.insert(id, (sender.clone(), reply_receiver.clone()));
         (sender, reply_receiver)
     }
-}
-
-fn main() {
-    let manager = AgentManager::new();
-    
-    let (sender1, reply_receiver1) = manager.get_or_create_agent(1);
-    let (_sender2, _reply_receiver2) = manager.get_or_create_agent(2);
-
-    sender1.send("Hello, agent 1!".to_string()).unwrap();
-
-    // Get the reply from the agent
-    let reply = reply_receiver1.recv().unwrap();
-    println!("Reply from agent 1: {}", reply);
 }
 
