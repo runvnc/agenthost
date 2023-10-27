@@ -12,6 +12,7 @@ use rhai::{Engine};
 use tokio::runtime::Runtime;
 
 use crate::agent::Agent;
+use crate::agentmgr::AgentManager;
 
 pub async fn server() {
     pretty_env_logger::init();
@@ -21,7 +22,8 @@ pub async fn server() {
     let users = Arc::new(Mutex::new(HashMap::new()));
     // Turn our "state" into a new Filter...
     let users = warp::any().map(move || users.clone());
-
+    let manager = AgentManager::new();
+ 
     // POST /chat -> send message
     let chat_send = warp::path("chat")
         .and(warp::post())
@@ -57,7 +59,7 @@ pub async fn server() {
 }
 
 async fn handle_msg(my_id: usize, msg:String, users: Users) -> Result<impl warp::Reply, Infallible> {
-    user_message(my_id, msg.clone(), &users);
+    //user_message(my_id, msg.clone(), &users);
 
     //let (tx_script, rx_master, tx_master, rx_script) = AgentMgr::get_agent_channels(my_id);
     // may need to spawn an async thread
@@ -67,47 +69,21 @@ async fn handle_msg(my_id: usize, msg:String, users: Users) -> Result<impl warp:
     //
 
     // Channel: Script -> Master
-    let (tx_script, rx_master) = std::sync::mpsc::channel();
+    //let (tx_script, rx_master) = std::sync::mpsc::channel();
     // Channel: Master -> Script
-    let (tx_master, rx_script) = std::sync::mpsc::channel();
+    //let (tx_master, rx_script) = std::sync::mpsc::channel();
 
-    let tx = users.lock().unwrap().get(&my_id);
+   // let users_lock = users.lock().unwrap();
+    //let tx = users_lock.get(&my_id).unwrap().clone();
 
-    std::thread::spawn( move || {
-        let rt = Runtime::new().unwrap();
+    let (sender, reply_receiver) = manager.get_or_create_agent(&my_id);
 
-        let mut engine = Engine::new();
-        let mut agent = Agent::new("scripts/dm.rhai".to_string()).unwrap();
-         engine.register_fn("get", move || rx_script.recv().unwrap())
-            .register_fn("put", move |v: i64| tx_script.send(v).unwrap());
+    sender.send(&msg).unwrap();
 
-        rt.block_on(agent.run_some(Some(msg.clone().as_str()), tx));
-    });
-
-    /*users.lock().unwrap().retain(|uid, tx| {
-        if my_id == *uid {
-            true
-        } else {
-            tx.send(Message::Reply(new_msg.clone())).is_ok()
-        }
-    }); */
-
-    println!("Starting main loop...");
-
-    let mut value = 0_i64;
-
-    while value < 10 {
-        println!("Value: {value}");
-        // Send value to script
-        tx_master.send(value).unwrap();
-        // Receive value from script
-        value = rx_master.recv().unwrap();
-    }
-
+    // make this a loop
+    let reply = reply_receiver.recv().unwrap();
+ 
    Ok( "ok" )
-
-    //tokio::time::sleep(Duration::from_secs(seconds)).await;
-    //Ok(format!("I waited {} seconds!", seconds))
 }
  
 /// Our global unique user id counter.

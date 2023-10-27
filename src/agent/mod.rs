@@ -23,7 +23,9 @@ use tokio::sync::mpsc;
 
 use crate::{s, json_str, dyn_str, dyn_map};
 
-use crate::api::{Message};
+use crate::api;
+
+
 
 //unsafe impl Send for Agent {}
 
@@ -42,12 +44,17 @@ pub struct Agent {
     log: ChatLog,
     model: String,
 //    chat: OpenAIChat,
-    handler: Handler 
+    handler: Handler,
+    receiver: mpsc::Receiver<String>,
+    reply_sender: mpsc::Sender<String>,
 }
 
+
 impl Agent {
-    pub fn new(script_path: String) -> Result<Self> {
-        println!("AgentHost 0.1 Startup..");
+    pub fn new(script_path: String,
+               receiver: mpsc::Receiver<String>,
+               reply_sender: mpsc::Sender<String> ) -> Result<Self> {
+        println!("AgentHost 0.1 Startup agent..");
         chatlog::init();
         let model = "gpt-4".to_string();
         let mut log = ChatLog::new();
@@ -55,7 +62,8 @@ impl Agent {
         let mut handler = scripts::init(&script_path)?;
 
         let mut instance = Self{ functions: Vec::<ChatCompletionFunctions>::new(),
-                              log, model, handler };
+                              log, model, handler,
+                              receiver, reply_sender };
 
         //let mut instance = Self{ functions: Vec::<ChatCompletionFunctions>::new(),
         //                      model, log, chat, handler };
@@ -129,19 +137,19 @@ impl Agent {
         Ok( () )
     }
 
-    pub async fn run_some(&mut self, 
-                          input: Option<&str>
-                          mpsc::UnboundedSender<Message>) -> Result<()> {
+    pub async fn run(&mut self) -> Result<()> {
         println!("OK");
+        //    self.reply_sender.send(format!("Received: {}", message)).unwrap();
+
         loop {
-            if let Some(input_str) = input {
+            if let Ok(input_str) = self.receiver.recv() {
                 self.log.add(user_msg(&input_str.to_string())?);
             }
 
             self.update_sys_msg();
             println!("Added message and updated sys log.");
-            tx.send(Message::Reply("Testing")).unwrap();
-
+            self.reply_sender.send(format!("Received: {}", message)).unwrap();
+            // tx.send(api::Message::Reply("Testing".to_string())).unwrap();
  
             /*
             let msgs = self.log.to_request_msgs(self.model.as_str())?;
