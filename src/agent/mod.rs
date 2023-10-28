@@ -20,6 +20,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use tokio::sync::mpsc;
+use flume::*;
 
 use crate::{s, json_str, dyn_str, dyn_map};
 
@@ -45,15 +46,15 @@ pub struct Agent {
     model: String,
 //    chat: OpenAIChat,
     handler: Handler,
-    receiver: mpsc::Receiver<String>,
-    reply_sender: mpsc::Sender<String>,
+    receiver: flume::Receiver<String>,
+    reply_sender: flume::Sender<String>,
 }
 
 
 impl Agent {
     pub fn new(script_path: String,
-               receiver: mpsc::Receiver<String>,
-               reply_sender: mpsc::Sender<String> ) -> Result<Self> {
+               receiver: flume::Receiver<String>,
+               reply_sender: flume::Sender<String> ) -> Result<Self> {
         println!("AgentHost 0.1 Startup agent..");
         chatlog::init();
         let model = "gpt-4".to_string();
@@ -142,13 +143,13 @@ impl Agent {
         //    self.reply_sender.send(format!("Received: {}", message)).unwrap();
 
         loop {
-            let input_str = self.receiver.recv().await.context("error")?; 
+            let input_str = self.receiver.recv().context("error")?; 
             self.log.add(user_msg(&input_str.to_string())?);
             
 
             self.update_sys_msg();
             println!("Added message and updated sys log.");
-            self.reply_sender.send(format!("Received: {}", input_str)).await?;
+            self.reply_sender.send(format!("Received: {}", input_str))?;
             // tx.send(api::Message::Reply("Testing".to_string())).unwrap();
  
             /*

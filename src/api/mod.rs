@@ -10,6 +10,7 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 use warp::{sse::Event, Filter};
 use rhai::{Engine};
 use tokio::runtime::Runtime;
+use flume::*;
 
 use crate::agent::Agent;
 use crate::agentmgr::AgentManager;
@@ -81,12 +82,13 @@ async fn handle_msg(my_id: usize, msg:String, users: Users,
    // let users_lock = users.lock().unwrap();
     //let tx = users_lock.get(&my_id).unwrap().clone();
 
-    let (sender, mut reply_receiver) = manager.get_or_create_agent(my_id, s!("scripts/dm.rhai"));
+    let (sender, reply_receiver) = manager.get_or_create_agent(my_id, s!("scripts/dm.rhai"));
+    //let mut reply_receiver: &tokio::sync::mpsc::Receiver<std::string::String> = reply_receiver.clone();
 
-    sender.send(msg).await.unwrap();
+    sender.send(msg).unwrap();
 
     // make this a loop
-    let reply = reply_receiver.recv().await.unwrap();
+    let reply = reply_receiver.recv().unwrap();
  
     Ok( "ok" )
 }

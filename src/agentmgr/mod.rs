@@ -5,10 +5,11 @@ use tokio::runtime::Runtime;
 use crate::agent::Agent;
 use std::sync::Arc;
 use tokio::sync::mpsc;
+use flume::*;
 
 #[derive(Debug, Clone)]
 pub struct AgentManager {
-    cache: Arc<Mutex<HashMap<usize, (mpsc::Sender<String>, mpsc::Receiver<String>)>>>,
+    cache: Arc<Mutex<HashMap<usize, (flume::Sender<String>, flume::Receiver<String>)>>>,
 }
 
 impl AgentManager {
@@ -19,7 +20,7 @@ impl AgentManager {
     }
 
     pub fn get_or_create_agent(&self, id: usize, script_path: String) -> 
-        (mpsc::Sender<String>, mpsc::Receiver<String>) {
+        (flume::Sender<String>, flume::Receiver<String>) {
 
         let mut cache = self.cache.lock().unwrap();
 
@@ -27,17 +28,16 @@ impl AgentManager {
             return (sender.clone(), reply_receiver.clone());
         }
 
-        let (sender, receiver) = mpsc::channel();
-        let (reply_sender, reply_receiver) = mpsc::channel();
+        let (sender, mut receiver) = flume::unbounded();
+        let (reply_sender, reply_receiver) = flume::unbounded();
 
-        // Spawn a new thread for each agent.
         thread::spawn(move || {
             // Create a new Tokio Runtime for this thread.
             let rt = Runtime::new().unwrap();
             
             // Create and run the agent inside the thread.
             let agent = Agent::new(script_path, receiver, reply_sender);
-            rt.block_on(agent.run()); // Block on the async function.
+            rt.block_on(agent.expect("No agent").run()); // Block on the async function.
         });
 
         cache.insert(id, (sender.clone(), reply_receiver.clone()));
