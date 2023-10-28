@@ -18,6 +18,7 @@ use futures::StreamExt;
 
 use std::error::Error;
 
+use flume::*;
 
 use crate::s;
 
@@ -47,7 +48,8 @@ impl OpenAIChat {
 
     pub async fn send_request(&self, 
             messages: Vec<ChatCompletionRequestMessage>,
-            functions: Vec<ChatCompletionFunctions> ) -> Result<(String, String, String)> {
+            functions: Vec<ChatCompletionFunctions>,
+            reply_sender: flume::Sender<String>  ) -> Result<(String, String, String)> {
         let request = CreateChatCompletionRequestArgs::default()
             .model(&*self.model)
             .messages(messages)
@@ -61,7 +63,7 @@ impl OpenAIChat {
         let mut fn_args = String::new();
         let mut text = String::new();
 
-        let mut lock = stdout().lock();
+        //let mut lock = stdout().lock();
         while let Some(result) = stream.next().await {
             match result {
                 Ok(response) => {
@@ -69,11 +71,11 @@ impl OpenAIChat {
                         if let Some(fn_call) = &chat_choice.delta.function_call {
                             if let Some(name) = &fn_call.name {
                                 fn_name = name.clone();
-                                write!(lock, "{}", name).unwrap();
+                                //write!(lock, "{}", name).unwrap();
                             }
                             if let Some(args) = &fn_call.arguments {
                                 fn_args.push_str(args);
-                                write!(lock, "{}", args).unwrap();
+                                //write!(lock, "{}", args).unwrap();
                             }
                         }
                         if let Some(finish_reason) = &chat_choice.finish_reason {
@@ -82,13 +84,15 @@ impl OpenAIChat {
                             }
                         } else if let Some(content) = &chat_choice.delta.content {
                             text.push_str(content);
-                            write!(lock, "{}", content).unwrap();
+                            reply_sender.send_async(s!(content)).await?;
+                            print!("(reply sent) {}", content);
+                            //write!(lock, "(reply sent on reply sender)"{}", content).unwrap();
                         }
                     }
                 },
                 
                 Err(err) => {
-                    writeln!(lock, "error: {err}").unwrap();
+                    println!("error: {err}");
                 }
             }
             stdout().flush()?;

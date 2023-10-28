@@ -1,11 +1,13 @@
 use std::collections::HashMap;
 use std::sync::{Mutex};
-use std::thread;
 use tokio::runtime::Runtime;
 use crate::agent::Agent;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use flume::*;
+use tokio::runtime::*;
+use tokio::*;
+use std::thread;
 
 #[derive(Debug, Clone)]
 pub struct AgentManager {
@@ -19,7 +21,7 @@ impl AgentManager {
         }
     }
 
-    pub fn get_or_create_agent(&self, id: usize, script_path: String) -> 
+    pub async fn get_or_create_agent(&self, id: usize, script_path: String) -> 
         (flume::Sender<String>, flume::Receiver<String>) {
 
         let mut cache = self.cache.lock().unwrap();
@@ -28,19 +30,24 @@ impl AgentManager {
             return (sender.clone(), reply_receiver.clone());
         }
 
-        let (sender, mut receiver) = flume::unbounded();
-        let (reply_sender, reply_receiver) = flume::unbounded();
+        let (sender, mut receiver) = flume::bounded(500);
+        let (reply_sender, reply_receiver) = flume::bounded(500);
+        cache.insert(id, (sender.clone(), reply_receiver.clone()));
 
-        thread::spawn(move || {
-            // Create a new Tokio Runtime for this thread.
+        thread::spawn(|| {
+            let future = async move {
+                let mut agent = Agent::new(script_path, receiver, reply_sender).expect("no agent");
+                agent.run().await;
+            };
             let rt = Runtime::new().unwrap();
-            
-            // Create and run the agent inside the thread.
-            let agent = Agent::new(script_path, receiver, reply_sender);
-            rt.block_on(agent.expect("No agent").run()); // Block on the async function.
+            rt.block_on(future);
         });
 
-        cache.insert(id, (sender.clone(), reply_receiver.clone()));
+        //thread::spawn(|| async move {
+        //    let mut agent = Agent::new(script_path, receiver, reply_sender).expect("no agent");
+        //    agent.run().await;
+        //});
+
         (sender, reply_receiver)
     }
 }

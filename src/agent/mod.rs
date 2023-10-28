@@ -140,7 +140,7 @@ impl Agent {
         let mut need_user_input = true;
         loop {
             if need_user_input {
-                let input_str = self.receiver.recv().context("error")?; 
+                let input_str = self.receiver.recv_async().await.context("error")?; 
                 self.log.add(user_msg(&input_str.to_string())?);
             }
             
@@ -148,18 +148,19 @@ impl Agent {
             println!("Added message and updated sys log.");
  
             let msgs = self.log.to_request_msgs(self.model.as_str())?;
-
+            println!("Sending chat request");
             let (text, fn_name, fn_args) = self.chat.send_request(
                 msgs.clone(), 
-                self.functions.clone()
+                self.functions.clone(),
+                self.reply_sender.clone()
             ).await?;
-
+            println!("In agent, received chat request response.");
             if fn_name != "" {
                 self.process_fn_call(&fn_name, &fn_args).await?;
                 need_user_input = false;
             } else {
                 self.log.add(agent_msg(&text)?);
-                self.reply_sender.send(text)?;
+                self.reply_sender.send_async(text).await?;
                 println!("Sent reply back to API endpoint.");
                 need_user_input = true;
             }

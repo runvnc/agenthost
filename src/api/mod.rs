@@ -53,9 +53,10 @@ pub async fn server() {
 
     // GET / -> index html
     let index = warp::path::end().map(|| {
+        let html = std::fs::read_to_string("chat.html").unwrap();
         warp::http::Response::builder()
             .header("content-type", "text/html; charset=utf-8")
-            .body(INDEX_HTML)
+            .body(html)
     });
 
     let routes = index.or(chat_recv).or(chat_send);
@@ -79,19 +80,23 @@ async fn handle_msg(my_id: usize, msg:String, users: Users,
     // Channel: Master -> Script
     //let (tx_master, rx_script) = std::sync::mpsc::channel();
 
-    let users_lock = users.lock().unwrap();
-    let tx = users_lock.get(&my_id).unwrap().clone();
-
-    let (sender, reply_receiver) = manager.get_or_create_agent(my_id, s!("scripts/dm.rhai"));
+    let (sender, reply_receiver) = manager.get_or_create_agent(my_id, s!("scripts/dm.rhai")).await;
     //let mut reply_receiver: &tokio::sync::mpsc::Receiver<std::string::String> = reply_receiver.clone();
 
-    sender.send(msg).unwrap();
+    println!("Sending message from API");
+    sender.send_async(msg).await.unwrap();
+    println!("Sent message from API to agent");
 
-    // make this a loop
-    let reply = reply_receiver.recv().unwrap();
-    println!("Received reply from agent: {}", reply);
-    tx.send(Message::Reply(reply));
-    println!("Forwarded reply as SSE.");
+    loop {
+      let reply = reply_receiver.recv_async().await.unwrap();
+      println!("Received reply from agent: {}", reply);
+      {
+        let users_lock = users.lock().unwrap();
+        let tx = users_lock.get(&my_id).unwrap().clone();
+        tx.send(Message::Reply(reply));
+      }
+      println!("Forwarded reply as SSE.");
+    }
 
     Ok( "ok" )
 }
@@ -159,46 +164,3 @@ fn user_message(my_id: usize, msg: String, users: &Users) {
     });
 }
 
-static INDEX_HTML: &str = r#"
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Warp Chat</title>
-    </head>
-    <body>
-        <h1>warp chat</h1>
-        <div id="chat">
-            <p><em>Connecting...</em></p>
-        </div>
-        <input type="text" id="text" />
-        <button type="button" id="send">Send</button>
-        <script type="text/javascript">
-        var uri = 'http://' + location.host + '/chat';
-        var sse = new EventSource(uri);
-        function message(data) {
-            var line = document.createElement('p');
-            line.innerText = data;
-            chat.appendChild(line);
-        }
-        sse.onopen = function() {
-            chat.innerHTML = "<p><em>Connected!</em></p>";
-        }
-        var user_id;
-        sse.addEventListener("user", function(msg) {
-            user_id = msg.data;
-        });
-        sse.onmessage = function(msg) {
-            message(msg.data);
-        };
-        send.onclick = function() {
-            var msg = text.value;
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", uri + '/' + user_id, true);
-            xhr.send(msg);
-            text.value = '';
-            message('<You>: ' + msg);
-        };
-        </script>
-    </body>
-</html>
-"#;

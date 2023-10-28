@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Warp Chat</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.2/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="h-screen flex flex-col justify-center items-center bg-gray-200">
+    <h1 class="text-4xl mb-8">warp chat</h1>
+    <div id="chat" class="w-full max-w-md bg-white rounded shadow-lg p-6">
+        <p><em>Connecting...</em></p>
+    </div>
+    <div class="mt-6">
+        <input type="text" id="text" class="border rounded w-full py-2 px-3 text-grey-darker" placeholder="Type your message here..." />
+        <button type="button" id="send" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Send</button>
+    </div>
+    <script type="text/javascript">
+    var uri = 'http://' + location.host + '/chat';
+    var sse = new EventSource(uri);
+    function message(data) {
+        var line = document.createElement('p');
+        line.innerText = data;
+        chat.appendChild(line);
+    }
+    sse.onopen = function() {
+        chat.innerHTML = "<p><em>Connected!</em></p>";
+    }
+    var user_id;
+    sse.addEventListener("user", function(msg) {
+        user_id = msg.data;
+    });
+    sse.onmessage = function(msg) {
+        message(msg.data);
+    };
+    var input = document.getElementById("text");
+    input.addEventListener("keyup", function(event) {
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            document.getElementById("send").click();
+        }
+    });
+    send.onclick = function() {
+        var msg = text.value;
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", uri + '/' + user_id, true);
+        xhr.send(msg);
+        text.value = '';
+        message('<You>: ' + msg);
+    };
+    </script>
+</body>
+</html>
