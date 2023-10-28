@@ -79,8 +79,8 @@ async fn handle_msg(my_id: usize, msg:String, users: Users,
     // Channel: Master -> Script
     //let (tx_master, rx_script) = std::sync::mpsc::channel();
 
-   // let users_lock = users.lock().unwrap();
-    //let tx = users_lock.get(&my_id).unwrap().clone();
+    let users_lock = users.lock().unwrap();
+    let tx = users_lock.get(&my_id).unwrap().clone();
 
     let (sender, reply_receiver) = manager.get_or_create_agent(my_id, s!("scripts/dm.rhai"));
     //let mut reply_receiver: &tokio::sync::mpsc::Receiver<std::string::String> = reply_receiver.clone();
@@ -89,7 +89,10 @@ async fn handle_msg(my_id: usize, msg:String, users: Users,
 
     // make this a loop
     let reply = reply_receiver.recv().unwrap();
- 
+    println!("Received reply from agent: {}", reply);
+    tx.send(Message::Reply(reply));
+    println!("Forwarded reply as SSE.");
+
     Ok( "ok" )
 }
  

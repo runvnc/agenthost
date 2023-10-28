@@ -44,7 +44,7 @@ pub struct Agent {
     functions: Vec::<ChatCompletionFunctions>,
     log: ChatLog,
     model: String,
-//    chat: OpenAIChat,
+    chat: OpenAIChat,
     handler: Handler,
     receiver: flume::Receiver<String>,
     reply_sender: flume::Sender<String>,
@@ -63,11 +63,8 @@ impl Agent {
         let mut handler = scripts::init(&script_path)?;
 
         let mut instance = Self{ functions: Vec::<ChatCompletionFunctions>::new(),
-                              log, model, handler,
+                              log, model, chat, handler,
                               receiver, reply_sender };
-
-        //let mut instance = Self{ functions: Vec::<ChatCompletionFunctions>::new(),
-        //                      model, log, chat, handler };
 
         instance.functions = instance.load_actions()?;
 
@@ -140,19 +137,16 @@ impl Agent {
 
     pub async fn run(&mut self) -> Result<()> {
         println!("OK");
-        //    self.reply_sender.send(format!("Received: {}", message)).unwrap();
-
+        let mut need_user_input = true;
         loop {
-            let input_str = self.receiver.recv().context("error")?; 
-            self.log.add(user_msg(&input_str.to_string())?);
+            if need_user_input {
+                let input_str = self.receiver.recv().context("error")?; 
+                self.log.add(user_msg(&input_str.to_string())?);
+            }
             
-
             self.update_sys_msg();
             println!("Added message and updated sys log.");
-            self.reply_sender.send(format!("Received: {}", input_str))?;
-            // tx.send(api::Message::Reply("Testing".to_string())).unwrap();
  
-            /*
             let msgs = self.log.to_request_msgs(self.model.as_str())?;
 
             let (text, fn_name, fn_args) = self.chat.send_request(
@@ -162,11 +156,13 @@ impl Agent {
 
             if fn_name != "" {
                 self.process_fn_call(&fn_name, &fn_args).await?;
+                need_user_input = false;
             } else {
                 self.log.add(agent_msg(&text)?);
-                break;
-            } */
-            break;
+                self.reply_sender.send(text)?;
+                println!("Sent reply back to API endpoint.");
+                need_user_input = true;
+            }
         }
         Ok( () )
     }
