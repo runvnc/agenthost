@@ -45,6 +45,18 @@
         #chat code {
             font-family: monospace;
         }
+        .text-orange-500 {
+          color: 'orange';
+        }
+        .text-yellow-500 {
+          color: 'yellow';
+        }
+        .text-cyan-500 {
+          color: 'cyan';
+        }
+        .text-white {
+          color: 'white';
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
 </head>
@@ -102,6 +114,7 @@
       let {name, params, result} = JSON.parse(fn.data);
       params = JSON.parse(params);
       let html = showFunctionCall(name, params, result);
+      console.log(html);
       message(html, 'Agent');
       message('', 'Agent');
     });
@@ -132,6 +145,6 @@
         message("", 'Agent');
     };
     </script>
-<script src="/static/showfunc.js"></script>    
+<script src="/static/showaction.js"></script>    
 </body>
 </html>

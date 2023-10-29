@@ -57,7 +57,7 @@ impl Agent {
                reply_sender: flume::Sender<ChatUIMessage> ) -> Result<Self> {
         println!("AgentHost 0.1 Startup agent..");
         chatlog::init();
-        let model = "gpt-4".to_string();
+        let model = s!("gpt-3.5-turbo");// s!("gpt-4");
         let mut log = ChatLog::new();
         let chat = OpenAIChat::new(model.clone());
         let mut handler = scripts::init(&script_path)?;
