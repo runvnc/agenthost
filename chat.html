@@ -34,7 +34,8 @@
     });
     sse.addEventListener("fragment", function(frag) {
       let text = frag.data.substr(1, frag.data.length-2);
-      currParagraph.innerHTML += text;
+      let html = marked(text);
+      currParagraph.innerHTML += html;
       console.log('frag: |'+frag.data+'|'); 
     });
     sse.onmessage = function(msg) {
