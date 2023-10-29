@@ -11,7 +11,6 @@ Timestamp: ${data.timestamp}
 
 Username: ${this.user}
 
-${show_fields(this, ["HP", "XP", "Gold", "inventory"])}
 Current location:
 
 ${this.location}
@@ -20,11 +19,15 @@ ${this.location}
 
 }
 
-fn renderUserMsg(text, data) {
-`{(SYSTEM note: SYSTEM message above is updated on EACH message.
-   Refer to updated system message above for CURRENT status]}}
+fn renderUserMsg(data) {
+`((
+    SYSTEM notes:
+    SYSTEM message above is updated with time and location on EACH message.
 
-[${data.timestamp}]:  ${text}`;
+    ${show_fields(this, ["HP", "XP", "Gold", "inventory"])}
+))
+
+[${data.timestamp}]:  ${data.user_msg}`;
 }
 
 fn evalExitStage(ignore) {

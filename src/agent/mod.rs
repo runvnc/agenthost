@@ -136,13 +136,27 @@ impl Agent {
         Ok( () )
     }
 
+    pub fn render_user_msg(&mut self, user_msg:String) -> Result<String> {
+        let mut data:HashMap<String, String> = HashMap::new();
+
+        let timestamp_str = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f UTC").to_string();
+        data.insert(s!("timestamp"), timestamp_str);
+        data.insert(s!("user_msg"), user_msg);
+        let json = json!(data);
+        let json_string = &json.to_string();
+
+        self.call_ret_string("renderUserMsg", json_string)
+    }
+
+
     pub async fn run(&mut self) -> Result<()> {
         println!("OK");
         let mut need_user_input = true;
         loop {
             if need_user_input {
                 let input_str = self.receiver.recv_async().await.context("error")?; 
-                self.log.add(user_msg(&input_str.to_string())?);
+                let msg = self.render_user_msg(s!(input_str))?;
+                self.log.add(user_msg(&msg)?);
             }
             
             self.update_sys_msg();

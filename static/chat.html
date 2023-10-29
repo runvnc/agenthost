@@ -4,6 +4,10 @@
     <title>Warp Chat</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.2/dist/tailwind.min.css" rel="stylesheet">
     <style>
+        #chat {
+          max-height: 80vh;
+          overflow-y: scroll;
+        }
         #chat ul {
             list-style: disc;
             padding-left: 1em;
@@ -34,6 +38,9 @@
             display: flex;
             align-items: start;
         }
+        #chat p {
+            margin-bottom: 1em;
+        }
         #chat code {
             font-family: monospace;
         }
@@ -58,7 +65,7 @@
     function message(data, sender) {
         var msgElement = document.createElement('div');
         var avatarElement = document.createElement('img');
-        avatarElement.src = sender == 'You' ? '/static/user.webp' : '/static/agent.webp';
+        avatarElement.src = sender != 'You' ? '/static/user.webp' : '/static/agent.webp';
         avatarElement.classList.add('av');
         var nameElement = document.createElement('span');
         nameElement.textContent = sender;
@@ -87,7 +94,7 @@
       rawMarkdown += text;
       let html = markdownit().render(rawMarkdown);
       currParagraph.innerHTML = html;
-      console.log('frag: |'+frag.data+'|'); 
+      chat.scrollTop = chat.scrollHeight;
     });
     sse.onmessage = function(msg) {
         //message(msg.data);
@@ -99,9 +106,16 @@
             document.getElementById("send").click();
         }
     });
+    var xhr;
     send.onclick = function() {
+        if (xhr) {
+          try {
+            xhr.abort();
+          } catch (e) {
+          }
+        }
         var msg = text.value;
-        var xhr = new XMLHttpRequest();
+        xhr = new XMLHttpRequest();
         xhr.open("POST", uri + '/' + user_id, true);
         xhr.send(msg);
         text.value = '';
