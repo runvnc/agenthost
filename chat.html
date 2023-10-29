@@ -17,25 +17,28 @@
     <script type="text/javascript">
     var uri = 'http://' + location.host + '/chat';
     var sse = new EventSource(uri);
+    var user_id;
+    var currParagraph;
+    var rawMarkdown = '';
     function message(data) {
         addBlankMessage();
     }
     sse.onopen = function() {
         chat.innerHTML = "<p><em>Connected!</em></p>";
     }
-    var user_id;
-    var currParagraph;
     function addBlankMessage() {
       currParagraph = document.createElement('p');
       chat.appendChild(currParagraph);
+      rawMarkdown = '';
     }
     sse.addEventListener("user", function(msg) {
         user_id = msg.data;
     });
     sse.addEventListener("fragment", function(frag) {
       let text = frag.data.substr(1, frag.data.length-2);
-      let html = marked(text);
-      currParagraph.innerHTML += html;
+      rawMarkdown += text;
+      let html = marked(rawMarkdown);
+      currParagraph.innerHTML = html;
       console.log('frag: |'+frag.data+'|'); 
     });
     sse.onmessage = function(msg) {
