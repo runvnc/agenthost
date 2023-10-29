@@ -90,7 +90,12 @@ static NEXT_USER_ID: AtomicUsize = AtomicUsize::new(1);
 pub enum ChatUIMessage {
     UserId(usize),
     Reply(String),
-    Fragment(String)
+    Fragment(String),
+    FunctionCall {
+        name: String,
+        params: String,
+        result: String
+    }
 }
 
 #[derive(Debug)]
@@ -126,6 +131,16 @@ fn user_connected(users: Users) -> impl Stream<Item = Result<Event, warp::Error>
         ChatUIMessage::UserId(my_id) => Ok(Event::default().event("user").data(my_id.to_string())),
         ChatUIMessage::Fragment(fragment) => Ok(Event::default().event("fragment").data(fragment)), 
         ChatUIMessage::Reply(reply) => Ok(Event::default().data(reply)),
+        ChatUIMessage::FunctionCall { name, params, result } => {
+            println!("Sending fn call as json");
+            let data = serde_json::json!({
+                "name": name,
+                "params": params,
+                "result": result
+            });
+            println!("OK 2");
+            Ok(Event::default().event("functionCall").data(data.to_string()))
+        }
     })
 }
 

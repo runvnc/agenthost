@@ -47,8 +47,7 @@ pub struct Agent {
     chat: OpenAIChat,
     handler: Handler,
     receiver: flume::Receiver<String>,
-    reply_sender: flume::Sender<ChatUIMessage>,
-    function_call_sender: flume::Sender<ChatUIMessage>,
+    reply_sender: flume::Sender<ChatUIMessage>
 }
 
 
@@ -107,11 +106,11 @@ impl Agent {
         self.log.add(fn_call_msg(&fn_name.to_string(), &fn_args.to_string())?);
                     
         let output = self.call(fn_name, fn_args)?; 
-        self.log.add(fn_result_msg(&fn_name.to_string(), &output.to_string())?);
-        let params: Vec<String> = serde_json::from_str(fn_args)?;
-        self.function_call_sender.send_async(ChatUIMessage::FunctionCall {
-            name: fn_name.to_string(),
-            params,
+        self.log.add(fn_result_msg(&s!(fn_name), &output.to_string())?);
+        println!("Trying to send func call back");
+        self.reply_sender.send_async(ChatUIMessage::FunctionCall {
+            name: s!(fn_name),
+            params: s!(fn_args),
             result: output
         }).await?;
         println!("Function call: {}({})", fn_name, fn_args);

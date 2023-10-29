@@ -78,6 +78,12 @@
         rawMarkdown = '';
         chat.appendChild(msgElement);
     }
+    function showFunctionCall(data) {
+      let { name, result, params } = JSON.parse(data);
+      params = JSON.parse(params);
+      
+    }
+
     sse.onopen = function() {
         chat.innerHTML = "<p><em>Connected!</em></p>";
     }
@@ -95,6 +101,10 @@
       let html = markdownit().render(rawMarkdown);
       currParagraph.innerHTML = html;
       chat.scrollTop = chat.scrollHeight;
+    });
+    sse.addEventListener("functionCall", function(fn) {
+      console.log({functionCall: fn.data});
+      message(JSON.stringify(fn.data),"Agent");
     });
     sse.onmessage = function(msg) {
         //message(msg.data);
