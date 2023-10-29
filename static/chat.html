@@ -45,18 +45,18 @@
         #chat code {
             font-family: monospace;
         }
-        .text-orange-500 {
-          color: 'orange';
+        .fn_name {
+            color: #FFA500; /* orange */
         }
-        .text-yellow-500 {
-          color: 'yellow';
+
+        .param_name {
+            color: #FFFF00; /* yellow */
         }
-        .text-cyan-500 {
-          color: 'cyan';
+
+        .param_value {
+            color: #00FFFF; /* cyan */
         }
-        .text-white {
-          color: 'white';
-        }
+
     </style>
     <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
 </head>
@@ -103,6 +103,10 @@
         user_id = msg.data;
     });
     sse.addEventListener("fragment", function(frag) {
+      if (rawMarkdown == '__WAITING__') {
+        message('', 'Agent')
+        rawMarkdown = ''
+      }
       let text = frag.data.substr(1, frag.data.length-2);
       rawMarkdown += text;
       let html = markdownit().render(rawMarkdown);
@@ -142,7 +146,7 @@
         xhr.send(msg);
         text.value = '';
         message(msg, 'You');
-        message("", 'Agent');
+        rawMarkdown = '__WAITING__';
     };
     </script>
 <script src="/static/showaction.js"></script>    
