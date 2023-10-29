@@ -86,7 +86,8 @@ impl OpenAIChat {
                             }
                         } else if let Some(content) = &chat_choice.delta.content {
                             text.push_str(content);
-                            reply_sender.send_async(ChatUIMessage::Fragment(s!(content))).await?;
+                            print!("**{}** ", content);
+                            reply_sender.send_async(ChatUIMessage::Fragment("*".to_owned()+content+"*")).await?;
                             print!("(reply sent) {}", content);
                             //write!(lock, "(reply sent on reply sender)"{}", content).unwrap();
                         }
