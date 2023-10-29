@@ -18,7 +18,7 @@
     var sse = new EventSource(uri);
     function message(data) {
         var line = document.createElement('p');
-        line.innerText = data;
+        line.innerText = ""; //data;
         chat.appendChild(line);
     }
     sse.onopen = function() {
@@ -27,6 +27,11 @@
     var user_id;
     sse.addEventListener("user", function(msg) {
         user_id = msg.data;
+    });
+    sse.addEventListener("fragment", function(frag) {
+      var span = document.createElement('span');
+      span.innerText = frag;
+      chat.appendChild(frag);
     });
     sse.onmessage = function(msg) {
         message(msg.data);
