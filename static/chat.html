@@ -48,7 +48,9 @@
         .fn_name {
             color: #FFA500; /* orange */
         }
-
+        .fn_result {
+          margin-bottom: 0 !important;
+        }
         .param_name {
             color: #FFFF00; /* yellow */
         }
@@ -131,7 +133,7 @@
       let html = showFunctionCall(name, params, result);
       console.log(html);
       message(html, 'Agent');
-      message('', 'Agent');
+      rawMarkdown = '__WAITING__';
     });
     sse.onmessage = function(msg) {
         //message(msg.data);
