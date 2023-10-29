@@ -25,7 +25,7 @@ use flume::*;
 use crate::{s, json_str, dyn_str, dyn_map};
 
 use crate::api;
-
+use crate::api::ChatUIMessage;
 
 
 //unsafe impl Send for Agent {}
@@ -47,14 +47,14 @@ pub struct Agent {
     chat: OpenAIChat,
     handler: Handler,
     receiver: flume::Receiver<String>,
-    reply_sender: flume::Sender<String>,
+    reply_sender: flume::Sender<ChatUIMessage>,
 }
 
 
 impl Agent {
     pub fn new(script_path: String,
                receiver: flume::Receiver<String>,
-               reply_sender: flume::Sender<String> ) -> Result<Self> {
+               reply_sender: flume::Sender<ChatUIMessage> ) -> Result<Self> {
         println!("AgentHost 0.1 Startup agent..");
         chatlog::init();
         let model = "gpt-4".to_string();
@@ -160,7 +160,7 @@ impl Agent {
                 need_user_input = false;
             } else {
                 self.log.add(agent_msg(&text)?);
-                self.reply_sender.send_async(text).await?;
+                self.reply_sender.send_async(ChatUIMessage::Reply(text)).await?;
                 println!("Sent reply back to API endpoint.");
                 need_user_input = true;
             }

@@ -74,7 +74,7 @@ async fn handle_msg(my_id: usize, msg:String, users: Users,
 
     loop {
       let reply = reply_receiver.recv_async().await.unwrap();
-      println!("Received reply from agent: {}", reply);
+      println!("Received reply from agent");
       {
         let users_lock = users.lock().unwrap();
         let tx = users_lock.get(&my_id).unwrap().clone();
@@ -128,7 +128,7 @@ fn user_connected(users: Users) -> impl Stream<Item = Result<Event, warp::Error>
     // Convert messages into Server-Sent Events and return resulting stream.
     rx.map(|msg| match msg {
         ChatUIMessage::UserId(my_id) => Ok(Event::default().event("user").data(my_id.to_string())),
-        ChatUIMessage::Fragment(fragment) => Ok(Event::default().event("fragment").data(fragment), 
+        ChatUIMessage::Fragment(fragment) => Ok(Event::default().event("fragment").data(fragment)), 
         ChatUIMessage::Reply(reply) => Ok(Event::default().data(reply)),
     })
 }

@@ -22,6 +22,8 @@ use flume::*;
 
 use crate::s;
 
+use crate::api::ChatUIMessage;
+
 pub struct OpenAIChat {
     model: String,
     client: Client<OpenAIConfig>
@@ -49,7 +51,7 @@ impl OpenAIChat {
     pub async fn send_request(&self, 
             messages: Vec<ChatCompletionRequestMessage>,
             functions: Vec<ChatCompletionFunctions>,
-            reply_sender: flume::Sender<String>  ) -> Result<(String, String, String)> {
+            reply_sender: flume::Sender<ChatUIMessage>  ) -> Result<(String, String, String)> {
         let request = CreateChatCompletionRequestArgs::default()
             .model(&*self.model)
             .messages(messages)
@@ -84,7 +86,7 @@ impl OpenAIChat {
                             }
                         } else if let Some(content) = &chat_choice.delta.content {
                             text.push_str(content);
-                            reply_sender.send_async(s!(content)).await?;
+                            reply_sender.send_async(ChatUIMessage::Fragment(s!(content))).await?;
                             print!("(reply sent) {}", content);
                             //write!(lock, "(reply sent on reply sender)"{}", content).unwrap();
                         }
