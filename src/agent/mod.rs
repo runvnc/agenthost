@@ -48,6 +48,7 @@ pub struct Agent {
     handler: Handler,
     receiver: flume::Receiver<String>,
     reply_sender: flume::Sender<ChatUIMessage>,
+    function_call_sender: flume::Sender<ChatUIMessage>,
 }
 
 
@@ -107,6 +108,12 @@ impl Agent {
                     
         let output = self.call(fn_name, fn_args)?; 
         self.log.add(fn_result_msg(&fn_name.to_string(), &output.to_string())?);
+        let params: Vec<String> = serde_json::from_str(fn_args)?;
+        self.function_call_sender.send_async(ChatUIMessage::FunctionCall {
+            name: fn_name.to_string(),
+            params,
+            result: output
+        }).await?;
         println!("Function call: {}({})", fn_name, fn_args);
 
         let next_step = self.call_ret_string("evalExitStage", "{}" )?;
