@@ -107,6 +107,7 @@ impl Agent {
                     
         let output = self.call(fn_name, fn_args)?; 
         self.log.add(fn_result_msg(&fn_name.to_string(), &output.to_string())?);
+        println!("Function call: {}({})", fn_name, fn_args);
 
         let next_step = self.call_ret_string("evalExitStage", "{}" )?;
         if next_step.contains("Function not found") {

@@ -21,7 +21,8 @@ ${this.location}
 }
 
 fn renderUserMsg(text, data) {
-`{(SYSTEM note: refer to updated system message above for current status]}
+`{(SYSTEM note: SYSTEM message above is updated on EACH message.
+   Refer to updated system message above for CURRENT status]}}
 
 [${data.timestamp}]:  ${text}`;
 }

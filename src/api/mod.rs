@@ -68,19 +68,15 @@ async fn handle_msg(my_id: usize, msg:String, users: Users,
                     manager: AgentManager) -> Result<impl warp::Reply, Infallible> {
     let (sender, reply_receiver) = manager.get_or_create_agent(my_id, s!("scripts/dm.rhai")).await;
 
-    println!("Sending message from API");
     sender.send_async(msg).await.unwrap();
-    println!("Sent message from API to agent");
 
     loop {
       let reply = reply_receiver.recv_async().await.unwrap();
-      println!("Received reply from agent");
       {
         let users_lock = users.lock().unwrap();
         let tx = users_lock.get(&my_id).unwrap().clone();
-        tx.send(reply); //Message::Reply(reply));
+        tx.send(reply); 
       }
-      println!("Forwarded reply as SSE.");
     }
 
     Ok( "ok" )
