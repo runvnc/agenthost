@@ -1,14 +1,28 @@
 function showFunctionCall(funcName, params, result) {
     // Create a new div element
     var newElement = document.createElement("div");
-    newElement.className = "border-2 border-blue-500 p-4 m-2 rounded-lg bg-gray-800 text-white";
+    newElement.className = "border-2 border-blue-500 p-4 m-2 rounded-lg bg-gray-800";
 
     // Format the function call name and parameters
     var funcCall = document.createElement("p");
-    funcCall.textContent = '⚡ ' + funcName + "(";
+
+    var funcNameSpan = document.createElement("span");
+    funcNameSpan.className = "text-orange-500";
+    funcNameSpan.textContent = '⚡ ' + funcName + "(";
+    funcCall.appendChild(funcNameSpan);
+
     for (var key in params) {
-        funcCall.textContent += key + ": " + params[key] + ", ";
+        var paramSpan = document.createElement("span");
+        paramSpan.className = "text-yellow-500";
+        paramSpan.textContent = key + ": ";
+        funcCall.appendChild(paramSpan);
+
+        var valueSpan = document.createElement("span");
+        valueSpan.className = "text-cyan-500";
+        valueSpan.textContent = params[key] + ", ";
+        funcCall.appendChild(valueSpan);
     }
+
     funcCall.textContent = funcCall.textContent.slice(0, -2) + ")";
     newElement.appendChild(funcCall);
 
@@ -16,7 +30,10 @@ function showFunctionCall(funcName, params, result) {
     var summary = document.createElement("summary");
     summary.textContent = "Result";
     var details = document.createElement("details");
-    details.textContent = result;
+    var resultSpan = document.createElement("span");
+    resultSpan.className = "text-white";
+    resultSpan.textContent = result;
+    details.appendChild(resultSpan);
     details.appendChild(summary);
     newElement.appendChild(details);
     return newElement.outerHTML;
