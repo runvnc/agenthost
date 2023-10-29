@@ -66,22 +66,7 @@ pub async fn server() {
 
 async fn handle_msg(my_id: usize, msg:String, users: Users,
                     manager: AgentManager) -> Result<impl warp::Reply, Infallible> {
-    //user_message(my_id, msg.clone(), &users);
-
-    //let (tx_script, rx_master, tx_master, rx_script) = AgentMgr::get_agent_channels(my_id);
-    // may need to spawn an async thread
-    // if we do it without a closure will it let us?
-    // maybe not because it's still in a different thread
-    // but it doesn't need to move anything between threads right?
-    //
-
-    // Channel: Script -> Master
-    //let (tx_script, rx_master) = std::sync::mpsc::channel();
-    // Channel: Master -> Script
-    //let (tx_master, rx_script) = std::sync::mpsc::channel();
-
     let (sender, reply_receiver) = manager.get_or_create_agent(my_id, s!("scripts/dm.rhai")).await;
-    //let mut reply_receiver: &tokio::sync::mpsc::Receiver<std::string::String> = reply_receiver.clone();
 
     println!("Sending message from API");
     sender.send_async(msg).await.unwrap();
@@ -93,7 +78,7 @@ async fn handle_msg(my_id: usize, msg:String, users: Users,
       {
         let users_lock = users.lock().unwrap();
         let tx = users_lock.get(&my_id).unwrap().clone();
-        tx.send(Message::Reply(reply));
+        tx.send(reply); //Message::Reply(reply));
       }
       println!("Forwarded reply as SSE.");
     }
@@ -106,9 +91,10 @@ static NEXT_USER_ID: AtomicUsize = AtomicUsize::new(1);
 
 /// Message variants.
 #[derive(Debug)]
-pub enum Message {
+pub enum ChatUIMessage {
     UserId(usize),
     Reply(String),
+    Fragment(String)
 }
 
 #[derive(Debug)]
@@ -119,7 +105,7 @@ impl warp::reject::Reject for NotUtf8 {}
 ///
 /// - Key is their id
 /// - Value is a sender of `Message`
-type Users = Arc<Mutex<HashMap<usize, mpsc::UnboundedSender<Message>>>>;
+type Users = Arc<Mutex<HashMap<usize, mpsc::UnboundedSender<ChatUIMessage>>>>;
 
 fn user_connected(users: Users) -> impl Stream<Item = Result<Event, warp::Error>> + Send + 'static {
     // Use a counter to assign a new unique ID for this user.
@@ -132,7 +118,7 @@ fn user_connected(users: Users) -> impl Stream<Item = Result<Event, warp::Error>
     let (tx, rx) = mpsc::unbounded_channel();
     let rx = UnboundedReceiverStream::new(rx);
 
-    tx.send(Message::UserId(my_id))
+    tx.send(ChatUIMessage::UserId(my_id))
         // rx is right above, so this cannot fail
         .unwrap();
 
@@ -141,8 +127,9 @@ fn user_connected(users: Users) -> impl Stream<Item = Result<Event, warp::Error>
 
     // Convert messages into Server-Sent Events and return resulting stream.
     rx.map(|msg| match msg {
-        Message::UserId(my_id) => Ok(Event::default().event("user").data(my_id.to_string())),
-        Message::Reply(reply) => Ok(Event::default().data(reply)),
+        ChatUIMessage::UserId(my_id) => Ok(Event::default().event("user").data(my_id.to_string())),
+        ChatUIMessage::Fragment(fragment) => Ok(Event::default().event("fragment").data(fragment), 
+        ChatUIMessage::Reply(reply) => Ok(Event::default().data(reply)),
     })
 }
 
@@ -159,7 +146,7 @@ fn user_message(my_id: usize, msg: String, users: &Users) {
             true
         } else {
             // If not `is_ok`, the SSE stream is gone, and so don't retain
-            tx.send(Message::Reply(new_msg.clone())).is_ok()
+            tx.send(ChatUIMessage::Reply(new_msg.clone())).is_ok()
         }
     });
 }
