@@ -82,7 +82,7 @@ fn modifyStat(args) {
 
 fn modifyInventory(args) {
     if args.operation == "add" {
-        this.inventory += args.itemName;
+        this.inventory.push(args.itemName);
     } else {
         this.inventory.retain( |i| i != args.itemName );
     }
