@@ -5,7 +5,7 @@ function showFunctionCall(funcName, params, result) {
 
     // Format the function call name and parameters
     var funcCall = document.createElement("p");
-    funcCall.textContent = funcName + "(";
+    funcCall.textContent = '⚡ ' + funcName + "(";
     for (var key in params) {
         funcCall.textContent += key + ": " + params[key] + ", ";
     }
@@ -19,11 +19,5 @@ function showFunctionCall(funcName, params, result) {
     details.textContent = result;
     details.appendChild(summary);
     newElement.appendChild(details);
-
-    // Insert the new element into the element with id 'chat'
-    document.getElementById("chat").appendChild(newElement);
-
-    // Autoscroll to the bottom of the 'chat' element
-    var chat = document.getElementById("chat");
-    chat.scrollTop = chat.scrollHeight;
+    return newElement.outerHTML;
 }
