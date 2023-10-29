@@ -17,9 +17,12 @@
             padding-left: 1em;
             color: #aaa;
         }
-        #chat pre {
+        #chat p {
             background-color: #eee;
             padding: 0.5em;
+            margin-bottom: 1em;
+            display: flex;
+            align-items: start;
         }
         #chat code {
             font-family: monospace;
@@ -29,7 +32,7 @@
 </head>
 <body class="h-screen flex flex-col justify-center items-center bg-gray-900 text-white">
     <h1 class="text-4xl mb-8">warp chat</h1>
-    <div id="chat" class="w-full max-w-md bg-gray-800 rounded shadow-lg p-6">
+    <div id="chat" class="w-full max-w-2xl bg-gray-800 rounded shadow-lg p-6">
         <p><em>Connecting...</em></p>
     </div>
     <div class="mt-6">
@@ -42,8 +45,18 @@
     var user_id;
     var currParagraph;
     var rawMarkdown = '';
-    function message(data) {
-        addBlankMessage();
+    function message(data, sender) {
+        var msgElement = document.createElement('p');
+        var avatarElement = document.createElement('img');
+        avatarElement.src = sender == 'You' ? 'your-avatar-url' : 'agent-avatar-url';
+        avatarElement.classList.add('avatar');
+        var nameElement = document.createElement('span');
+        nameElement.textContent = sender;
+        nameElement.classList.add('name');
+        msgElement.appendChild(avatarElement);
+        msgElement.appendChild(nameElement);
+        msgElement.appendChild(document.createTextNode(data));
+        chat.appendChild(msgElement);
     }
     sse.onopen = function() {
         chat.innerHTML = "<p><em>Connected!</em></p>";
@@ -79,8 +92,7 @@
         xhr.open("POST", uri + '/' + user_id, true);
         xhr.send(msg);
         text.value = '';
-        message('<You>: ' + msg);
-        addBlankMessage();
+        message(msg, 'You');
     };
     </script>
 </body>
