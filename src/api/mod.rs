@@ -52,14 +52,14 @@ pub async fn server() {
     });
 
     // GET / -> index html
-    let index = warp::path::end().map(|| {
-        let html = std::fs::read_to_string("chat.html").unwrap();
-        warp::http::Response::builder()
-            .header("content-type", "text/html; charset=utf-8")
-            .body(html)
-    });
+    let index = warp::path::end()
+        .and(warp::fs::file("static/chat.html"));
 
-    let routes = index.or(chat_recv).or(chat_send);
+    // Serve static files from static/ directory
+    let static_files = warp::path("static")
+        .and(warp::fs::dir("static"));
+
+    let routes = index.or(chat_recv).or(chat_send).or(static_files);
 
     warp::serve(routes).run(([0, 0, 0, 0], 3132)).await;
 }
