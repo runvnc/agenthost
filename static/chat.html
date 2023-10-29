@@ -17,8 +17,8 @@
             padding-left: 1em;
             color: #aaa;
         }
-        #chat p {
-            background-color: #eee;
+        #chat div {
+            /* background-color: #eee; */
             padding: 0.5em;
             margin-bottom: 1em;
             display: flex;
@@ -46,16 +46,19 @@
     var currParagraph;
     var rawMarkdown = '';
     function message(data, sender) {
-        var msgElement = document.createElement('p');
+        var msgElement = document.createElement('div');
         var avatarElement = document.createElement('img');
-        avatarElement.src = sender == 'You' ? 'your-avatar-url' : 'agent-avatar-url';
+        avatarElement.src = sender == 'You' ? 'user.webp' : 'agent.webp';
         avatarElement.classList.add('avatar');
         var nameElement = document.createElement('span');
         nameElement.textContent = sender;
         nameElement.classList.add('name');
         msgElement.appendChild(avatarElement);
         msgElement.appendChild(nameElement);
-        msgElement.appendChild(document.createTextNode(data));
+        currParagraph = document.createElement('p');
+        currParagraph.innerHTML += data;
+        msgElement.appendChild(currParagraph);
+        rawMarkdown = '';
         chat.appendChild(msgElement);
     }
     sse.onopen = function() {
@@ -77,7 +80,7 @@
       console.log('frag: |'+frag.data+'|'); 
     });
     sse.onmessage = function(msg) {
-        message(msg.data);
+        //message(msg.data);
     };
     var input = document.getElementById("text");
     input.addEventListener("keyup", function(event) {
@@ -93,6 +96,7 @@
         xhr.send(msg);
         text.value = '';
         message(msg, 'You');
+        message("", 'Agent');
     };
     </script>
 </body>
