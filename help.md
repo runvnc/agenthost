@@ -1,1 +1,0 @@
-In Rust, variables are immutable by default. This means that once a variable is bound to a value, it cannot be changed. However, the `recv()` method on a Receiver mutates the state of the Receiver internally as it removes a message from the channel. Therefore, you need to declare `reply_receiver` as mutable even though you're not explicitly changing its value in your code.
