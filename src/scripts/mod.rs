@@ -104,9 +104,16 @@ pub fn init(path: &str, session_id: usize) -> Result<Handler>  {
 
     engine.register_fn("path", sandboxed_path);
 
-    let states_map = Map::new();
-    let states_dyn: Dynamic = states_map.into();
-    let mut states = states_dyn.into_shared();
+    let states_file = format!("data/sessions/states-{}.json", session_id);
+    let mut states = if Path::new(&states_file).exists() {
+        let data = fs::read_to_string(&states_file)?;
+        let states_map: Map = serde_json::from_str(&data)?;
+        Dynamic::from_map(states_map).into_shared()
+    } else {
+        let states_map = Map::new();
+        let states_dyn: Dynamic = states_map.into();
+        states_dyn.into_shared()
+    };
     let mut scope = Scope::new();
 
     println!("> Loading script file: {path} with utils.rhai appended");
