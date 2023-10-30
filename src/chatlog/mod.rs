@@ -47,6 +47,11 @@ impl ChatMessage {
     }
 }
 
+use std::fs;
+use serde::{Serialize, Deserialize};
+use std::path::Path;
+
+#[derive(Serialize, Deserialize)]
 pub struct ChatLog {
     session_id: usize,
     messages: Vec<ChatMessage>,
@@ -100,11 +105,18 @@ pub fn fn_result_msg(fn_name: &String, result:&String) -> Result<ChatMessage> {
 
 impl ChatLog {
     pub fn new(session_id: usize) -> Self {
-      Self { session_id, messages: Vec::<ChatMessage>::new() }
+        let path = format!("data/sessions/{}.json", session_id);
+        if Path::new(&path).exists() {
+            let data = fs::read_to_string(&path).unwrap();
+            serde_json::from_str(&data).unwrap()
+        } else {
+            Self { session_id, messages: Vec::<ChatMessage>::new() }
+        }
     }
 
     pub fn add(&mut self, msg: ChatMessage) {
-        self.messages.push(msg)
+        self.messages.push(msg);
+        self.save();
     }
 
     pub fn change_sys_msg(&mut self, msg: ChatMessage) {
@@ -115,6 +127,13 @@ impl ChatLog {
         }
         let content: String = self.messages[0].message.content.as_ref().expect("The value is None").to_string();
         println!("System message changed to:\n{}", content);
+        self.save();
+    }
+
+    fn save(&self) {
+        let path = format!("data/sessions/{}.json", self.session_id);
+        let data = serde_json::to_string(self).unwrap();
+        fs::write(&path, data).unwrap();
     }
 
     pub fn to_request_msgs(&mut self, model: &str) -> Result<Vec<ChatCompletionRequestMessage>> {
