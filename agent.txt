@@ -1,0 +1,23 @@
+Each agent needs:
+
+ - name
+ - avatar image
+ - session starts with agent text or user input
+ 
+
+Need sessions that are saved
+
+Each chat has associated session id
+
+Chat logs saved and retrieved automatically
+
+Need a way to retrieve history
+
+- a way to modify locations or add other notes?
+
+I am basically duplicating ChatGPT
+
+But I can run code 
+
+
+

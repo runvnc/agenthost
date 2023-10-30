@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Agent Chat</title>
-  <link rel="icon" type="image/webp" href="static/nexus.webp">
+  <link rel="icon" type="image/png" href="static/agentnexus.png">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.2/dist/tailwind.min.css" rel="stylesheet">
     <style>
         #chat {
@@ -70,11 +70,16 @@
         .action details {
           display: block;
         }
-
+        .logohead {
+          width: 46px;
+          height: 46px;
+          margin: 20px;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
 </head>
 <body class="h-screen flex flex-col justify-center items-center bg-gray-900 text-white">
+    <img class="logohead" src="/static/agentnexus.png">
     <h1 class="text-4xl mb-8">Agent Chat</h1>
     <div id="chat" class="w-full max-w-2xl bg-gray-800 rounded shadow-lg p-6">
         <p><em>Connecting...</em></p>
