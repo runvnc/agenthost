@@ -239,3 +239,10 @@ fn sandboxed_path(str_path: &str) -> Result<PathBuf, Box<EvalAltResult>> {
     .ok_or_else(|| "Path out of bounds".into())
 }
 
+fn save_states(handler: &Handler, session_id: usize) -> Result<()> {
+    let states_map = handler.states.downcast_ref::<Map>().ok_or(anyhow!("Could not access states as map."))?;
+    let data = serde_json::to_string(states_map)?;
+    let states_file = format!("data/sessions/states-{}.json", session_id);
+    fs::write(&states_file, data)?;
+    Ok(())
+}
