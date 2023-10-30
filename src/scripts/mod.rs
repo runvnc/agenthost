@@ -85,7 +85,7 @@ fn get_directory(file_path: &str) -> String {
 
 #[cfg(not(feature = "no_function"))]
 #[cfg(not(feature = "no_object"))]
-pub fn init(path: &str) -> Result<Handler>  {
+pub fn init(path: &str, session_id: usize) -> Result<Handler>  {
     let dir = get_directory(path);
 
     stdout().flush().expect("flush stdout");
