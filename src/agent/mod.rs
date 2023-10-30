@@ -42,6 +42,7 @@ pub enum AgentMessage {
 
 pub struct Agent {
     functions: Vec::<ChatCompletionFunctions>,
+    session_id: usize,
     log: ChatLog,
     model: String,
     chat: OpenAIChat,
@@ -52,19 +53,19 @@ pub struct Agent {
 
 
 impl Agent {
-    pub fn new(script_path: String,
+    pub fn new(session_id: usize, script_path: String,
                receiver: flume::Receiver<String>,
                reply_sender: flume::Sender<ChatUIMessage> ) -> Result<Self> {
         println!("AgentHost 0.1 Startup agent..");
         chatlog::init();
         //let model = s!("gpt-3.5-turbo");
         let model = s!("gpt-4");
-        let mut log = ChatLog::new();
+        let mut log = ChatLog::new(session_id);
         let chat = OpenAIChat::new(model.clone());
         let mut handler = scripts::init(&script_path)?;
 
         let mut instance = Self{ functions: Vec::<ChatCompletionFunctions>::new(),
-                              log, model, chat, handler,
+                              session_id, log, model, chat, handler,
                               receiver, reply_sender };
 
         instance.functions = instance.load_actions()?;

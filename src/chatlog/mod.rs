@@ -48,6 +48,7 @@ impl ChatMessage {
 }
 
 pub struct ChatLog {
+    session_id: usize,
     messages: Vec<ChatMessage>,
 }
 
@@ -98,8 +99,8 @@ pub fn fn_result_msg(fn_name: &String, result:&String) -> Result<ChatMessage> {
 
 
 impl ChatLog {
-    pub fn new() -> Self {
-      Self { messages: Vec::<ChatMessage>::new() }
+    pub fn new(session_id: usize) -> Self {
+      Self { session_id, messages: Vec::<ChatMessage>::new() }
     }
 
     pub fn add(&mut self, msg: ChatMessage) {

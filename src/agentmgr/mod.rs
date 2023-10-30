@@ -22,12 +22,12 @@ impl AgentManager {
         }
     }
 
-    pub async fn get_or_create_agent(&self, id: usize, script_path: String) -> 
+    pub async fn get_or_create_agent(&self, session_id: usize, script_path: String) -> 
         (flume::Sender<String>, flume::Receiver<ChatUIMessage>) {
 
         let mut cache = self.cache.lock().unwrap();
 
-        if let Some((sender, reply_receiver)) = cache.get(&id) {
+        if let Some((sender, reply_receiver)) = cache.get(&session_id) {
             return (sender.clone(), reply_receiver.clone());
         }
 
@@ -37,7 +37,7 @@ impl AgentManager {
 
         thread::spawn(|| {
             let future = async move {
-                let mut agent = Agent::new(script_path, receiver, reply_sender).expect("no agent");
+                let mut agent = Agent::new(id, script_path, receiver, reply_sender).expect("no agent");
                 agent.run().await;
             };
             let rt = Runtime::new().unwrap();
