@@ -96,4 +96,3 @@ fn move(args) {
     this.location = loc.read_string();
 }
 
-

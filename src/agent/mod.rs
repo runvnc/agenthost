@@ -158,7 +158,7 @@ impl Agent {
 
     pub async fn run(&mut self) -> Result<()> {
         println!("OK");
-        let mut need_user_input = true;
+        let mut need_user_input = false;
         loop {
             if need_user_input {
                 let input_str = self.receiver.recv_async().await.context("error")?; 
