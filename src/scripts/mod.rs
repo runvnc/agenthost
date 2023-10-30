@@ -212,11 +212,13 @@ pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) ->
     let result = engine.call_fn_with_options::<Dynamic>(options, scope, ast, func, (arg,));
         
     let output = match result {
-        Ok(result) => format!("{:?}", result),
+        Ok(result) => {
+            save_states(handler, session_id)?;
+            format!("{:?}", result)
+        },
         Err(err) => {
             eprint_error(&handler.script, *err);
             "Error".to_string()
-            //format!("{:?}", err)
         }
     };
     Ok( output )
