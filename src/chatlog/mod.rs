@@ -22,6 +22,7 @@ static BPE: OnceCell<CoreBPE> = OnceCell::new();
 
 
 
+#[derive(Serialize, Deserialize)]
 pub struct ChatMessage {
     pub message: ChatCompletionRequestMessage,
     pub length: usize,
