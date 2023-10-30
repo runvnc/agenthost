@@ -2,6 +2,8 @@ use rhai::{CallFnOptions, Dynamic, Engine,
            EvalAltResult, Position, Map, Scope, AST};
 use std::io::{stdout, Write};
 use std::path::{Path, PathBuf};
+use std::fs;
+use serde_json::{self, json};
 
 use rhai::packages::Package;
 use rhai_rand::RandomPackage;
