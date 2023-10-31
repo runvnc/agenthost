@@ -14,7 +14,7 @@ use flume::*;
 
 use crate::agent::Agent;
 use crate::agentmgr::AgentManager;
-
+use crate::jwt_util;
 use crate::{s};
 
 pub async fn server() {
@@ -51,6 +51,30 @@ pub async fn server() {
         warp::sse::reply(warp::sse::keep_alive().stream(stream))
     });
 
+
+    let login = warp::path!("login")
+        .and(warp::post())
+        .and(warp::body::json())
+        .and_then(|credentials: Credentials| async move {
+            // Validate credentials (dummy validation for simplicity)
+            if credentials.username == "user" && credentials.password == "password" {
+                let token = jwt_util::create_token(&credentials.username)?;
+                Ok(warp::reply::json(&LoginResponse { token }))
+            } else {
+                Err(warp::reject::custom(InvalidCredentials))
+            }
+        });
+
+    // Authenticated route
+    let auth_route = warp::path!("auth_route")
+        .and(warp::header("authorization"))
+        .and_then(|authorization: String| async move {
+            let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(InvalidTokenFormat))?;
+            let claims = jwt_util::verify_token(token)?;
+            // Now claims contains the user info
+            Ok(warp::reply::json(&claims))
+        });
+
     // GET / -> index html
     let index = warp::path::end()
         .and(warp::fs::file("static/chat.html"));
@@ -59,7 +83,7 @@ pub async fn server() {
     let static_files = warp::path("static")
         .and(warp::fs::dir("static"));
 
-    let routes = index.or(chat_recv).or(chat_send).or(static_files);
+    let routes = index.or(chat_recv).or(chat_send).or(static_files).or(login).or(auth_route);
 
     warp::serve(routes).run(([0, 0, 0, 0], 3132)).await;
 }
@@ -102,16 +126,21 @@ pub enum ChatUIMessage {
 pub struct NotUtf8;
 impl warp::reject::Reject for NotUtf8 {}
 
-/// Our state of currently connected users.
-///
-/// - Key is their id
-/// - Value is a sender of `Message`
+#[derive(Debug)]
+struct InvalidCredentials;
+impl reject::Reject for InvalidCredentials {}
+
+#[derive(Debug)]
+struct InvalidTokenFormat;
+impl reject::Reject for InvalidTokenFormat {}
+
+
 type Users = Arc<Mutex<HashMap<usize, mpsc::UnboundedSender<ChatUIMessage>>>>;
 
 fn user_connected(users: Users) -> impl Stream<Item = Result<Event, warp::Error>> + Send + 'static {
     // Use a counter to assign a new unique ID for this user.
-    let my_id = NEXT_USER_ID.fetch_add(1, Ordering::Relaxed);
-
+    //let my_id = NEXT_USER_ID.fetch_add(1, Ordering::Relaxed);
+    let my_id = 1;
     eprintln!("new chat user: {}", my_id);
 
     // Use an unbounded channel to handle buffering and flushing of messages
@@ -162,3 +191,13 @@ fn user_message(my_id: usize, msg: String, users: &Users) {
     });
 }
 
+#[derive(serde::Deserialize)]
+struct Credentials {
+    username: String,
+    password: String,
+}
+
+#[derive(serde::Serialize)]
+struct LoginResponse {
+    token: String,
+}

@@ -22,7 +22,8 @@ pub struct Handler {
     pub states: Dynamic,
     pub ast: AST,
     pub script: String,
-    pub dir: String
+    pub dir: String,
+    pub session_id: usize
 }
 
 use regex::Regex;
@@ -145,7 +146,8 @@ pub fn init(path: &str, session_id: usize) -> Result<Handler>  {
         states,
         ast,
         script: with_utils,
-        dir
+        dir,
+        session_id
     };
 
     Ok(handler)
@@ -213,7 +215,7 @@ pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) ->
         
     let output = match result {
         Ok(result) => {
-            save_states(handler, session_id)?;
+            save_states(handler, handler.session_id)?;
             format!("{:?}", result)
         },
         Err(err) => {
@@ -240,8 +242,8 @@ fn sandboxed_path(str_path: &str) -> Result<PathBuf, Box<EvalAltResult>> {
 }
 
 fn save_states(handler: &Handler, session_id: usize) -> Result<()> {
-    let states_map = handler.states.downcast_ref::<Map>().ok_or(anyhow!("Could not access states as map."))?;
-    let data = serde_json::to_string(states_map)?;
+    let states_map = dyn_map!(handler.states, "Could not access states as map.")?;
+    let data = serde_json::to_string(&states_map)?;
     let states_file = format!("data/sessions/states-{}.json", session_id);
     fs::write(&states_file, data)?;
     Ok(())

@@ -14,6 +14,7 @@ mod scripts;
 mod openai_chat;
 mod agent;
 mod agentmgr;
+mod jwt_util;
 mod api;
 
 use api::server;

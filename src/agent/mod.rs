@@ -62,7 +62,7 @@ impl Agent {
         let model = s!("gpt-4");
         let mut log = ChatLog::new(session_id);
         let chat = OpenAIChat::new(model.clone());
-        let mut handler = scripts::init(&script_path)?;
+        let mut handler = scripts::init(&script_path, session_id)?;
 
         let mut instance = Self{ functions: Vec::<ChatCompletionFunctions>::new(),
                               session_id, log, model, chat, handler,
@@ -159,7 +159,7 @@ impl Agent {
 
     pub async fn run(&mut self) -> Result<()> {
         println!("OK");
-        let mut need_user_input = false;
+        let mut need_user_input = true;
         loop {
             if need_user_input {
                 let input_str = self.receiver.recv_async().await.context("error")?; 
