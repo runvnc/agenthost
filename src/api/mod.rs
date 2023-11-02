@@ -56,7 +56,7 @@ pub async fn server() {
         .and(warp::post())
         .and(warp::body::json())
         .and_then(|credentials: Credentials| async move {
-            // Validate credentials (dummy validation for simplicity)
+            
             if credentials.username == "user" && credentials.password == "password" {
                 let token = jwt_util::create_token(&credentials.username)?;
                 Ok(warp::reply::json(&LoginResponse { token }))
