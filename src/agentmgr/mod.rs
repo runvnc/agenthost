@@ -12,29 +12,36 @@ use crate::api::ChatUIMessage;
 
 
 #[derive(Debug, Clone)]
+pub struct SessionCache {
+    cache: HashMap<usize, (flume::Sender<String>, flume::Receiver<ChatUIMessage>)>,
+}
+
+#[derive(Debug, Clone)]
 pub struct AgentManager {
-    cache: Arc<Mutex<HashMap<usize, (flume::Sender<String>, flume::Receiver<ChatUIMessage>)>>>,
+    user_cache: Arc<Mutex<HashMap<String, SessionCache>>>,
 }
 
 impl AgentManager {
     pub fn new() -> Self {
         AgentManager {
-            cache: Arc::new(Mutex::new(HashMap::new())),
+            user_cache: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
-    pub async fn get_or_create_agent(&self, id: usize, script_path: String) -> 
+    pub async fn get_or_create_agent(&self, username: String, id: usize, script_path: String) -> 
         (flume::Sender<String>, flume::Receiver<ChatUIMessage>) {
 
-        let mut cache = self.cache.lock().unwrap();
+        let mut user_cache = self.user_cache.lock().unwrap();
 
-        if let Some((sender, reply_receiver)) = cache.get(&id) {
+        let session_cache = user_cache.entry(username).or_insert_with(|| SessionCache { cache: HashMap::new() });
+
+        if let Some((sender, reply_receiver)) = session_cache.cache.get(&id) {
             return (sender.clone(), reply_receiver.clone());
         }
 
         let (sender, mut receiver) = flume::bounded(500);
         let (reply_sender, reply_receiver) = flume::bounded(500);
-        cache.insert(id, (sender.clone(), reply_receiver.clone()));
+        session_cache.cache.insert(id, (sender.clone(), reply_receiver.clone()));
         let session_id = id.clone();
 
         thread::spawn(move || {
