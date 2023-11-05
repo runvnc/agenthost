@@ -46,7 +46,7 @@ impl AgentManager {
 
         thread::spawn(move || {
             let future = async move {
-                let mut agent = Agent::new(session_id, script_path, receiver, reply_sender).expect("no agent");
+                let mut agent = Agent::new(username, session_id, script_path, receiver, reply_sender).expect("no agent");
                 agent.run().await;
             };
             let rt = Runtime::new().unwrap();
