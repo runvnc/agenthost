@@ -10,6 +10,7 @@ use tokio::*;
 use std::thread;
 use crate::api::ChatUIMessage;
 
+
 #[derive(Debug, Clone)]
 pub struct AgentManager {
     cache: Arc<Mutex<HashMap<usize, (flume::Sender<String>, flume::Receiver<ChatUIMessage>)>>>,
@@ -44,11 +45,6 @@ impl AgentManager {
             let rt = Runtime::new().unwrap();
             rt.block_on(future);
         });
-
-        //thread::spawn(|| async move {
-        //    let mut agent = Agent::new(script_path, receiver, reply_sender).expect("no agent");
-        //    agent.run().await;
-        //});
 
         (sender, reply_receiver)
     }

@@ -5,14 +5,14 @@ use warp::Rejection;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    pub sub: String,
-    pub exp: usize,
+    pub username: String,
+    pub expires: usize,
 }
 
 pub fn create_token(user_id: &str) -> Result<String, Rejection> {
     let my_claims = Claims {
-        sub: user_id.to_owned(),
-        exp: (chrono::Utc::now() + chrono::Duration::hours(24)).timestamp() as usize,
+        username: user_id.to_owned(),
+        expires: (chrono::Utc::now() + chrono::Duration::hours(24)).timestamp() as usize,
     };
     let key = "secret";
     encode(&Header::default(), &my_claims, key.as_ref())

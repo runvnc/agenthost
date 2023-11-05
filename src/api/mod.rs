@@ -14,7 +14,7 @@ use flume::*;
 
 use crate::agent::Agent;
 use crate::agentmgr::AgentManager;
-use crate::jwt_util;
+use crate::jwt_util::{Claims, create_token, verify_token}};
 use crate::{s};
 
 pub async fn server() {
@@ -32,6 +32,10 @@ pub async fn server() {
     let chat_send = warp::path("chat")
         .and(warp::post())
         .and(warp::path::param::<usize>())
+        .and(warp::header("authorization"))
+        .and_then(|authorization: String| async move {
+            let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(InvalidTokenFormat))?;
+            let claims = jwt_util::verify_token(token)?;
         .and(warp::body::content_length_limit(500))
         .and(
             warp::body::bytes().and_then(|body: bytes::Bytes| async move {
@@ -47,6 +51,8 @@ pub async fn server() {
    // GET /chat -> messages stream
     let chat_recv = warp::path("chat").and(warp::get()).and(users).map(|users| {
         // reply using server-sent events
+        let claims = jwt_util::verify_token(token)?;
+        println!("User connected: {}", claims.username);
         let stream = user_connected(users);
         warp::sse::reply(warp::sse::keep_alive().stream(stream))
     });
