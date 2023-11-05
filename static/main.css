@@ -1,0 +1,69 @@
+        #chat {
+          max-height: 80vh;
+          overflow-y: scroll;
+        }
+        #chat ul {
+            list-style: disc;
+            padding-left: 1em;
+        }
+        #chat ol {
+            list-style: decimal;
+            padding-left: 1em;
+        }
+        .av {
+          width: 40px;
+          height: 40px;
+          margin-right: 30px;
+        }
+        .name {
+          display: none;
+          padding-left: 5px;
+          padding-right: 5px;
+        }
+        #chat blockquote {
+            border-left: 4px solid #ddd;
+            padding-left: 1em;
+            color: #aaa;
+        }
+        #chat div {
+            /* background-color: #eee; */
+            padding: 0.5em;
+            margin-bottom: 1em;
+            display: flex;
+            align-items: start;
+        }
+        #chat p {
+            margin-bottom: 1em;
+        }
+        #chat code {
+            font-family: monospace;
+        }
+        .fn_name {
+            color: #FFA500; /* orange */
+        }
+        .fn_result {
+          margin-bottom: 0 !important;
+        }
+        .param_name {
+            color: #FFFF00; /* yellow */
+        }
+
+        .param_value {
+            color: #00FFFF; /* cyan */
+        }
+      
+        .action span {
+          padding-left: 2px;
+          padding-right: 3px;
+        }
+        .action {
+          display: block !important;
+        }
+        .action details {
+          display: block;
+        }
+        .logohead {
+          width: 46px;
+          height: 46px;
+          margin: 20px;
+        }
