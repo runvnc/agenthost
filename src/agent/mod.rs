@@ -41,6 +41,7 @@ pub enum AgentMessage {
 }
 
 pub struct Agent {
+    username: String,
     functions: Vec::<ChatCompletionFunctions>,
     session_id: usize,
     log: ChatLog,
@@ -51,9 +52,8 @@ pub struct Agent {
     reply_sender: flume::Sender<ChatUIMessage>
 }
 
-
 impl Agent {
-    pub fn new(session_id: usize, script_path: String,
+    pub fn new(username: String, session_id: usize, script_path: String,
                receiver: flume::Receiver<String>,
                reply_sender: flume::Sender<ChatUIMessage> ) -> Result<Self> {
         println!("AgentHost 0.1 Startup agent..");

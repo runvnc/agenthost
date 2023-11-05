@@ -105,12 +105,13 @@ pub fn fn_result_msg(fn_name: &String, result:&String) -> Result<ChatMessage> {
 
 
 impl ChatLog {
-    pub fn new(session_id: usize) -> Self {
-        let path = format!("data/sessions/{}.json", session_id);
+    pub fn new(username: String, session_id: usize) -> Self {
+        let path = format!("data/{}/sessions/{}.json", username, session_id);
         if Path::new(&path).exists() {
             let data = fs::read_to_string(&path).unwrap();
             serde_json::from_str(&data).unwrap()
         } else {
+            fs::create_dir_all(format!("data/{}", username)).unwrap();
             Self { session_id, messages: Vec::<ChatMessage>::new() }
         }
     }
