@@ -36,7 +36,7 @@ pub async fn server() {
         .and_then(|authorization: String| async move {
             let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(SimpleRejection("Invalid token format".into())))?;
             let claims = verify_token(token)?;
-            claims.username
+            Ok::<_, warp::Rejection>(claims.username)
         })
         .and(warp::body::content_length_limit(500))
         .and(
@@ -53,10 +53,11 @@ pub async fn server() {
    // GET /chat -> messages stream
     let chat_recv = warp::path("chat").and(warp::get())
         .and(warp::header("authorization"))
-        .and_then(|user_id: usize, authorization: String| async move {
+        .and_then(|(user_id, authorization): (usize, String)| async move {
             let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(SimpleRejection("Invalid token format".into())))?;
             let claims = verify_token(token)?;
             println!("User connected: {}", claims.username);
+            Ok::<_, warp::Rejection>(())
         })
         .and(users).map(|users| {
          let stream = user_connected(users);
