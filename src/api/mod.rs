@@ -7,14 +7,14 @@ use std::sync::{
 };
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use warp::{sse::Event, Filter};
+use warp::{sse::Event, Filter, reject};
 use rhai::{Engine};
 use tokio::runtime::Runtime;
 use flume::*;
 
 use crate::agent::Agent;
 use crate::agentmgr::AgentManager;
-use crate::jwt_util::{Claims, create_token, verify_token}};
+use crate::jwt_util::{Claims, create_token, verify_token};
 use crate::{s};
 
 pub async fn server() {
@@ -35,7 +35,9 @@ pub async fn server() {
         .and(warp::header("authorization"))
         .and_then(|authorization: String| async move {
             let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(InvalidTokenFormat))?;
-            let claims = jwt_util::verify_token(token)?;
+            let claims = verify_token(token)?;
+            claims.username
+        })
         .and(warp::body::content_length_limit(500))
         .and(
             warp::body::bytes().and_then(|body: bytes::Bytes| async move {
@@ -49,13 +51,17 @@ pub async fn server() {
         .and_then(handle_msg);
         
    // GET /chat -> messages stream
-    let chat_recv = warp::path("chat").and(warp::get()).and(users).map(|users| {
-        // reply using server-sent events
-        let claims = jwt_util::verify_token(token)?;
-        println!("User connected: {}", claims.username);
-        let stream = user_connected(users);
-        warp::sse::reply(warp::sse::keep_alive().stream(stream))
-    });
+    let chat_recv = warp::path("chat").and(warp::get()).
+        .and(warp::header("authorization"))
+        .and_then(|authorization: String| async move {
+            let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(InvalidTokenFormat))?;
+            let claims = verify_token(token)?;
+            println!("User connected: {}", claims.username);
+        })
+        .and(users).map(|users| {
+         let stream = user_connected(users);
+          warp::sse::reply(warp::sse::keep_alive().stream(stream))
+        });
 
 
     let login = warp::path!("login")
@@ -65,7 +71,7 @@ pub async fn server() {
             
             if credentials.username.starts_with("anon") || 
                (credentials.username == "user" && credentials.password == "password") {
-                let token = jwt_util::create_token(&credentials.username)?;
+                let token = create_token(&credentials.username)?;
                 Ok(warp::reply::json(&LoginResponse { token }))
             } else {
                 Err(warp::reject::custom(InvalidCredentials))
@@ -77,7 +83,7 @@ pub async fn server() {
         .and(warp::header("authorization"))
         .and_then(|authorization: String| async move {
             let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(InvalidTokenFormat))?;
-            let claims = jwt_util::verify_token(token)?;
+            let claims = verify_token(token)?;
             // Now claims contains the user info
             Ok(warp::reply::json(&claims))
         });
@@ -95,7 +101,7 @@ pub async fn server() {
     warp::serve(routes).run(([0, 0, 0, 0], 3132)).await;
 }
 
-async fn handle_msg(my_id: usize, msg:String, users: Users,
+async fn handle_msg(my_id: usize, userid: String, msg:String, users: Users,
                     manager: AgentManager) -> Result<impl warp::Reply, Infallible> {
     let (sender, reply_receiver) = manager.get_or_create_agent(my_id, s!("scripts/dm.rhai")).await;
 
