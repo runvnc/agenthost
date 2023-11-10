@@ -139,9 +139,8 @@ pub enum ChatUIMessage {
 pub struct NotUtf8;
 impl warp::reject::Reject for NotUtf8 {}
 
-#[derive(Debug)]
-struct SimpleRejection(String);
-impl reject::Reject for SimpleRejection {}
+// Import SimpleRejection from the errors module.
+use crate::errors::SimpleRejection;
 
 
 type Users = Arc<Mutex<HashMap<usize, mpsc::UnboundedSender<ChatUIMessage>>>>;

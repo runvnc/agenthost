@@ -26,3 +26,5 @@ pub fn verify_token(token: &str) -> Result<Claims, Rejection> {
         .map(|data| data.claims)
 }
 
+// Import SimpleRejection from the errors module.
+use crate::errors::SimpleRejection;
