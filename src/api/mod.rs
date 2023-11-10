@@ -33,7 +33,7 @@ pub async fn server() {
         .and(warp::post())
         .and(warp::path::param::<usize>())
         .and(warp::header("authorization"))
-        .and_then(|authorization: String| async move -> Result<_, warp::Rejection> {
+        .and_then(|authorization: String| async move {
             let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(SimpleRejection("Invalid token format".into())))?;
             let claims = verify_token(token)?;
             claims.username
