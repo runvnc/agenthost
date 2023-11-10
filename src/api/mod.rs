@@ -140,12 +140,8 @@ pub struct NotUtf8;
 impl warp::reject::Reject for NotUtf8 {}
 
 #[derive(Debug)]
-struct InvalidCredentials;
-impl reject::Reject for InvalidCredentials {}
-
-#[derive(Debug)]
-struct InvalidTokenFormat;
-impl reject::Reject for InvalidTokenFormat {}
+struct SimpleRejection(String);
+impl reject::Reject for SimpleRejection {}
 
 
 type Users = Arc<Mutex<HashMap<usize, mpsc::UnboundedSender<ChatUIMessage>>>>;
