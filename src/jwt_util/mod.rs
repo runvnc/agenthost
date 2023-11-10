@@ -15,14 +15,16 @@ pub fn create_token(user_id: &str) -> Result<String, Rejection> {
         expires: (chrono::Utc::now() + chrono::Duration::hours(24)).timestamp() as usize,
     };
     let key = "secret";
-    encode(&Header::default(), &my_claims, key.as_ref())
-        .map_err(|_| warp::reject::custom("Token creation failed"))
+    let encoding_key = jwt::EncodingKey::from_secret(key.as_ref());
+    encode(&Header::default(), &my_claims, &encoding_key)
+        .map_err(|_| warp::reject::custom(SimpleRejection("Token creation failed".into())))
 }
 
 pub fn verify_token(token: &str) -> Result<Claims, Rejection> {
     let key = "secret";
-    decode::<Claims>(token, key.as_ref(), &Validation::default())
-        .map_err(|_| warp::reject::custom("Token verification failed"))
+    let decoding_key = jwt::DecodingKey::from_secret(key.as_ref());
+    decode::<Claims>(token, &decoding_key, &Validation::default())
+        .map_err(|_| warp::reject::custom(SimpleRejection("Token verification failed".into())))
         .map(|data| data.claims)
 }
 

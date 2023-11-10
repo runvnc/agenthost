@@ -33,7 +33,7 @@ pub async fn server() {
         .and(warp::post())
         .and(warp::path::param::<usize>())
         .and(warp::header("authorization"))
-        .and_then(|authorization: String| async move {
+        .and_then(|authorization: String| async move -> Result<_, warp::Rejection> {
             let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(SimpleRejection("Invalid token format".into())))?;
             let claims = verify_token(token)?;
             claims.username
@@ -51,9 +51,9 @@ pub async fn server() {
         .and_then(handle_msg);
         
    // GET /chat -> messages stream
-    let chat_recv = warp::path("chat").and(warp::get()).
+    let chat_recv = warp::path("chat").and(warp::get())
         .and(warp::header("authorization"))
-        .and_then(|authorization: String| async move {
+        .and_then(|user_id: usize, authorization: String| async move {
             let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(SimpleRejection("Invalid token format".into())))?;
             let claims = verify_token(token)?;
             println!("User connected: {}", claims.username);
@@ -82,7 +82,7 @@ pub async fn server() {
     let auth_route = warp::path!("auth_route")
         .and(warp::header("authorization"))
         .and_then(|authorization: String| async move {
-            let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(InvalidTokenFormat))?;
+            let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(SimpleRejection("Invalid token format".into())))?;
             let claims = verify_token(token)?;
             // Now claims contains the user info
             Ok(warp::reply::json(&claims))
@@ -103,7 +103,7 @@ pub async fn server() {
 
 async fn handle_msg(my_id: usize, userid: String, msg:String, users: Users,
                     manager: AgentManager) -> Result<impl warp::Reply, Infallible> {
-    let (sender, reply_receiver) = manager.get_or_create_agent(my_id, s!("scripts/dm.rhai")).await;
+    let (sender, reply_receiver) = manager.get_or_create_agent("username".to_string(), my_id, s!("scripts/dm.rhai")).await;
 
     sender.send_async(msg).await.unwrap();
 

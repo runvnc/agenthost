@@ -60,11 +60,11 @@ impl Agent {
         chatlog::init();
         //let model = s!("gpt-3.5-turbo");
         let model = s!("gpt-4");
-        let mut log = ChatLog::new(session_id);
+        let mut log = ChatLog::new(username.clone(), session_id);
         let chat = OpenAIChat::new(model.clone());
         let mut handler = scripts::init(&script_path, session_id)?;
 
-        let mut instance = Self{ functions: Vec::<ChatCompletionFunctions>::new(),
+        let mut instance = Self{ username, functions: Vec::<ChatCompletionFunctions>::new(),
                               session_id, log, model, chat, handler,
                               receiver, reply_sender };
 
