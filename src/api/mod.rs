@@ -34,7 +34,7 @@ pub async fn server() {
         .and(warp::path::param::<usize>())
         .and(warp::header("authorization"))
         .and_then(|authorization: String| async move {
-            let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(InvalidTokenFormat))?;
+            let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(SimpleRejection("Invalid token format".into())))?;
             let claims = verify_token(token)?;
             claims.username
         })
@@ -43,7 +43,7 @@ pub async fn server() {
             warp::body::bytes().and_then(|body: bytes::Bytes| async move {
                 std::str::from_utf8(&body)
                     .map(String::from)
-                    .map_err(|_e| warp::reject::custom(NotUtf8))
+                    .map_err(|_e| warp::reject::custom(SimpleRejection("Not UTF-8".into())))
             }),
         )
         .and(users.clone())
@@ -54,7 +54,7 @@ pub async fn server() {
     let chat_recv = warp::path("chat").and(warp::get()).
         .and(warp::header("authorization"))
         .and_then(|authorization: String| async move {
-            let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(InvalidTokenFormat))?;
+            let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(SimpleRejection("Invalid token format".into())))?;
             let claims = verify_token(token)?;
             println!("User connected: {}", claims.username);
         })
@@ -74,7 +74,7 @@ pub async fn server() {
                 let token = create_token(&credentials.username)?;
                 Ok(warp::reply::json(&LoginResponse { token }))
             } else {
-                Err(warp::reject::custom(InvalidCredentials))
+                Err(warp::reject::custom(SimpleRejection("Invalid credentials".into())))
             }
         });
 
