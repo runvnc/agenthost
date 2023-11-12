@@ -43,10 +43,7 @@ pub async fn server() -> Result<(), hyper::Error> {
     // Keep track of all connected users, key is usize, value
     // is an event stream sender.
     let users = Arc::new(Mutex::new(HashMap::new()));
-    // Turn our "state" into a new Filter...
-    let users = warp::any().map(move || users.clone());
     let manager = AgentManager::new();
-    let manager = warp::any().map(move || manager.clone());
 
     // POST /chat -> send message
 use axum::{
@@ -103,8 +100,8 @@ async fn handle_msg(
     let app = app.route("/chat/:user_id", post(chat_send_handler));
         
    // GET /chat -> messages stream
-    let chat_recv = warp::path("chat").and(warp::get())
-        .and(warp::header("authorization"))
+    let chat_recv = Router::new()
+        .route("/chat", get(chat_recv_handler))
         .and_then(|(user_id, authorization): (usize, String)| async move {
             let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(SimpleRejection("Invalid token format".into())))?;
             let claims = verify_token(token)?;
@@ -142,16 +139,19 @@ async fn handle_msg(
         });
 
     // GET / -> index html
-    let index = warp::path::end()
-        .and(warp::fs::file("static/chat.html"));
+    let index = Router::new()
+        .route("/", get(|| async { serve_file("static/chat.html").await }));
 
     // Serve static files from static/ directory
-    let static_files = warp::path("static")
-        .and(warp::fs::dir("static"));
+    let static_files = Router::new()
+        .route("/static/*path", get(serve_dir("static")));
 
     let routes = index.or(chat_recv).or(chat_send).or(static_files).or(login).or(auth_route);
 
-    warp::serve(routes).run(([0, 0, 0, 0], 3132)).await;
+    axum::Server::bind(&"0.0.0.0:3132".parse().unwrap())
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
 }
 
 async fn handle_msg(my_id: usize, userid: String, msg:String, users: Users,
