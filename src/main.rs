@@ -14,6 +14,7 @@ mod scripts;
 mod openai_chat;
 mod agent;
 mod agentmgr;
+mod errors;
 mod jwt_util;
 mod api;
 

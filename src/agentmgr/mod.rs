@@ -33,7 +33,7 @@ impl AgentManager {
 
         let mut user_cache = self.user_cache.lock().unwrap();
 
-        let session_cache = user_cache.entry(username).or_insert_with(|| SessionCache { cache: HashMap::new() });
+        let session_cache = user_cache.entry(username.clone()).or_insert_with(|| SessionCache { cache: HashMap::new() });
 
         if let Some((sender, reply_receiver)) = session_cache.cache.get(&id) {
             return (sender.clone(), reply_receiver.clone());
