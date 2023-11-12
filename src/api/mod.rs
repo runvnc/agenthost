@@ -51,11 +51,7 @@ impl IntoResponse for ApiError {
     }
 }
 
-// Middleware for logging
-// Move the middleware declarations inside the `server` function
-    .allow_methods(vec![header::GET, header::POST])
-    .allow_origin(Origin::exact("http://example.com".parse().unwrap()))
-    .allow_credentials(true);
+// Middleware declarations will be moved inside the `server` function below
 
 // Update the app to include middleware
 let app = Router::new()
