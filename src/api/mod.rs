@@ -102,16 +102,7 @@ async fn handle_msg(
    // GET /chat -> messages stream
     let chat_recv = Router::new()
         .route("/chat", get(chat_recv_handler))
-        .and_then(|(user_id, authorization): (usize, String)| async move {
-            let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(SimpleRejection("Invalid token format".into())))?;
-            let claims = verify_token(token)?;
-            println!("User connected: {}", claims.username);
-            Ok::<_, warp::Rejection>(())
-        })
-        .and(users).map(|users| {
-         let stream = user_connected(users);
-          warp::sse::reply(warp::sse::keep_alive().stream(stream))
-        });
+        .layer(Extension(users));
 
 
     let login = warp::path!("login")
