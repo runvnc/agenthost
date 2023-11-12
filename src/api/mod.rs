@@ -24,9 +24,21 @@ use crate::agentmgr::AgentManager;
 use crate::jwt_util::{Claims, create_token, verify_token};
 use crate::{s};
 
+use axum::{
+    Router,
+    routing::get,
+    http::StatusCode,
+    response::IntoResponse,
+};
+
+async fn hello_world() -> &'static str {
+    "Hello, world!"
+}
+
 pub async fn server() -> Result<(), hyper::Error> {
     pretty_env_logger::init();
-    let app = Router::new();
+    let app = Router::new()
+        .route("/", get(hello_world));
 
     // Keep track of all connected users, key is usize, value
     // is an event stream sender.
