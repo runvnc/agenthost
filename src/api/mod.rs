@@ -12,9 +12,59 @@ use axum::{
     routing::{get, post},
     response::sse::Event,
     extract::{Path, Json, ContentLengthLimit, Extension},
-    http::StatusCode,
+    http::{StatusCode, Request, Response},
     response::IntoResponse,
+    middleware::{self, Next},
+    body::Body,
+    error_handling::HandleErrorLayer,
 };
+use tower_http::{
+    trace::TraceLayer,
+    cors::{CorsLayer, Origin},
+};
+use http::header;
+
+// Define a custom error type for your application
+#[derive(Debug)]
+enum ApiError {
+    SimpleRejection(String),
+    InternalError,
+    // Add other error variants as needed
+}
+
+// Implement `IntoResponse` for `ApiError`
+impl IntoResponse for ApiError {
+    fn into_response(self) -> Response<Body> {
+        match self {
+            ApiError::SimpleRejection(message) => (
+                StatusCode::BAD_REQUEST,
+                format!("Error: {}", message),
+            )
+                .into_response(),
+            ApiError::InternalError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal server error",
+            )
+                .into_response(),
+            // Handle other error variants as needed
+        }
+    }
+}
+
+// Middleware for logging
+let logging_middleware = TraceLayer::new_for_http();
+
+// CORS middleware configuration
+let cors_middleware = CorsLayer::new()
+    .allow_methods(vec![header::GET, header::POST])
+    .allow_origin(Origin::exact("http://example.com".parse().unwrap()))
+    .allow_credentials(true);
+
+// Update the app to include middleware
+let app = Router::new()
+    // ... (rest of your routes)
+    .layer(logging_middleware)
+    .layer(cors_middleware);
 use rhai::{Engine};
 use tokio::runtime::Runtime;
 use flume::*;
