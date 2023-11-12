@@ -52,10 +52,7 @@ impl IntoResponse for ApiError {
 }
 
 // Middleware for logging
-let logging_middleware = TraceLayer::new_for_http();
-
-// CORS middleware configuration
-let cors_middleware = CorsLayer::new()
+// Move the middleware declarations inside the `server` function
     .allow_methods(vec![header::GET, header::POST])
     .allow_origin(Origin::exact("http://example.com".parse().unwrap()))
     .allow_credentials(true);
