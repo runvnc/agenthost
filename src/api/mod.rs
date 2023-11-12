@@ -140,13 +140,15 @@ async fn handle_msg(
 
     // GET / -> index html
     let index = Router::new()
-        .route("/", get(|| async { serve_file("static/chat.html").await }));
+        .route("/", get(serve_file("static/chat.html")));
+
+    use tower_http::services::ServeDir;
 
     // Serve static files from static/ directory
     let static_files = Router::new()
-        .route("/static/*path", get(serve_dir("static")));
+        .nest("/static", service(ServeDir::new("static")));
 
-    let routes = index.or(chat_recv).or(chat_send).or(static_files).or(login).or(auth_route);
+    let routes = index.or(chat_recv).or(chat_send).or(login).or(auth_route).merge(static_files);
 
     axum::Server::bind(&"0.0.0.0:3132".parse().unwrap())
         .serve(app.into_make_service())
