@@ -101,8 +101,8 @@ async fn handle_msg(
         
    // GET /chat -> messages stream
     let chat_recv = Router::new()
-        .route("/chat", get(user_connected))
-        .layer(Extension(users.clone()));
+        .route("/chat", get(chat_recv_handler))
+        .layer(Extension(users));
 
 
     let login = warp::path!("login")
