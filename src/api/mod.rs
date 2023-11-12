@@ -71,8 +71,10 @@ async fn chat_send_handler(
     Extension(manager): Extension<AgentManager>
 ) -> impl IntoResponse {
     // Extract the token from the authorization header
-    let token = authorization.strip_prefix("Bearer ").ok_or(SimpleRejection("Invalid token format".into()))?;
-    let claims = verify_token(token).map_err(|_| SimpleRejection("Invalid token".into()))?;
+    let token = authorization.strip_prefix("Bearer ")
+        .ok_or((StatusCode::BAD_REQUEST, "Invalid token format"))?;
+    let claims = verify_token(token)
+        .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid token"))?;
 
     // Call the existing handle_msg function to process the message
     match handle_msg(user_id, claims.username, msg, users, manager).await {
@@ -94,12 +96,13 @@ async fn handle_msg(
 ) -> Result<(), SimpleRejection> {
     let (sender, reply_receiver) = manager.get_or_create_agent(username, my_id, s!("scripts/dm.rhai")).await;
 
-    sender.send_async(msg).await.map_err(|_| SimpleRejection("Failed to send message".into()))?;
+    sender.send_async(msg).await.map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to send message"))?;
 
     if let Some(reply) = reply_receiver.recv_async().await {
-        let users_lock = users.lock().map_err(|_| SimpleRejection("Failed to lock users".into()))?;
+        let users_lock = users.lock().map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to lock users"))?;
         if let Some(tx) = users_lock.get(&my_id) {
-            tx.send(ChatUIMessage::Reply(reply)).map_err(|_| SimpleRejection("Failed to send reply".into()))?;
+            tx.send(ChatUIMessage::Reply(reply))
+                .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to send reply"))?;
         }
     }
 
@@ -126,8 +129,7 @@ async fn handle_msg(
     ) -> impl IntoResponse {
         if credentials.username.starts_with("anon") || 
            (credentials.username == "user" && credentials.password == "password") {
-            let token = create_token(&credentials.username)
-                .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create token"))?;
+            let token = create_token(&credentials.username).map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create token"))?;
             (StatusCode::OK, Json(LoginResponse { token }))
         } else {
             (StatusCode::UNAUTHORIZED, "Invalid credentials").into_response()
@@ -140,10 +142,8 @@ async fn handle_msg(
     async fn auth_route_handler(
         Header(authorization): Header<String>
     ) -> Result<Json<Claims>, (StatusCode, &'static str)> {
-        let token = authorization.strip_prefix("Bearer ")
-            .ok_or((StatusCode::BAD_REQUEST, "Invalid token format"))?;
-        let claims = verify_token(token)
-            .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid token"))?;
+        let token = authorization.strip_prefix("Bearer ").ok_or((StatusCode::BAD_REQUEST, "Invalid token format"))?;
+        let claims = verify_token(token).map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid token"))?;
         Ok(Json(claims))
     }
 
