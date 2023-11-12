@@ -105,29 +105,36 @@ async fn handle_msg(
         .layer(Extension(users));
 
 
-    let login = warp::path!("login")
-        .and(warp::post())
-        .and(warp::body::json())
-        .and_then(|credentials: Credentials| async move {
-            
-            if credentials.username.starts_with("anon") || 
-               (credentials.username == "user" && credentials.password == "password") {
-                let token = create_token(&credentials.username)?;
-                Ok(warp::reply::json(&LoginResponse { token }))
-            } else {
-                Err(warp::reject::custom(SimpleRejection("Invalid credentials".into())))
-            }
-        });
+    let login = Router::new()
+        .route("/login", post(login_handler))
+        .layer(Extension(manager.clone()));
 
-    // Authenticated route
-    let auth_route = warp::path!("auth_route")
-        .and(warp::header("authorization"))
-        .and_then(|authorization: String| async move {
-            let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(SimpleRejection("Invalid token format".into())))?;
-            let claims = verify_token(token)?;
-            // Now claims contains the user info
-            Ok(warp::reply::json(&claims))
-        });
+    async fn login_handler(
+        Json(credentials): Json<Credentials>,
+        Extension(manager): Extension<AgentManager>
+    ) -> impl IntoResponse {
+        if credentials.username.starts_with("anon") || 
+           (credentials.username == "user" && credentials.password == "password") {
+            let token = create_token(&credentials.username)
+                .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create token"))?;
+            (StatusCode::OK, Json(LoginResponse { token }))
+        } else {
+            (StatusCode::UNAUTHORIZED, "Invalid credentials").into_response()
+        }
+    }
+
+    let auth_route = Router::new()
+        .route("/auth_route", get(auth_route_handler));
+
+    async fn auth_route_handler(
+        Header(authorization): Header<String>
+    ) -> Result<Json<Claims>, (StatusCode, &'static str)> {
+        let token = authorization.strip_prefix("Bearer ")
+            .ok_or((StatusCode::BAD_REQUEST, "Invalid token format"))?;
+        let claims = verify_token(token)
+            .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid token"))?;
+        Ok(Json(claims))
+    }
 
     // GET / -> index html
     let index = Router::new()
@@ -139,12 +146,17 @@ async fn handle_msg(
     let static_files = Router::new()
         .nest("/static", service(ServeDir::new("static")));
 
-    let routes = index.or(chat_recv).or(chat_send).or(login).or(auth_route).merge(static_files);
+    let app = Router::new()
+        .merge(index)
+        .merge(chat_recv)
+        .merge(chat_send)
+        .merge(login)
+        .merge(auth_route)
+        .merge(static_files);
 
     axum::Server::bind(&"0.0.0.0:3132".parse().unwrap())
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+        .serve(app.into_make_service_with_connect_info::<std::net::SocketAddr>())
+        .await?;
 }
 
 async fn handle_msg(my_id: usize, userid: String, msg:String, users: Users,
