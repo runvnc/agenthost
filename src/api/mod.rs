@@ -24,36 +24,7 @@ use tower_http::{
 };
 use http::header;
 
-// Define a custom error type for your application
-#[derive(Debug)]
-enum ApiError {
-    SimpleRejection(String),
-    InternalError,
-    // Add other error variants as needed
-}
-
-// Implement `IntoResponse` for `ApiError`
-impl IntoResponse for ApiError {
-    fn into_response(self) -> Response<Body> {
-        let (status, message) = match self {
-            ApiError::SimpleRejection(message) => (
-                StatusCode::BAD_REQUEST,
-                message.as_str(),
-            ),
-            ApiError::InternalError => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Internal server error",
-            ),
-            // Handle other error variants as needed
-        };
-        let body = Body::from(message);
-        let response = Response::builder()
-            .status(status)
-            .body(body)
-            .unwrap();
-        response
-    }
-}
+// Remove the ApiError enum and its IntoResponse implementation
 
 use rhai::{Engine};
 use tokio::runtime::Runtime;
