@@ -65,11 +65,37 @@ async fn chat_send_handler(
     // Extract the token from the authorization header
     let token = authorization.strip_prefix("Bearer ").ok_or(SimpleRejection("Invalid token format".into()))?;
     let claims = verify_token(token).map_err(|_| SimpleRejection("Invalid token".into()))?;
-    
-    // Here you would include the logic to handle the message, similar to the existing handle_msg function
-    // ...
 
-    AxumJson("ok")
+    // Call the existing handle_msg function to process the message
+    match handle_msg(user_id, claims.username, msg, users, manager).await {
+        Ok(_) => AxumJson("ok"),
+        Err(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Failed to handle message"
+        ).into_response(),
+    }
+}
+
+// Since handle_msg is now an async function, we need to update its signature and implementation
+async fn handle_msg(
+    my_id: usize,
+    username: String,
+    msg: String,
+    users: Users,
+    manager: AgentManager
+) -> Result<(), SimpleRejection> {
+    let (sender, reply_receiver) = manager.get_or_create_agent(username, my_id, s!("scripts/dm.rhai")).await;
+
+    sender.send_async(msg).await.map_err(|_| SimpleRejection("Failed to send message".into()))?;
+
+    if let Some(reply) = reply_receiver.recv_async().await {
+        let users_lock = users.lock().map_err(|_| SimpleRejection("Failed to lock users".into()))?;
+        if let Some(tx) = users_lock.get(&my_id) {
+            tx.send(ChatUIMessage::Reply(reply)).map_err(|_| SimpleRejection("Failed to send reply".into()))?;
+        }
+    }
+
+    Ok(())
 }
 
 // ... (rest of the existing code)
