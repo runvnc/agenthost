@@ -200,7 +200,7 @@ use crate::errors::SimpleRejection;
 
 type Users = Arc<Mutex<HashMap<usize, mpsc::UnboundedSender<ChatUIMessage>>>>;
 
-fn user_connected(users: Users) -> impl Stream<Item = Result<Event, warp::Error>> + Send + 'static {
+fn user_connected(users: Users) -> impl Stream<Item = Result<axum::response::sse::Event, Infallible>> + Send + 'static {
     // Use a counter to assign a new unique ID for this user.
     //let my_id = NEXT_USER_ID.fetch_add(1, Ordering::Relaxed);
     let my_id = 1;
