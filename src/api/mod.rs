@@ -35,19 +35,23 @@ enum ApiError {
 // Implement `IntoResponse` for `ApiError`
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response<Body> {
-        match self {
+        let (status, message) = match self {
             ApiError::SimpleRejection(message) => (
                 StatusCode::BAD_REQUEST,
-                format!("Error: {}", message),
-            )
-                .into_response(),
+                message.as_str(),
+            ),
             ApiError::InternalError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Internal server error",
-            )
-                .into_response(),
+            ),
             // Handle other error variants as needed
-        }
+        };
+        let body = Body::from(message);
+        let response = Response::builder()
+            .status(status)
+            .body(body)
+            .unwrap();
+        response
     }
 }
 
