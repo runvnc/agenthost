@@ -7,7 +7,14 @@ use std::sync::{
 };
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use warp::{sse::Event, Filter, reject};
+use axum::{
+    Router,
+    routing::{get, post},
+    response::sse::Event,
+    extract::{Path, Json, ContentLengthLimit, Extension},
+    http::StatusCode,
+    response::IntoResponse,
+};
 use rhai::{Engine};
 use tokio::runtime::Runtime;
 use flume::*;
@@ -17,8 +24,9 @@ use crate::agentmgr::AgentManager;
 use crate::jwt_util::{Claims, create_token, verify_token};
 use crate::{s};
 
-pub async fn server() {
+pub async fn server() -> Result<(), hyper::Error> {
     pretty_env_logger::init();
+    let app = Router::new();
 
     // Keep track of all connected users, key is usize, value
     // is an event stream sender.
