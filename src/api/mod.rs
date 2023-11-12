@@ -51,13 +51,6 @@ impl IntoResponse for ApiError {
     }
 }
 
-// Middleware declarations will be moved inside the `server` function below
-
-// Update the app to include middleware
-let app = Router::new()
-    // ... (rest of your routes)
-    .layer(logging_middleware)
-    .layer(cors_middleware);
 use rhai::{Engine};
 use tokio::runtime::Runtime;
 use flume::*;
