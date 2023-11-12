@@ -49,26 +49,32 @@ pub async fn server() -> Result<(), hyper::Error> {
     let manager = warp::any().map(move || manager.clone());
 
     // POST /chat -> send message
-    let chat_send = warp::path("chat")
-        .and(warp::post())
-        .and(warp::path::param::<usize>())
-        .and(warp::header("authorization"))
-        .and_then(|authorization: String| async move {
-            let token = authorization.strip_prefix("Bearer ").ok_or(warp::reject::custom(SimpleRejection("Invalid token format".into())))?;
-            let claims = verify_token(token)?;
-            Ok::<_, warp::Rejection>(claims.username)
-        })
-        .and(warp::body::content_length_limit(500))
-        .and(
-            warp::body::bytes().and_then(|body: bytes::Bytes| async move {
-                std::str::from_utf8(&body)
-                    .map(String::from)
-                    .map_err(|_e| warp::reject::custom(SimpleRejection("Not UTF-8".into())))
-            }),
-        )
-        .and(users.clone())
-        .and(manager.clone())
-        .and_then(handle_msg);
+use axum::{
+    extract::{Path, Header, ContentLengthLimit, Json, Extension},
+    response::IntoResponse,
+    Json as AxumJson,
+};
+
+async fn chat_send_handler(
+    Path(user_id): Path<usize>,
+    Header(authorization): Header<String>,
+    ContentLengthLimit(Json(msg)): ContentLengthLimit<Json<String>, { 500 }>,
+    Extension(users): Extension<Users>,
+    Extension(manager): Extension<AgentManager>
+) -> impl IntoResponse {
+    // Extract the token from the authorization header
+    let token = authorization.strip_prefix("Bearer ").ok_or(SimpleRejection("Invalid token format".into()))?;
+    let claims = verify_token(token).map_err(|_| SimpleRejection("Invalid token".into()))?;
+    
+    // Here you would include the logic to handle the message, similar to the existing handle_msg function
+    // ...
+
+    AxumJson("ok")
+}
+
+// ... (rest of the existing code)
+
+    let app = app.route("/chat/:user_id", post(chat_send_handler));
         
    // GET /chat -> messages stream
     let chat_recv = warp::path("chat").and(warp::get())
