@@ -1,4 +1,4 @@
-    await anonymousLogin()
+    //await anonymousLogin()
     var sse = openEventSource('chat');
     var user_id;
     var currParagraph;

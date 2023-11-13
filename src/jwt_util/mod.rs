@@ -1,6 +1,6 @@
 extern crate jsonwebtoken as jwt;
-use jwt::{encode, decode, Header, Algorithm, Validation};
-use serde::{Serialize, Deserialize};
+use jwt::{decode, encode, Algorithm, Header, Validation};
+use serde::{Deserialize, Serialize};
 use warp::Rejection;
 
 #[derive(Debug, Serialize, Deserialize)]

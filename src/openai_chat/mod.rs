@@ -1,13 +1,11 @@
 //use smartstring::alias::String;
 
+use anyhow::Result;
 use std::io::{stdout, Write};
-use anyhow::{Result};
 
 use async_openai::{
     types::{
-        ChatCompletionFunctions,
-        ChatCompletionRequestMessage,
-        ChatCompletionFunctionsArgs,
+        ChatCompletionFunctions, ChatCompletionFunctionsArgs, ChatCompletionRequestMessage,
         CreateChatCompletionRequestArgs,
     },
     Client,
@@ -26,32 +24,35 @@ use crate::api::ChatUIMessage;
 
 pub struct OpenAIChat {
     model: String,
-    client: Client<OpenAIConfig>
+    client: Client<OpenAIConfig>,
 }
 
-pub fn chat_fn(func_name: String, descr: String, params: serde_json::Value) ->
-  Result<ChatCompletionFunctions> {
-    Ok( 
-        ChatCompletionFunctionsArgs::default()
-         .name(func_name)
-         .description(descr)
-         .parameters(params)
-         .build()?
-    )
+pub fn chat_fn(
+    func_name: String,
+    descr: String,
+    params: serde_json::Value,
+) -> Result<ChatCompletionFunctions> {
+    Ok(ChatCompletionFunctionsArgs::default()
+        .name(func_name)
+        .description(descr)
+        .parameters(params)
+        .build()?)
 }
 
 impl OpenAIChat {
     pub fn new(model: String) -> Self {
         Self {
             model,
-            client: Client::new()
+            client: Client::new(),
         }
     }
 
-    pub async fn send_request(&self, 
-            messages: Vec<ChatCompletionRequestMessage>,
-            functions: Vec<ChatCompletionFunctions>,
-            reply_sender: flume::Sender<ChatUIMessage>  ) -> Result<(String, String, String)> {
+    pub async fn send_request(
+        &self,
+        messages: Vec<ChatCompletionRequestMessage>,
+        functions: Vec<ChatCompletionFunctions>,
+        reply_sender: flume::Sender<ChatUIMessage>,
+    ) -> Result<(String, String, String)> {
         let request = CreateChatCompletionRequestArgs::default()
             .model(&*self.model)
             .messages(messages)
@@ -86,11 +87,13 @@ impl OpenAIChat {
                             }
                         } else if let Some(content) = &chat_choice.delta.content {
                             text.push_str(content);
-                            reply_sender.send_async(ChatUIMessage::Fragment(format!("*{}*", content))).await?;
+                            reply_sender
+                                .send_async(ChatUIMessage::Fragment(format!("*{}*", content)))
+                                .await?;
                         }
                     }
-                },
-                
+                }
+
                 Err(err) => {
                     println!("error: {err}");
                 }
@@ -98,6 +101,6 @@ impl OpenAIChat {
             stdout().flush()?;
         }
 
-        Ok( ( text, s!(""),s!("") ) )
+        Ok((text, s!(""), s!("")))
     }
 }

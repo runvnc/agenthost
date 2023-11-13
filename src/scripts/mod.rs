@@ -1,19 +1,17 @@
-use rhai::{CallFnOptions, Dynamic, Engine,
-           EvalAltResult, Position, Map, Scope, AST};
+use rhai::{CallFnOptions, Dynamic, Engine, EvalAltResult, Map, Position, Scope, AST};
+use serde_json::{self, json};
+use std::fs;
 use std::io::{stdout, Write};
 use std::path::{Path, PathBuf};
-use std::fs;
-use serde_json::{self, json};
 
 use rhai::packages::Package;
 use rhai_rand::RandomPackage;
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 
+use crate::cat::cat_files;
 use crate::{dyn_map, dyn_str};
-use crate::cat::{cat_files};
 use rhai_fs::FilesystemPackage;
-
 
 #[derive(Debug)]
 pub struct Handler {
@@ -23,7 +21,7 @@ pub struct Handler {
     pub ast: AST,
     pub script: String,
     pub dir: String,
-    pub session_id: usize
+    pub session_id: usize,
 }
 
 use regex::Regex;
@@ -88,7 +86,7 @@ fn get_directory(file_path: &str) -> String {
 
 #[cfg(not(feature = "no_function"))]
 #[cfg(not(feature = "no_object"))]
-pub fn init(path: &str, session_id: usize) -> Result<Handler>  {
+pub fn init(path: &str, session_id: usize) -> Result<Handler> {
     let dir = get_directory(path);
 
     stdout().flush().expect("flush stdout");
@@ -118,7 +116,7 @@ pub fn init(path: &str, session_id: usize) -> Result<Handler>  {
     let mut scope = Scope::new();
 
     println!("> Loading script file: {path} with utils.rhai appended");
-   
+
     let with_utils = cat_files(path, "scripts/utils.rhai")?;
 
     let ast = match engine.compile_with_scope(&scope, with_utils.as_str()) {
@@ -147,19 +145,22 @@ pub fn init(path: &str, session_id: usize) -> Result<Handler>  {
         ast,
         script: with_utils,
         dir,
-        session_id
+        session_id,
     };
 
     Ok(handler)
 }
 
 pub fn goto_stage(handler: &mut Handler, stage: &str) -> Result<()> {
-    let path = handler.dir.as_str().to_owned() + "/" + stage+".rhai";
+    let path = handler.dir.as_str().to_owned() + "/" + stage + ".rhai";
     println!("> Loading script file: {path} with utils.rhai appended");
-   
+
     let with_utils = cat_files(path.as_str(), "scripts/utils.rhai")?;
 
-    let ast = match handler.engine.compile_with_scope(&handler.scope, with_utils.as_str()) {
+    let ast = match handler
+        .engine
+        .compile_with_scope(&handler.scope, with_utils.as_str())
+    {
         Ok(ast) => ast,
         Err(err) => {
             eprintln!("! Error: {err}");
@@ -172,34 +173,41 @@ pub fn goto_stage(handler: &mut Handler, stage: &str) -> Result<()> {
         .eval_ast(false)
         .bind_this_ptr(&mut handler.states);
 
-    let result = handler.engine.call_fn_with_options::<()>(options, &mut handler.scope, &ast, "init", ());
+    let result =
+        handler
+            .engine
+            .call_fn_with_options::<()>(options, &mut handler.scope, &ast, "init", ());
 
     if let Err(err) = result {
         eprintln!("Script init() error: {err}")
     }
 
     handler.ast = ast;
-    Ok( () )
-} 
+    Ok(())
+}
 
 pub fn get_actions(handler: &mut Handler) -> Result<rhai::Map> {
     let states_map = dyn_map!(handler.states, "Could not access states as map.")?;
-    let actions = states_map.get("actions").ok_or(anyhow!("Could not read actions"))?;
+    let actions = states_map
+        .get("actions")
+        .ok_or(anyhow!("Could not read actions"))?;
     dyn_map!(actions, "Could not read actions as map")
 }
 
 pub fn get_sys_msg(handler: &mut Handler) -> Result<String> {
     let states_map = dyn_map!(handler.states, "Could not access states as map.")?;
-    dyn_str!(states_map, "sys")     
+    dyn_str!(states_map, "sys")
 }
 
 pub fn get_relevant_state(handler: &mut Handler) -> Result<String> {
     call_function(handler, "get_relevant", "{}")
 }
 
-pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) ->
-        Result<String> {
-    let argmap = handler.engine.parse_json(&args_json, true).unwrap_or(Map::new());
+pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) -> Result<String> {
+    let argmap = handler
+        .engine
+        .parse_json(&args_json, true)
+        .unwrap_or(Map::new());
     let arg = Dynamic::from_map(argmap);
 
     //println!("{:?}", handler.states);
@@ -212,18 +220,18 @@ pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) ->
         .bind_this_ptr(&mut handler.states);
 
     let result = engine.call_fn_with_options::<Dynamic>(options, scope, ast, func, (arg,));
-        
+
     let output = match result {
         Ok(result) => {
             save_states(handler, handler.session_id)?;
             format!("{:?}", result)
-        },
+        }
         Err(err) => {
             eprint_error(&handler.script, *err);
             "Error".to_string()
         }
     };
-    Ok( output )
+    Ok(output)
 }
 
 fn sandboxed_path(str_path: &str) -> Result<PathBuf, Box<EvalAltResult>> {

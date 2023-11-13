@@ -1,26 +1,16 @@
-
+use anyhow::Result;
 use once_cell::sync::OnceCell;
-use anyhow::{Result};
-use termion::{style};
+use termion::style;
 
-
-use async_openai::{
-    types::{
-        ChatCompletionRequestMessageArgs,
-        ChatCompletionRequestMessage,
-        FunctionCall,
-        Role,
-    }
+use async_openai::types::{
+    ChatCompletionRequestMessage, ChatCompletionRequestMessageArgs, FunctionCall, Role,
 };
 
-
-use tiktoken_rs::{CoreBPE, cl100k_base};
+use tiktoken_rs::{cl100k_base, CoreBPE};
 
 static BPE: OnceCell<CoreBPE> = OnceCell::new();
 
 //mod shorthands;
-
-
 
 #[derive(Serialize, Deserialize)]
 pub struct ChatMessage {
@@ -36,20 +26,21 @@ impl ChatMessage {
     }
 
     pub fn new_with_len(message: ChatCompletionRequestMessage, length: usize) -> Self {
-      Self { message, length }
+        Self { message, length }
     }
 
     pub fn calc_length(&mut self) {
-        let tokens = BPE.get().expect("No tokenizer").encode_with_special_tokens(
-            &(self.message.content.as_deref().unwrap_or(""))
-        );
+        let tokens = BPE
+            .get()
+            .expect("No tokenizer")
+            .encode_with_special_tokens(&(self.message.content.as_deref().unwrap_or("")));
 
         self.length = tokens.len()
     }
 }
 
+use serde::{Deserialize, Serialize};
 use std::fs;
-use serde::{Serialize, Deserialize};
 use std::path::Path;
 
 #[derive(Serialize, Deserialize)]
@@ -63,46 +54,44 @@ pub fn sys_msg(text: &String) -> Result<ChatMessage> {
         .role(Role::System)
         .content(text.as_str())
         .build()?;
-    Ok( ChatMessage::new(msg) )
+    Ok(ChatMessage::new(msg))
 }
 
 pub fn user_msg(text: &String) -> Result<ChatMessage> {
-   let msg = ChatCompletionRequestMessageArgs::default()
+    let msg = ChatCompletionRequestMessageArgs::default()
         .role(Role::User)
         .content(text)
         .build()?;
-   Ok( ChatMessage::new(msg) )
+    Ok(ChatMessage::new(msg))
 }
 
 pub fn agent_msg(text: &String) -> Result<ChatMessage> {
-   let msg = ChatCompletionRequestMessageArgs::default()
-            .role(Role::Assistant)
-            .content(text)
-            .build()?;
-   Ok( ChatMessage::new(msg) )
+    let msg = ChatCompletionRequestMessageArgs::default()
+        .role(Role::Assistant)
+        .content(text)
+        .build()?;
+    Ok(ChatMessage::new(msg))
 }
 
-pub fn fn_call_msg(fn_name: &String, args_json:&String) -> Result<ChatMessage> {
-   let msg = ChatCompletionRequestMessageArgs::default()
-            .role(Role::Assistant)
-            .function_call(
-                FunctionCall{ 
-                    name: fn_name.to_string(),
-                    arguments: args_json.to_string()
-                }
-            ).build()?;
-   Ok( ChatMessage::new(msg) )
+pub fn fn_call_msg(fn_name: &String, args_json: &String) -> Result<ChatMessage> {
+    let msg = ChatCompletionRequestMessageArgs::default()
+        .role(Role::Assistant)
+        .function_call(FunctionCall {
+            name: fn_name.to_string(),
+            arguments: args_json.to_string(),
+        })
+        .build()?;
+    Ok(ChatMessage::new(msg))
 }
 
-pub fn fn_result_msg(fn_name: &String, result:&String) -> Result<ChatMessage> {
-   let msg = ChatCompletionRequestMessageArgs::default()
-            .role(Role::Function)
-            .name(fn_name)
-            .content(result)
-            .build()?;
-   Ok( ChatMessage::new(msg) )
+pub fn fn_result_msg(fn_name: &String, result: &String) -> Result<ChatMessage> {
+    let msg = ChatCompletionRequestMessageArgs::default()
+        .role(Role::Function)
+        .name(fn_name)
+        .content(result)
+        .build()?;
+    Ok(ChatMessage::new(msg))
 }
-
 
 impl ChatLog {
     pub fn new(username: String, session_id: usize) -> Self {
@@ -112,7 +101,10 @@ impl ChatLog {
             serde_json::from_str(&data).unwrap()
         } else {
             fs::create_dir_all(format!("data/{}", username)).unwrap();
-            Self { session_id, messages: Vec::<ChatMessage>::new() }
+            Self {
+                session_id,
+                messages: Vec::<ChatMessage>::new(),
+            }
         }
     }
 
@@ -127,7 +119,12 @@ impl ChatLog {
         } else {
             self.messages.push(msg);
         }
-        let content: String = self.messages[0].message.content.as_ref().expect("The value is None").to_string();
+        let content: String = self.messages[0]
+            .message
+            .content
+            .as_ref()
+            .expect("The value is None")
+            .to_string();
         println!("System message changed to:\n{}", content);
         self.save();
     }
@@ -139,24 +136,24 @@ impl ChatLog {
     }
 
     pub fn to_request_msgs(&mut self, model: &str) -> Result<Vec<ChatCompletionRequestMessage>> {
-        let _i:i32 = 0;
+        let _i: i32 = 0;
         let max_tokens = match model {
             "gpt-3.5-turbo" => 3000,
-            _other           => 7000
+            _other => 7000,
         };
-        let mut msgs: Vec<ChatCompletionRequestMessage> = vec![ self.messages[0].message.clone() ];
+        let mut msgs: Vec<ChatCompletionRequestMessage> = vec![self.messages[0].message.clone()];
         let mut tokens = self.messages[0].length;
 
         for msg in self.messages.iter().rev() {
-           tokens += msg.length; 
-           if tokens <= max_tokens {
+            tokens += msg.length;
+            if tokens <= max_tokens {
                 msgs.insert(1, msg.message.clone());
-           } else {
+            } else {
                 break;
-           }
-        };
+            }
+        }
         //println!("{}({} of {} max tokens)", style::Reset,tokens, max_tokens);
-        Ok( msgs )
+        Ok(msgs)
     }
 }
 
@@ -169,7 +166,7 @@ pub fn init() {
 
 /*
     pub fn trimmed(&mut self, max_tokens: i64) -> Vec<ChatCompletionRequestMessage> {
-        
+
     }
 
     pub fn add_function_call(&mut self, name: String, args: serde_json::Value) {

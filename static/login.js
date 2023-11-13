@@ -1,5 +1,5 @@
 window.baseURL = window.baseURL || window.location.href.replace(/\/$/, '') + '/'
-console.log({baseURL: window.baseURL)
+console.log({baseURL: window.baseURL})
 
 async function anonymousLogin() {
   let user = localStorage.getItem('username')

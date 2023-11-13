@@ -1,22 +1,22 @@
 #![allow(warnings)]
 
 use std::io;
-use std::io::Write;
 use std::io::Read;
+use std::io::Write;
 
-use anyhow::{Result};
+use anyhow::Result;
 
 //mod connector;
-mod cat;
-mod shorthands;
-mod chatlog;
-mod scripts;
-mod openai_chat;
 mod agent;
 mod agentmgr;
-mod errors;
-mod jwt_util;
 mod api;
+mod cat;
+mod chatlog;
+//mod errors;
+//mod jwt_util;
+mod openai_chat;
+mod scripts;
+mod shorthands;
 
 use api::server;
 
@@ -25,10 +25,8 @@ use api::server;
 #[tokio::main]
 async fn main() -> Result<()> {
     api::server().await;
-    Ok( () )
+    Ok(())
 }
-
 
 //    io::stdout().flush().unwrap();
 //    io::stdin().read_line(&mut input).unwrap();
-
