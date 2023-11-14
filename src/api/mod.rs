@@ -211,10 +211,10 @@ async fn user_connected(Query(params): Query<HashMap<String, String>>)
             .get_or_create_agent(userid, session_id, s!("scripts/dm.rhai"))
             .await;
 
-        let events = flume::r#async::into_stream(rx).map(|msg| match msg {
-        ChatUIMessage::UserId(session_id) => Ok(Event::default().event("user").data(session_id.to_string())),
-        ChatUIMessage::Fragment(fragment) => Ok(Event::default().event("fragment").data(fragment)),
-        ChatUIMessage::Reply(reply) => Ok(Event::default().data(reply)),
+        let events = rx.stream().map(|msg| match msg {
+        ChatUIMessage::UserId(session_id) => Ok::<_, Infallible>(Event::default().event("user").data(session_id.to_string())),
+        ChatUIMessage::Fragment(fragment) => Ok::<_, Infallible>(Event::default().event("fragment").data(fragment)),
+        ChatUIMessage::Reply(reply) => Ok::<_, Infallible>(Event::default().data(reply)),
         ChatUIMessage::FunctionCall {
             name,
             params,
@@ -226,7 +226,7 @@ async fn user_connected(Query(params): Query<HashMap<String, String>>)
                 "params": params,
                 "result": result
             });
-            Ok(Event::default()
+            Ok::<_, Infallible>(Event::default()
                 .event("functionCall")
                 .data(data.to_string()))
         }
@@ -235,7 +235,7 @@ async fn user_connected(Query(params): Query<HashMap<String, String>>)
     .send_async(s!("Chat session initiated.")).await
     .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to send chat session initiation message"))?;
  
-    Ok(events)
+    Ok(Sse::new(events))
 }
 
 
