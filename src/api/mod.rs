@@ -132,7 +132,7 @@ pub async fn server() -> Result<(), hyper::Error> {
     let app = Router::new()
         .route("/hello", get(hello_world))
         .route("/login", post(login_handler))
-        .route("/chat", get(axum::handler::service(user_connected)))
+        .route("/chat", get(user_connected))
         .fallback(get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -211,7 +211,7 @@ async fn user_connected(Query(params): Query<HashMap<String, String>>)
             .get_or_create_agent(userid, session_id, s!("scripts/dm.rhai"))
             .await;
 
-        let events = UnboundedReceiverStream::new(rx).map(|msg| match msg {
+        let events = tokio_stream::wrappers::ReceiverStream::new(rx).map(|msg| match msg {
         ChatUIMessage::UserId(session_id) => Ok::<_, Infallible>(Event::default().event("user").data(session_id.to_string())),
         ChatUIMessage::Fragment(fragment) => Ok::<_, Infallible>(Event::default().event("fragment").data(fragment)),
         ChatUIMessage::Reply(reply) => Ok::<_, Infallible>(Event::default().data(reply)),
