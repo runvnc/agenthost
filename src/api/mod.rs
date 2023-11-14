@@ -193,12 +193,8 @@ pub enum ChatUIMessage {
 }
 
 async fn user_connected(Query(params): Query<HashMap<String, String>>)  
-  -> Result<impl Stream<Item = Result<axum::response::sse::Event, Infallible>> + Send + 'static, (StatusCode, &'static str) > {
-    use tokio_stream::wrappers::UnboundedReceiverStream;
-
-    async fn user_connected(Query(params): Query<HashMap<String, String>>)  
-      -> Result<impl Stream<Item = Result<axum::response::sse::Event, Infallible>> + Send + 'static, (StatusCode, &'static str)> {
-        let mut userid = s!("failuser");
+  -> Result<impl Stream<Item = Result<axum::response::sse::Event, Infallible>> + Send + 'static, (StatusCode, &'static str)> {
+    let mut userid = s!("failuser");
 
         if let Some(token) = params.get("token") {
             println!("Token: {}", token);
