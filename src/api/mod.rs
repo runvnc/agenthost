@@ -192,29 +192,33 @@ pub enum ChatUIMessage {
     },
 }
 
-async fn user_connected(Query(params): Query<HashMap<String, String>>)  
-  -> impl Stream<Item = Result<axum::response::sse::Event, Infallible>> + Send + 'static {
-    let userid = s!("failuser");
+async fn user_connected(Query(params): Query<HashMap<String, String>>) -> Result<impl Stream<Item = Result<Event, Infallible>> + Send + 'static, (StatusCode, &'static str)> {
+    let mut userid = s!("failuser");
+    let mut session_id = 1;
 
-    if let Some(token) = params.get("token") {                                                                                  
-        println!("Token: {}", token);
-        let claims = verify_token(token)?;
-        userid = claims.username;
+    if let Some(token) = params.get("token") {
+        if let Ok(claims) = verify_token(token) {
+            userid = claims.username;
+        } else {
+            return Err((StatusCode::UNAUTHORIZED, "Invalid token"));
+        }
     }
-    let session_id = 1;
+
     if let Some(session) = params.get("session_id") {
-       session_id = session.parse::<usize>()?; 
+        if let Ok(parsed_session_id) = session.parse::<usize>() {
+            session_id = parsed_session_id;
+        } else {
+            return Err((StatusCode::BAD_REQUEST, "Invalid session_id"));
+        }
     }
+
     eprintln!("chat user connected: {} {}", userid, session_id);
 
     let (tx, rx) = agent_mgr.get().expect("No Agent Manager!")
         .get_or_create_agent(userid, session_id, s!("scripts/dm.rhai"))
         .await;
 
-    //tx.send(ChatUIMessage::UserId(session_id))
-    //    .unwrap();
-
-    let events = rx.map(|msg| match msg {
+    let events = UnboundedReceiverStream::new(rx).map(|msg| Ok(match msg {
         ChatUIMessage::UserId(session_id) => Event::default().event("user").data(session_id.to_string()),
         ChatUIMessage::Fragment(fragment) => Event::default().event("fragment").data(fragment),
         ChatUIMessage::Reply(reply) => Event::default().data(reply),
