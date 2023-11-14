@@ -194,27 +194,28 @@ pub enum ChatUIMessage {
 
 async fn user_connected(Query(params): Query<HashMap<String, String>>)  
   -> Result<impl Stream<Item = Result<axum::response::sse::Event, Infallible>> + Send + 'static, (StatusCode, &'static str) > {
-    let userid = s!("failuser");
+    use tokio_stream::wrappers::UnboundedReceiverStream;
 
-    if let Some(token) = params.get("token") {                                                                                  
-        println!("Token: {}", token);
-        let claims = verify_token(token)?;
-        userid = claims.username;
-    }
-    let session_id = 1;
-    if let Some(session) = params.get("session_id") {
-       session_id = session.parse::<usize>()?; 
-    }
-    eprintln!("chat user connected: {} {}", userid, session_id);
+    async fn user_connected(Query(params): Query<HashMap<String, String>>)  
+      -> Result<impl Stream<Item = Result<Event, Infallible>> + Send + 'static, (StatusCode, &'static str)> {
+        let mut userid = s!("failuser");
 
-    let (tx, rx) = agent_mgr.get().expect("No Agent Manager!")
-        .get_or_create_agent(userid, session_id, s!("scripts/dm.rhai"))
-        .await;
+        if let Some(token) = params.get("token") {
+            println!("Token: {}", token);
+            let claims = verify_token(token).map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid token"))?;
+            userid = claims.username;
+        }
+        let mut session_id = 1;
+        if let Some(session) = params.get("session_id") {
+           session_id = session.parse::<usize>().map_err(|_| (StatusCode::BAD_REQUEST, "Invalid session_id"))?;
+        }
+        eprintln!("chat user connected: {} {}", userid, session_id);
 
-    //tx.send(ChatUIMessage::UserId(session_id))
-    //    .unwrap();
+        let (tx, rx) = agent_mgr.get().expect("No Agent Manager!")
+            .get_or_create_agent(userid, session_id, s!("scripts/dm.rhai"))
+            .await;
 
-    let events = rx.into_stream().map(|msg| match msg {
+        let events = UnboundedReceiverStream::new(rx).map(|msg| match msg {
         ChatUIMessage::UserId(session_id) => Ok(Event::default().event("user").data(session_id.to_string())),
         ChatUIMessage::Fragment(fragment) => Ok(Event::default().event("fragment").data(fragment)),
         ChatUIMessage::Reply(reply) => Ok(Event::default().data(reply)),
