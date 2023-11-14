@@ -1,6 +1,6 @@
 use crate::agent::Agent;
 use crate::api::ChatUIMessage;
-use flume;
+use flume::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -55,8 +55,8 @@ impl AgentManager {
             return (sender.clone(), reply_receiver.clone());
         }
 
-        let (sender, mut receiver) = flume::unbounded();
-        let (reply_sender, reply_receiver) = flume::unbounded();
+        let (sender, mut receiver) = flume::bounded(500);
+        let (reply_sender, reply_receiver) = flume::bounded(500);
         session_cache
             .cache
             .insert(id, (sender.clone(), reply_receiver.clone()));

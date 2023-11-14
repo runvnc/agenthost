@@ -18,15 +18,15 @@ use std::sync::{
     atomic::{AtomicUsize, Ordering},
     Arc, Mutex,
 };
-use flume;
-// Remove UnboundedReceiverStream import as it's no longer used
+use tokio::sync::mpsc;
+use tokio_stream::wrappers::UnboundedReceiverStream;
 use tower_http::{
     cors::{CorsLayer},
     trace::TraceLayer,
     services::{ServeDir}
 };
 
-// Remove flume import as it's no longer used
+use flume::*;
 use rhai::Engine;
 use tokio::runtime::Runtime;
 
@@ -211,7 +211,7 @@ async fn user_connected(Query(params): Query<HashMap<String, String>>)
             .get_or_create_agent(userid, session_id, s!("scripts/dm.rhai"))
             .await;
 
-        let events = tokio_stream::wrappers::ReceiverStream::new(rx).map(|msg| match msg.unwrap() {
+        let events = rx.stream().map(|msg| match msg {
         ChatUIMessage::UserId(session_id) => Ok::<_, Infallible>(Event::default().event("user").data(session_id.to_string())),
         ChatUIMessage::Fragment(fragment) => Ok::<_, Infallible>(Event::default().event("fragment").data(fragment)),
         ChatUIMessage::Reply(reply) => Ok::<_, Infallible>(Event::default().data(reply)),
@@ -231,8 +231,8 @@ async fn user_connected(Query(params): Query<HashMap<String, String>>)
                 .data(data.to_string()))
         }
     });
-   tx.send(s!("Chat session initiated."))
-    .await
+   tx
+    .send_async(s!("Chat session initiated.")).await
     .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to send chat session initiation message"))?;
  
     Ok(Sse::new(events))
