@@ -1,6 +1,6 @@
 use crate::agent::Agent;
 use crate::api::ChatUIMessage;
-use flume::*;
+use tokio::sync::mpsc;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -15,7 +15,7 @@ pub static agent_mgr: OnceCell<AgentManager> = OnceCell::new();
 
 #[derive(Debug, Clone)]
 pub struct SessionCache {
-    cache: HashMap<usize, (flume::Sender<String>, flume::Receiver<ChatUIMessage>)>,
+    cache: HashMap<usize, (mpsc::Sender<String>, mpsc::Receiver<ChatUIMessage>)>,
 }
 
 #[derive(Debug, Clone)]
@@ -42,7 +42,7 @@ impl AgentManager {
         username: String,
         id: usize,
         script_path: String,
-    ) -> (flume::Sender<String>, flume::Receiver<ChatUIMessage>) {
+    ) -> (mpsc::Sender<String>, mpsc::Receiver<ChatUIMessage>) {
         let mut user_cache = self.user_cache.lock().unwrap();
 
         let session_cache = user_cache
@@ -55,8 +55,8 @@ impl AgentManager {
             return (sender.clone(), reply_receiver.clone());
         }
 
-        let (sender, mut receiver) = flume::bounded(500);
-        let (reply_sender, reply_receiver) = flume::bounded(500);
+        let (sender, mut receiver) = mpsc::channel(500);
+        let (reply_sender, reply_receiver) = mpsc::channel(500);
         session_cache
             .cache
             .insert(id, (sender.clone(), reply_receiver.clone()));
