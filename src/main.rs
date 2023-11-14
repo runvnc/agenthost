@@ -28,5 +28,3 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-//    io::stdout().flush().unwrap();
-//    io::stdin().read_line(&mut input).unwrap();

@@ -9,6 +9,9 @@ use tokio::runtime::Runtime;
 use tokio::runtime::*;
 use tokio::sync::mpsc;
 use tokio::*;
+use once_cell::sync::OnceCell;
+
+pub static agent_mgr: OnceCell<AgentManager> = OnceCell::new();
 
 #[derive(Debug, Clone)]
 pub struct SessionCache {
@@ -20,6 +23,12 @@ pub struct AgentManager {
     user_cache: Arc<Mutex<HashMap<String, SessionCache>>>,
 }
 
+pub fn init() {
+    if !(agent_mgr.get().is_some()) {
+        println!("agentmgr: init..");
+        agent_mgr.set(AgentManager::new()).unwrap();
+    }
+}
 impl AgentManager {
     pub fn new() -> Self {
         AgentManager {

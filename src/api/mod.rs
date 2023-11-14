@@ -32,7 +32,7 @@ use rhai::Engine;
 use tokio::runtime::Runtime;
 
 use crate::agent::Agent;
-use crate::agentmgr::AgentManager;
+use crate::agentmgr::{AgentManager, AgentMgr, init};
 use crate::jwt_util::{create_token}; //, verify_token, Claims};
 use crate::s;
 
@@ -122,13 +122,11 @@ async fn auth_route_handler(
 pub async fn server() -> Result<(), hyper::Error> {
     pretty_env_logger::init();
 
-    //let manager = AgentManager::new();
+    AgentManager::init();
 
     /*
     let app = app.route("/chat/:user_id", post(chat_send_handler));
 
-    let chat_recv = Router::new()
-        .route("/chat", get(chat_recv_handler))
     */
 
     let app = Router::new()
@@ -194,11 +192,22 @@ pub enum ChatUIMessage {
     },
 }
 
-fn user_connected(
-    username: String,
-    session_id: usize,
+async fn check_token_handler(Query(params): Query<HashMap<String, String>>) -> Html<String> {                                   
+     if let Some(token) = params.get("token") {                                                                                  
+         println!("Token: {}", token);                                                                                           
+     }                                                                                                                           
+     Html("ok".to_string())                                                                                                      
+ }
+
+fn user_connected(Query(params): Query<HashMap<String, String>> {  
 ) -> impl Stream<Item = Result<axum::response::sse::Event, Infallible>> + Send + 'static {
+    let userid = "failuser";
+    if let Some(token) = params.get("token") {                                                                                  
+        println!("Token: {}", token);                                                                                           
+    }
+    let session_id = 1;
     eprintln!("chat user connected: {}", session_id);
+
     let (tx, rx) = manager
         .get_or_create_agent(userid, session_id, s!("scripts/dm.rhai"))
         .await?;
