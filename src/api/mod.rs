@@ -145,7 +145,7 @@ pub async fn server() -> Result<(), hyper::Error> {
 
     let app = Router::new()
         .route("/hello", get(hello_world))
-        .route("login", post(login_handler))
+        .route("/login", post(login_handler))
         .fallback(get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,

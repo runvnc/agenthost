@@ -1,4 +1,4 @@
-    //await anonymousLogin()
+    await anonymousLogin()
     var sse = openEventSource('chat');
     var user_id;
     var currParagraph;
@@ -6,7 +6,7 @@
     function message(data, sender) {
         var msgElement = document.createElement('div');
         var avatarElement = document.createElement('img');
-        avatarElement.src = sender != 'You' ? '/static/user.webp' : '/static/agent.webp';
+        avatarElement.src = sender != 'You' ? '/user.webp' : '/agent.webp';
         avatarElement.classList.add('av');
         var nameElement = document.createElement('span');
         nameElement.textContent = sender;

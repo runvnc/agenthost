@@ -2,12 +2,14 @@ window.baseURL = window.baseURL || window.location.href.replace(/\/$/, '') + '/'
 console.log({baseURL: window.baseURL})
 
 async function anonymousLogin() {
+  console.log('anonymouseLogin()')
   let user = localStorage.getItem('username')
   let pass = ''
   if (!user) {
-    user = generateAnonUsername() 
+    user = generateAnonUsername()
     localStorage.setItem('username', user)
   }
+  console.log({user, pass})
   return await login(user, pass)
 }
 
@@ -15,6 +17,7 @@ async function login(username, password) {
   if (!window.baseURL) {
     throw new Error("No baseURL")
   }
+  console.log('logging in',window.baseURL);
   fetch(window.baseURL + 'login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -23,12 +26,14 @@ async function login(username, password) {
   .then(response => response.json())
   .then(data => {
       localStorage.setItem('token', data.token)
+      console.log('token is ',data.token)
   })
 }
 
 function openEventSource(relurl) {
+  console.log('openEventSource(',relurl,')')
   const token = localStorage.getItem('token')
-  const url = window.baseurl + relurl + `?token=${encodeURIComponent(token)}`
+  const url = relurl + `?token=${encodeURIComponent(token)}`
   return new EventSource(url)
 }
 
