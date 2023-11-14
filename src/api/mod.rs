@@ -211,7 +211,7 @@ async fn user_connected(Query(params): Query<HashMap<String, String>>)
             .get_or_create_agent(userid, session_id, s!("scripts/dm.rhai"))
             .await;
 
-        let events = UnboundedReceiverStream::new(rx).map(|msg| match msg {
+        let events = flume::r#async::into_stream(rx).map(|msg| match msg {
         ChatUIMessage::UserId(session_id) => Ok(Event::default().event("user").data(session_id.to_string())),
         ChatUIMessage::Fragment(fragment) => Ok(Event::default().event("fragment").data(fragment)),
         ChatUIMessage::Reply(reply) => Ok(Event::default().data(reply)),
@@ -232,10 +232,10 @@ async fn user_connected(Query(params): Query<HashMap<String, String>>)
         }
     });
    tx
-    .send_async(s!("Chat session initiated."))
-    .await?;
+    .send_async(s!("Chat session initiated.")).await
+    .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to send chat session initiation message"))?;
  
-    events
+    Ok(events)
 }
 
 
