@@ -197,7 +197,7 @@ async fn user_connected(Query(params): Query<HashMap<String, String>>)
     use tokio_stream::wrappers::UnboundedReceiverStream;
 
     async fn user_connected(Query(params): Query<HashMap<String, String>>)  
-      -> Result<impl Stream<Item = Result<Event, Infallible>> + Send + 'static, (StatusCode, &'static str)> {
+      -> Result<impl Stream<Item = Result<axum::response::sse::Event, Infallible>> + Send + 'static, (StatusCode, &'static str)> {
         let mut userid = s!("failuser");
 
         if let Some(token) = params.get("token") {
