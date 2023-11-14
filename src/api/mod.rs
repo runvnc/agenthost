@@ -7,6 +7,7 @@ use axum::{
     middleware::{self, Next},
     response::sse::Event,
     response::IntoResponse,
+    response::sse::{Event, Sse},
     routing::{get, post, get_service},
     Router,
 };
@@ -121,31 +122,19 @@ async fn auth_route_handler(
 pub async fn server() -> Result<(), hyper::Error> {
     pretty_env_logger::init();
 
-    //let users = Arc::new(Mutex::new(HashMap::new()));
     //let manager = AgentManager::new();
 
     /*
     let app = app.route("/chat/:user_id", post(chat_send_handler));
 
-
     let chat_recv = Router::new()
         .route("/chat", get(chat_recv_handler))
-
-    let login = Router::new()
-        .route("/login", post(login_handler))
-
-    let auth_route = Router::new().route("/auth_route", get(auth_route_handler));
-
-    let index = Router::new().route("/", get(serve_file("static/chat.html")));
-
-    use tower_http::services::ServeDir;
-
-    let static_files = Router::new().nest("/static", service(ServeDir::new("static")));
     */
 
     let app = Router::new()
         .route("/hello", get(hello_world))
         .route("/login", post(login_handler))
+        .route("/chat", get(user_connected))
         .fallback(get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -167,21 +156,22 @@ pub async fn server() -> Result<(), hyper::Error> {
 }
 
 /*
-async fn handle_msg(
-    my_id: usize,
+async fn chat_input(
     userid: String,
+    session_id: usize,
     msg: String,
-    users: Users,
-    manager: AgentManager,
 ) -> Result<impl warp::Reply, Infallible> {
     let (sender, reply_receiver) = manager
-        .get_or_create_agent("username".to_string(), my_id, s!("scripts/dm.rhai"))
-        .await;
+        .get_or_create_agent(userid, session_id, s!("scripts/dm.rhai"))
+        .await?;
+
+    println!("Received: {}", msg);
 
     sender.send_async(msg).await.unwrap();
 
     loop {
         let reply = reply_receiver.recv_async().await.unwrap();
+        println!(reply)
         {
             let users_lock = users.lock().unwrap();
             let tx = users_lock.get(&my_id).unwrap().clone();
@@ -190,8 +180,7 @@ async fn handle_msg(
     }
 
     Ok("ok")
-}
-*/
+} */
 
 #[derive(Debug)]
 pub enum ChatUIMessage {
@@ -205,24 +194,20 @@ pub enum ChatUIMessage {
     },
 }
 
-/*
-
 fn user_connected(
-    users: Users,
+    username: String,
+    session_id: usize,
 ) -> impl Stream<Item = Result<axum::response::sse::Event, Infallible>> + Send + 'static {
-    let my_id = 1;
-    eprintln!("new chat user: {}", my_id);
+    eprintln!("chat user connected: {}", session_id);
+    let (tx, rx) = manager
+        .get_or_create_agent(userid, session_id, s!("scripts/dm.rhai"))
+        .await?;
 
-    let (tx, rx) = mpsc::unbounded_channel();
-    let rx = UnboundedReceiverStream::new(rx);
+    //tx.send(ChatUIMessage::UserId(session_id))
+    //    .unwrap();
 
-    tx.send(ChatUIMessage::UserId(my_id))
-        .unwrap();
-
-    users.lock().unwrap().insert(my_id, tx);
-
-    rx.map(|msg| match msg {
-        ChatUIMessage::UserId(my_id) => Ok(Event::default().event("user").data(my_id.to_string())),
+    let events = rx.map(|msg| match msg {
+        ChatUIMessage::UserId(session_id) => Ok(Event::default().event("user").data(session_id.to_string())),
         ChatUIMessage::Fragment(fragment) => Ok(Event::default().event("fragment").data(fragment)),
         ChatUIMessage::Reply(reply) => Ok(Event::default().data(reply)),
         ChatUIMessage::FunctionCall {
@@ -236,15 +221,15 @@ fn user_connected(
                 "params": params,
                 "result": result
             });
-            println!("OK 2");
             Ok(Event::default()
                 .event("functionCall")
                 .data(data.to_string()))
         }
     })
+    Sse::new(events)
 }
 
-*/
+
 #[derive(serde::Deserialize)]
 struct Credentials {
     username: String,
