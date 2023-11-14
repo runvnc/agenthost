@@ -17,7 +17,7 @@ pub struct Claims {
 }
 
 
-pub fn create_token(user_id: &str) -> Result<String, (StatusCode, &'static str) > {
+pub fn create_token(user_id: &str) -> Result<String, (StatusCode, &'static str)> {
     let my_claims = Claims {
         username: user_id.to_owned(),
         expires: (chrono::Utc::now() + chrono::Duration::hours(24)).timestamp() as usize,

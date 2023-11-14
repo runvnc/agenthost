@@ -94,16 +94,15 @@ async fn handle_msg(
 async fn login_handler(
     Json(credentials): Json<Credentials>,
 ) -> Result<Json<LoginResponse>, (StatusCode, &'static str)>  {
- //   if true || credentials.username.starts_with("anon")
- //       || (credentials.username == "user" && credentials.password == "password")
- //   {
+    if true || credentials.username.starts_with("anon")
+        || (credentials.username == "user" && credentials.password == "password")
+    {
         let token = create_token(&credentials.username)
              .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create token"))?;
-        //let token = s!("DUMMYTOKEN");
         Ok(Json(LoginResponse { token }))
- //   } // else {
-      //  Err((StatusCode::UNAUTHORIZED, "Invalid credentials"))
-    //}
+    } else {
+        Err((StatusCode::UNAUTHORIZED, "Invalid credentials"))
+    }
 }
 
 /*
