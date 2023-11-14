@@ -2,10 +2,9 @@ use hyper::http;
 use axum::{
     body::Body,
     error_handling::HandleErrorLayer,
-    extract::{Extension, Json, Path},
+    extract::{Extension, Json, Path, Query},
     http::{Request, Response, StatusCode}, 
     middleware::{self, Next},
-    response::sse::Event,
     response::IntoResponse,
     response::sse::{Event, Sse},
     routing::{get, post, get_service},
@@ -31,9 +30,10 @@ use flume::*;
 use rhai::Engine;
 use tokio::runtime::Runtime;
 
+use crate::agentmgr;
 use crate::agent::Agent;
-use crate::agentmgr::{AgentManager, AgentMgr, init};
-use crate::jwt_util::{create_token}; //, verify_token, Claims};
+use crate::agentmgr::{AgentManager, agent_mgr, init};
+use crate::jwt_util::{create_token, verify_token, Claims};
 use crate::s;
 
 
@@ -122,7 +122,7 @@ async fn auth_route_handler(
 pub async fn server() -> Result<(), hyper::Error> {
     pretty_env_logger::init();
 
-    AgentManager::init();
+    agentmgr::init();
 
     /*
     let app = app.route("/chat/:user_id", post(chat_send_handler));
@@ -192,23 +192,22 @@ pub enum ChatUIMessage {
     },
 }
 
-async fn check_token_handler(Query(params): Query<HashMap<String, String>>) -> Html<String> {                                   
-     if let Some(token) = params.get("token") {                                                                                  
-         println!("Token: {}", token);                                                                                           
-     }                                                                                                                           
-     Html("ok".to_string())                                                                                                      
- }
+async fn user_connected(Query(params): Query<HashMap<String, String>>)  
+  -> impl Stream<Item = Result<axum::response::sse::Event, Infallible>> + Send + 'static {
+    let userid = s!("failuser");
 
-fn user_connected(Query(params): Query<HashMap<String, String>> {  
-) -> impl Stream<Item = Result<axum::response::sse::Event, Infallible>> + Send + 'static {
-    let userid = "failuser";
     if let Some(token) = params.get("token") {                                                                                  
-        println!("Token: {}", token);                                                                                           
+        println!("Token: {}", token);
+        let claims = verify_token(token)?;
+        userid = claims.username;
     }
     let session_id = 1;
-    eprintln!("chat user connected: {}", session_id);
+    if let Some(session) = params.get("session_id") {
+       session_id = session.parse::<usize>()?; 
+    }
+    eprintln!("chat user connected: {} {}", userid, session_id);
 
-    let (tx, rx) = manager
+    let (tx, rx) = agent_mgr.get().expect("No Agent Manager!")
         .get_or_create_agent(userid, session_id, s!("scripts/dm.rhai"))
         .await?;
 
@@ -234,7 +233,11 @@ fn user_connected(Query(params): Query<HashMap<String, String>> {
                 .event("functionCall")
                 .data(data.to_string()))
         }
-    })
+    });
+   tx
+    .send_async("Chat session initiated.")
+    .await?;
+ 
     Sse::new(events)
 }
 

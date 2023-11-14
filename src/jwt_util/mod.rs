@@ -28,12 +28,9 @@ pub fn create_token(user_id: &str) -> Result<String, (StatusCode, &'static str)>
     Ok(token)
 }
 
-/*
-pub fn verify_token(token: &str) -> Result<Claims, Rejection> {
-    let key = "secret";
-    let decoding_key = jwt::DecodingKey::from_secret(key.as_ref());
+pub fn verify_token(token: &str) -> Result<Claims, (StatusCode, &'static str)> {
+    let decoding_key = jwt::DecodingKey::from_secret(CODE.as_ref());
     decode::<Claims>(token, &decoding_key, &Validation::default())
-        .map_err(|_| warp::reject::custom(SimpleRejection("Token verification failed".into())))
+        .map_err(|_| (StatusCode::UNAUTHORIZED, "Token verification failed."))
         .map(|data| data.claims)
 }
-*/

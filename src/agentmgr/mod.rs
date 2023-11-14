@@ -26,9 +26,10 @@ pub struct AgentManager {
 pub fn init() {
     if !(agent_mgr.get().is_some()) {
         println!("agentmgr: init..");
-        agent_mgr.set(AgentManager::new()).unwrap();
+        agent_mgr.set(AgentManager::new().unwrap()).unwrap();
     }
 }
+
 impl AgentManager {
     pub fn new() -> Self {
         AgentManager {
