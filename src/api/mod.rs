@@ -209,15 +209,15 @@ async fn user_connected(Query(params): Query<HashMap<String, String>>)
 
     let (tx, rx) = agent_mgr.get().expect("No Agent Manager!")
         .get_or_create_agent(userid, session_id, s!("scripts/dm.rhai"))
-        .await?;
+        .await;
 
     //tx.send(ChatUIMessage::UserId(session_id))
     //    .unwrap();
 
     let events = rx.map(|msg| match msg {
-        ChatUIMessage::UserId(session_id) => Ok(Event::default().event("user").data(session_id.to_string())),
-        ChatUIMessage::Fragment(fragment) => Ok(Event::default().event("fragment").data(fragment)),
-        ChatUIMessage::Reply(reply) => Ok(Event::default().data(reply)),
+        ChatUIMessage::UserId(session_id) => Event::default().event("user").data(session_id.to_string()),
+        ChatUIMessage::Fragment(fragment) => Event::default().event("fragment").data(fragment),
+        ChatUIMessage::Reply(reply) => Event::default().data(reply),
         ChatUIMessage::FunctionCall {
             name,
             params,
@@ -229,13 +229,13 @@ async fn user_connected(Query(params): Query<HashMap<String, String>>)
                 "params": params,
                 "result": result
             });
-            Ok(Event::default()
+            Event::default()
                 .event("functionCall")
-                .data(data.to_string()))
+                .data(data.to_string())
         }
     });
    tx
-    .send_async("Chat session initiated.")
+    .send_async(s!("Chat session initiated."))
     .await?;
  
     Sse::new(events)
