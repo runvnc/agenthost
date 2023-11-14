@@ -1,7 +1,14 @@
 extern crate jsonwebtoken as jwt;
 use jwt::{decode, encode, Algorithm, Header, Validation};
 use serde::{Deserialize, Serialize};
-use warp::Rejection;
+use hyper::http;
+use axum::{
+    http::{
+        Request, Response, StatusCode
+    }, 
+};
+
+const CODE: &str = "cvx$^G#%^nh3t9y83h$%^@#isfdhioeroisd";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -9,17 +16,19 @@ pub struct Claims {
     pub expires: usize,
 }
 
-pub fn create_token(user_id: &str) -> Result<String, Rejection> {
+
+pub fn create_token(user_id: &str) -> Result<String, (StatusCode, &'static str) > {
     let my_claims = Claims {
         username: user_id.to_owned(),
         expires: (chrono::Utc::now() + chrono::Duration::hours(24)).timestamp() as usize,
     };
-    let key = "secret";
-    let encoding_key = jwt::EncodingKey::from_secret(key.as_ref());
-    encode(&Header::default(), &my_claims, &encoding_key)
-        .map_err(|_| warp::reject::custom(SimpleRejection("Token creation failed".into())))
+    let encoding_key = jwt::EncodingKey::from_secret(CODE.as_ref());
+    let token = encode(&Header::default(), &my_claims, &encoding_key)
+        .map_err(|_| (StatusCode::UNAUTHORIZED, "Token creation failed."))?;
+    Ok(token)
 }
 
+/*
 pub fn verify_token(token: &str) -> Result<Claims, Rejection> {
     let key = "secret";
     let decoding_key = jwt::DecodingKey::from_secret(key.as_ref());
@@ -27,6 +36,4 @@ pub fn verify_token(token: &str) -> Result<Claims, Rejection> {
         .map_err(|_| warp::reject::custom(SimpleRejection("Token verification failed".into())))
         .map(|data| data.claims)
 }
-
-// Import SimpleRejection from the errors module.
-use crate::errors::SimpleRejection;
+*/

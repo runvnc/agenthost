@@ -13,7 +13,7 @@ mod api;
 mod cat;
 mod chatlog;
 //mod errors;
-//mod jwt_util;
+mod jwt_util;
 mod openai_chat;
 mod scripts;
 mod shorthands;

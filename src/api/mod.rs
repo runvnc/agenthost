@@ -3,7 +3,7 @@ use axum::{
     body::Body,
     error_handling::HandleErrorLayer,
     extract::{Extension, Json, Path},
-    http::{Request, Response, StatusCode},
+    http::{Request, Response, StatusCode}, 
     middleware::{self, Next},
     response::sse::Event,
     response::IntoResponse,
@@ -23,7 +23,7 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 use tower_http::{
     cors::{CorsLayer},
     trace::TraceLayer,
-    services::{ServeFile, ServeDir}
+    services::{ServeDir}
 };
 
 use flume::*;
@@ -32,7 +32,7 @@ use tokio::runtime::Runtime;
 
 use crate::agent::Agent;
 use crate::agentmgr::AgentManager;
-//use crate::jwt_util::{create_token, verify_token, Claims};
+use crate::jwt_util::{create_token}; //, verify_token, Claims};
 use crate::s;
 
 
@@ -89,20 +89,24 @@ async fn handle_msg(
 
     Ok(())
 }
+*/
 
 async fn login_handler(
     Json(credentials): Json<Credentials>,
-) -> impl IntoResponse {
-    if credentials.username.starts_with("anon")
-        || (credentials.username == "user" && credentials.password == "password")
-    {
+) -> Result<Json<LoginResponse>, (StatusCode, &'static str)>  {
+ //   if true || credentials.username.starts_with("anon")
+ //       || (credentials.username == "user" && credentials.password == "password")
+ //   {
         let token = create_token(&credentials.username)
-            .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create token"))?;
-        (StatusCode::OK, Json(LoginResponse { token }))
-    } else {
-        (StatusCode::UNAUTHORIZED, "Invalid credentials").into_response()
-    }
+             .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create token"))?;
+        //let token = s!("DUMMYTOKEN");
+        Ok(Json(LoginResponse { token }))
+ //   } // else {
+      //  Err((StatusCode::UNAUTHORIZED, "Invalid credentials"))
+    //}
 }
+
+/*
 
 async fn auth_route_handler(
     Header(authorization): Header<String>,
@@ -142,6 +146,7 @@ pub async fn server() -> Result<(), hyper::Error> {
 
     let app = Router::new()
         .route("/hello", get(hello_world))
+        .route("login", post(login_handler))
         .fallback(get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -152,7 +157,6 @@ pub async fn server() -> Result<(), hyper::Error> {
     /*
         .route(chat_recv)
         .route(chat_send_handler)
-        .route(login)
         .merge(static_files);
     */
    // https://docs.rs/tower-http/latest/tower_http/services/fs/struct.ServeFile.html 
@@ -241,6 +245,7 @@ fn user_connected(
     })
 }
 
+*/
 #[derive(serde::Deserialize)]
 struct Credentials {
     username: String,
@@ -252,4 +257,3 @@ struct LoginResponse {
     token: String,
 }
 
-*/
