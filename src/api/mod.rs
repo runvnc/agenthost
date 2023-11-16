@@ -165,6 +165,7 @@ pub async fn server() -> Result<(), hyper::Error> {
             let stream = user_connected(&connected_users, userid, session_id).await;
             Ok(Sse::new(stream))
         }))
+        .layer(middleware::from_fn(logging_middleware))
         .fallback(get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -279,3 +280,14 @@ struct LoginResponse {
     token: String,
 }
 
+async fn logging_middleware(
+    req: Request<Body>,
+    next: Next<Body>,
+) -> Result<Response<Body>, Infallible> {
+    println!("Path: {}", req.uri().path());
+    println!("Headers: {:?}", req.headers());
+    let response = next.run(req).await;
+    let (parts, body) = response.into_parts();
+    let body = Body::from(hyper::body::to_bytes(body).await.unwrap());
+    Ok(Response::from_parts(parts, body))
+}
