@@ -22,7 +22,7 @@ pub struct Claims {
 pub fn create_token(user_id: &str) -> Result<String, (StatusCode, &'static str)> {
     let my_claims = Claims {
         username: user_id.to_owned(),
-        expires: get_current_timestamp() + 60*60*24*7 as u64,
+        expires: (get_current_timestamp() + 60*60*24*7) as usize,
     };
     let encoding_key = jwt::EncodingKey::from_secret(CODE.as_ref());
     let token = encode(&Header::default(), &my_claims, &encoding_key)
