@@ -153,12 +153,17 @@ pub async fn server() -> Result<(), hyper::Error> {
                 println!("Token: {}", token);
                 let claims = verify_token(token).expect("Invalid token");
                 userid = claims.username;
+            } else {
+                return Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid token"));
             }
 
             if let Some(session) = params.get("session_id") {
                 session_id = session.parse::<usize>().expect("Invalid session id");
+            } else {
+                return Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid session id"));
             }
-            user_connected(&connected_users, userid, session_id).await
+            let stream = user_connected(&connected_users, userid, session_id).await;
+            Ok(Sse::new(stream))
         }))
         .fallback(get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
             (
