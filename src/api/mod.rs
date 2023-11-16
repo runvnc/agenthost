@@ -41,6 +41,8 @@ use tokio_stream::wrappers::ReceiverStream;
 use std::convert::Infallible;
 use std::pin::Pin;
 use std::task::Waker;
+use serde::Deserialize;
+use std::convert::Infallible;
 
 async fn hello_world() -> &'static str {
     "Hello, world!"
@@ -152,7 +154,7 @@ pub async fn server() -> Result<(), hyper::Error> {
             } else {
                 return Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid session id"));
             }
-            let stream = user_connected(claims, &connected_users, userid, session_id).await;
+            let stream = user_connected(claims, &connected_users, session_id).await;
             Ok(Sse::new(stream))
         }))
         .layer(middleware::from_fn(logging_middleware))
@@ -215,7 +217,7 @@ pub enum ChatUIMessage {
     },
 }
 
-async fn user_connected(Extension(claims): Extension<Claims>, users: &ConnectedUsers, userid: String, session_id: usize) 
+async fn user_connected(Extension(claims): Extension<Claims>, users: &ConnectedUsers, session_id: usize) 
   -> impl Stream<Item = Result<Event, Infallible>> + Send + 'static {
     let mut locked_users = users.user_cache.lock().unwrap();
     let sse_streams = locked_users
@@ -277,13 +279,22 @@ async fn auth_middleware(
 ) -> Result<Response<Body>, (StatusCode, &'static str) > {
     println!("Request URI: {}", req.uri());
     println!("Headers: {:?}", req.headers());
-    
-    if let Some(token) = params.get("token") {
-        println!("Token: {}", token);
-        let claims = verify_token(token).expect("Invalid token");
-        req.extensions_mut().insert(claims);
-    } else {
-        return Err((StatusCode::INTERNAL_SERVER_ERROR, "Auth failed"));
+    let needs_auth = vec!["/chat", "/send"];
+
+    if needs_auth.iter().any(|path| req.uri().path().starts_with(path)) {
+        if let Some(query_string) = req.uri().query() {
+            let query_params: HashMap<String, String> = serde_urlencoded::from_str(query_string).unwrap_or_default();
+        
+            if let Some(token) = req.params.get("token") {
+                println!("Token: {}", token);
+                let claims = verify_token(token).expect("Invalid token");
+                req.extensions_mut().insert(claims);
+            } else {
+                return Err((StatusCode::INTERNAL_SERVER_ERROR, "Auth failed"));
+            }
+        } else {
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, "Auth failed"));
+        }
     }
     let response = next.run(req).await;
     let (parts, body) = response.into_parts();
