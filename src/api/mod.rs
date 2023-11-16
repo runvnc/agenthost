@@ -16,8 +16,10 @@ use std::sync::{
     atomic::{AtomicUsize, Ordering},
     Arc, Mutex,
 };
+
 use tokio::sync::mpsc;
-use tokio_stream::wrappers::{UnboundedSenderStream, UnboundedReceiverStream};
+use tokio::sync::mpsc::{UnboundedSender};
+use tokio_stream::wrappers::{UnboundedReceiverStream};
 use tower_http::{
     cors::{CorsLayer},
     trace::TraceLayer,
@@ -124,7 +126,7 @@ async fn auth_route_handler(
 
 #[derive(Debug, Clone)]
 pub struct SessionSseStreams {
-    cache: HashMap<usize, UnboundedSender>;
+    cache: HashMap<usize, UnboundedSender<ChatUIMessage>>
 }
 
 #[derive(Debug, Clone)]
@@ -138,25 +140,25 @@ pub async fn server() -> Result<(), hyper::Error> {
 
     agentmgr::init();
 
-    let connected_users = ConnectedUsers { Arc::new(Mutex::new(HashMap::new())) };
+    let connected_users = ConnectedUsers { user_cache: Arc::new(Mutex::new(HashMap::new())) };
 
     let app = Router::new()
         .route("/hello", get(hello_world))
         .route("/login", post(login_handler))
         .route("/chat", get(|params: Query<HashMap<String, String>>| async move {
             let mut userid = s!("failuser");
-
+            let mut session_id = 1;
+            
             if let Some(token) = params.get("token") {
                 println!("Token: {}", token);
                 let claims = verify_token(token).expect("Invalid token");
                 userid = claims.username;
-            
-                let mut session_id = 1;
-                if let Some(session) = params.get("session_id") {
-                   session_id = session.parse::<usize>().expect("Invalid session id");
-                    user_connected(connected_users, userid, session_id).await
-                }
             }
+
+            if let Some(session) = params.get("session_id") {
+                session_id = session.parse::<usize>().expect("Invalid session id");
+            }
+            user_connected(&connected_users, userid, session_id).await
         }))
         .fallback(get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
             (
@@ -206,7 +208,7 @@ async fn chat_input(
 
 #[derive(Debug)]
 pub enum ChatUIMessage {
-    UserId(usize),
+    UserId(String),
     Reply(String),
     Fragment(String),
     FunctionCall {
@@ -216,10 +218,10 @@ pub enum ChatUIMessage {
     },
 }
 
-
-async fn user_connected(users, Query(params): Query<HashMap<String, String>>) 
+async fn user_connected(users: &ConnectedUsers, userid: String, session_id: usize) 
   -> impl Stream<Item = Result<Event, Infallible>> + Send + 'static {
-    let sse_streams = users.user_cache
+    let mut locked_users = users.user_cache.lock().unwrap();
+    let sse_streams = locked_users   
         .entry(userid.clone())
         .or_insert_with(|| SessionSseStreams {
             cache: HashMap::new(),
@@ -228,10 +230,8 @@ async fn user_connected(users, Query(params): Query<HashMap<String, String>>)
     let (tx, rx) = mpsc::unbounded_channel();
     let rx = UnboundedReceiverStream::new(rx);
 
-    tx.send(ChatUIMessage::UserId(my_id))
+    tx.send(ChatUIMessage::UserId(userid))
         .unwrap();
-
-    users.lock().unwrap().insert(my_id, tx);
 
     let mapped = rx.map(|msg| match msg {
         ChatUIMessage::UserId(my_id) => Ok(Event::default().event("user").data(my_id.to_string())),
@@ -253,7 +253,7 @@ async fn user_connected(users, Query(params): Query<HashMap<String, String>>)
                 .event("functionCall")
                 .data(data.to_string()))
         }
-    })
+    });
 
     sse_streams
         .cache
