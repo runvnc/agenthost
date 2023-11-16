@@ -145,27 +145,18 @@ pub async fn server() -> Result<(), hyper::Error> {
     let app = Router::new()
         .route("/hello", get(hello_world))
         .route("/login", post(login_handler))
-        .route("/chat", get(|params: Query<HashMap<String, String>>| async move {
-            let mut userid = s!("failuser");
+        .route("/chat", get(|claims: Extension<Claims>, params: Query<HashMap<String, String>>| async move {
             let mut session_id = 1;
-            
-            if let Some(token) = params.get("token") {
-                println!("Token: {}", token);
-                let claims = verify_token(token).expect("Invalid token");
-                userid = claims.username;
-            } else {
-                return Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid token"));
-            }
-
             if let Some(session) = params.get("session_id") {
                 session_id = session.parse::<usize>().expect("Invalid session id");
             } else {
                 return Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid session id"));
             }
-            let stream = user_connected(&connected_users, userid, session_id).await;
+            let stream = user_connected(claims, &connected_users, userid, session_id).await;
             Ok(Sse::new(stream))
         }))
         .layer(middleware::from_fn(logging_middleware))
+        .layer(middleware::from_fn(auth_middleware)) 
         .fallback(get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -224,11 +215,11 @@ pub enum ChatUIMessage {
     },
 }
 
-async fn user_connected(users: &ConnectedUsers, userid: String, session_id: usize) 
+async fn user_connected(Extension(claims): Extension<Claims>, users: &ConnectedUsers, userid: String, session_id: usize) 
   -> impl Stream<Item = Result<Event, Infallible>> + Send + 'static {
     let mut locked_users = users.user_cache.lock().unwrap();
-    let sse_streams = locked_users   
-        .entry(userid.clone())
+    let sse_streams = locked_users
+        .entry(claims.username.clone())
         .or_insert_with(|| SessionSseStreams {
             cache: HashMap::new(),
         });
@@ -236,7 +227,7 @@ async fn user_connected(users: &ConnectedUsers, userid: String, session_id: usiz
     let (tx, rx) = mpsc::unbounded_channel();
     let rx = UnboundedReceiverStream::new(rx);
 
-    tx.send(ChatUIMessage::UserId(userid))
+    tx.send(ChatUIMessage::UserId(claims.username.clone()))
         .unwrap();
 
     let mapped = rx.map(|msg| match msg {
@@ -279,6 +270,27 @@ struct Credentials {
 struct LoginResponse {
     token: String,
 }
+
+async fn auth_middleware(
+    req: Request<Body>,
+    next: Next<Body>,
+) -> Result<Response<Body>, (StatusCode, &'static str) > {
+    println!("Request URI: {}", req.uri());
+    println!("Headers: {:?}", req.headers());
+    
+    if let Some(token) = params.get("token") {
+        println!("Token: {}", token);
+        let claims = verify_token(token).expect("Invalid token");
+        req.extensions_mut().insert(claims);
+    } else {
+        return Err((StatusCode::INTERNAL_SERVER_ERROR, "Auth failed"));
+    }
+    let response = next.run(req).await;
+    let (parts, body) = response.into_parts();
+    let body = Body::from(hyper::body::to_bytes(body).await.unwrap());
+    Ok(Response::from_parts(parts, body))
+}
+
 
 async fn logging_middleware(
     req: Request<Body>,

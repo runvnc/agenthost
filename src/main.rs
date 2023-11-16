@@ -26,11 +26,7 @@ use jwt_util::*;
 #[cfg(not(feature = "no_object"))]
 #[tokio::main]
 async fn main() -> Result<()> {
-    let token = create_token("bob").unwrap();
-    let verified = verify_token(&token).unwrap();
-    println!("{}", verified.username);
-
-    //api::server().await;
+    api::server().await;
     Ok(())
 }
 

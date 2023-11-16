@@ -31,11 +31,10 @@ async function login(username, password) {
 }
 
 function openEventSource(relurl) {
-  
   console.log('openEventSource(',relurl,')')
   const token = localStorage.getItem('token')
   const queryParams = new URLSearchParams(window.location.search);
-  const session_id = queryParams.get('session_id') || '10';
+  window.session_id = queryParams.get('session_id') || '10';
   const url = relurl + `?token=${encodeURIComponent(token)}&session_id=${session_id}`
   return new EventSource(url)
 }

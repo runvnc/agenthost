@@ -79,7 +79,8 @@
         }
         var msg = text.value;
         xhr = new XMLHttpRequest();
-        xhr.open("POST", uri + '/' + user_id, true);
+
+        xhr.open("POST", window.location.host + '/' + window.session_id, true);
         xhr.send(msg);
         text.value = '';
         message(msg, 'You');
