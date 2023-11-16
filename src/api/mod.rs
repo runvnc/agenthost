@@ -17,6 +17,8 @@ use std::sync::{
     Arc, Mutex,
 };
 
+use serde_urlencoded::*;
+
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{UnboundedSender};
 use tokio_stream::wrappers::{UnboundedReceiverStream};
@@ -42,7 +44,6 @@ use std::convert::Infallible;
 use std::pin::Pin;
 use std::task::Waker;
 use serde::Deserialize;
-use std::convert::Infallible;
 
 async fn hello_world() -> &'static str {
     "Hello, world!"
@@ -137,6 +138,8 @@ pub struct ConnectedUsers {
 }
 
 
+async fn chat_events
+
 pub async fn server() -> Result<(), hyper::Error> {
     pretty_env_logger::init();
 
@@ -145,21 +148,24 @@ pub async fn server() -> Result<(), hyper::Error> {
     let connected_users = ConnectedUsers { user_cache: Arc::new(Mutex::new(HashMap::new())) };
 
     let app = Router::new()
+        .layer(middleware::from_fn(auth_middleware)) 
         .route("/hello", get(hello_world))
         .route("/login", post(login_handler))
-        .route("/chat", get(|claims: Extension<Claims>, params: Query<HashMap<String, String>>| async move {
+        .route("/chat", get(|params: Query<HashMap<String, String>> | async move {
             let mut session_id = 1;
             if let Some(session) = params.get("session_id") {
                 session_id = session.parse::<usize>().expect("Invalid session id");
-            } else {
-                return Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid session id"));
-            }
-            let stream = user_connected(claims, &connected_users, session_id).await;
-            Ok(Sse::new(stream))
+            } //else {
+              //  return Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid session id"));
+            //}
+            //let stream = user_connected(claims, &connected_users, session_id).await;
+            //Ok(Sse::new(stream)) */
+            println!("ok");
+            s!("OK")
+            //Ok::<&str, hyper::Error>(s!("hello"))
         }))
         .layer(middleware::from_fn(logging_middleware))
-        .layer(middleware::from_fn(auth_middleware)) 
-        .fallback(get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
+       .fallback(get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 format!("Unhandled internal error: {}", error),
@@ -274,7 +280,7 @@ struct LoginResponse {
 }
 
 async fn auth_middleware(
-    req: Request<Body>,
+    mut req: Request<Body>,
     next: Next<Body>,
 ) -> Result<Response<Body>, (StatusCode, &'static str) > {
     println!("Request URI: {}", req.uri());
@@ -285,7 +291,7 @@ async fn auth_middleware(
         if let Some(query_string) = req.uri().query() {
             let query_params: HashMap<String, String> = serde_urlencoded::from_str(query_string).unwrap_or_default();
         
-            if let Some(token) = req.params.get("token") {
+            if let Some(token) = query_params.get("token") {
                 println!("Token: {}", token);
                 let claims = verify_token(token).expect("Invalid token");
                 req.extensions_mut().insert(claims);
