@@ -15,14 +15,14 @@ const CODE: &str = "cvx$^G#%^nh3t9y83h$%^@#isfdhioeroisd";
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub username: String,
-    pub expires: usize,
+    pub exp: usize,
 }
 
 
 pub fn create_token(user_id: &str) -> Result<String, (StatusCode, &'static str)> {
     let my_claims = Claims {
         username: user_id.to_owned(),
-        expires: (get_current_timestamp() + 60*60*24*7) as usize,
+        exp: (get_current_timestamp() + 60*60*24*7) as usize,
     };
     let encoding_key = jwt::EncodingKey::from_secret(CODE.as_ref());
     let token = encode(&Header::default(), &my_claims, &encoding_key)

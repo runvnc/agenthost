@@ -22,6 +22,15 @@
     sse.onopen = function() {
         chat.innerHTML = "<p><em>Connected!</em></p>";
     }
+    sse.onerror = function(e) {
+        console.error(e)
+        console.warn("Lost server connection, will reconnect in 5 seconds.")
+        sse.close()
+        //setTimeout( () => {
+        //  sse = openEventSource('chat')
+        //}, 5000)
+    }
+
     function addBlankMessage() {
       currParagraph = document.createElement('p');
       chat.appendChild(currParagraph);
