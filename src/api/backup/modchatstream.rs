@@ -17,7 +17,7 @@ use std::sync::{
     Arc, Mutex,
 };
 use tokio::sync::mpsc;
-use tokio_stream::wrappers::{UnboundedSenderStream, UnboundedReceiverStream};
+use tokio_stream::wrappers::UnboundedReceiverStream;
 use tower_http::{
     cors::{CorsLayer},
     trace::TraceLayer,
@@ -122,42 +122,23 @@ async fn auth_route_handler(
 }
 */
 
-#[derive(Debug, Clone)]
-pub struct SessionSseStreams {
-    cache: HashMap<usize, UnboundedSender>;
-}
-
-#[derive(Debug, Clone)]
-pub struct ConnectedUsers {
-    user_cache: Arc<Mutex<HashMap<String, SessionSseStreams>>>,
-}
-
-
 pub async fn server() -> Result<(), hyper::Error> {
     pretty_env_logger::init();
 
     agentmgr::init();
 
-    let connected_users = ConnectedUsers { Arc::new(Mutex::new(HashMap::new())) };
+    /*
+    let app = app.route("/chat/:user_id", post(chat_send_handler));
+
+    */
 
     let app = Router::new()
         .route("/hello", get(hello_world))
         .route("/login", post(login_handler))
-        .route("/chat", get(|params: Query<HashMap<String, String>>| async move {
-            let mut userid = s!("failuser");
-
-            if let Some(token) = params.get("token") {
-                println!("Token: {}", token);
-                let claims = verify_token(token).expect("Invalid token");
-                userid = claims.username;
-            
-                let mut session_id = 1;
-                if let Some(session) = params.get("session_id") {
-                   session_id = session.parse::<usize>().expect("Invalid session id");
-                    user_connected(connected_users, userid, session_id).await
-                }
-            }
+        .route("/chat", get(|Query((userid, session_id))| async move {
+            user_connected(userid, session_id).await
         }))
+        //.route("/chat", get(user_connected))
         .fallback(get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -168,8 +149,9 @@ pub async fn server() -> Result<(), hyper::Error> {
     /*
         .route(chat_recv)
         .route(chat_send_handler)
+        .merge(static_files);
     */
-
+   // https://docs.rs/tower-http/latest/tower_http/services/fs/struct.ServeFile.html 
     println!("Listening at http://45.79.139.237:3132/");
 
     axum::Server::bind(&"0.0.0.0:3132".parse().unwrap())
@@ -216,25 +198,79 @@ pub enum ChatUIMessage {
     },
 }
 
+struct ChatStream {
+    receiver: Receiver<ChatUIMessage>,
+}
 
-async fn user_connected(users, Query(params): Query<HashMap<String, String>>) 
+impl ChatStream {
+    fn new(receiver: Receiver<ChatUIMessage>) -> Self {
+        ChatStream { receiver }
+    }
+}
+
+impl Stream for ChatStream {
+    type Item = Result<Event, Infallible>;
+
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        match self.receiver.try_recv() {
+            Ok(message) => Poll::Ready(Some(match message {
+                ChatUIMessage::Fragment(fragment) => Ok(Event::default().event("fragment").data(fragment)),
+                ChatUIMessage::Reply(reply) => Ok(Event::default().data(reply)),
+                ChatUIMessage::FunctionCall {
+                    name,
+                    params,
+                    result,
+                } => {
+                    println!("Sending fn call as json");
+                    let data = serde_json::json!({
+                        "name": name,
+                        "params": params,
+                        "result": result
+                    });
+                    Ok(Event::default()
+                    .event("functionCall")
+                    .data(data.to_string()))
+                }
+     
+                // handle other variants
+            })),
+            Err(flume::TryRecvError::Empty) => {
+                cx.waker().clone().wake();
+                Poll::Pending
+            },
+            Err(flume::TryRecvError::Disconnected) => Poll::Ready(None),
+        }
+    }
+}
+
+async fn user_connected(Query(params): Query<HashMap<String, String>>) 
   -> impl Stream<Item = Result<Event, Infallible>> + Send + 'static {
-    let sse_streams = users.user_cache
-        .entry(userid.clone())
-        .or_insert_with(|| SessionSseStreams {
-            cache: HashMap::new(),
-        });
+    let mut userid = s!("failuser");
+/*
+    if let Some(token) = params.get("token") {
+        println!("Token: {}", token);
+        let claims = verify_token(token).expect("Invalid token");
+        userid = claims.username;
+    }
+    let mut session_id = 1;
+    if let Some(session) = params.get("session_id") {
+       session_id = session.parse::<usize>().expect("Invalid session id");
+    } */
+    let userid=s!("test");
+    let session_id=1;
+    eprintln!("chat user connected: {} {}", userid, session_id);
 
-    let (tx, rx) = mpsc::unbounded_channel();
-    let rx = UnboundedReceiverStream::new(rx);
+    let (tx, rx) = agent_mgr.get().expect("No Agent Manager!")
+        .get_or_create_agent(userid, session_id, s!("scripts/dm.rhai"))
+        .await;
+    //tx
+    //.send_async(s!("Chat session initiated.")).await
+    //.map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to send chat session initiation message"))?;
+    ChatStream::new(rx)
 
-    tx.send(ChatUIMessage::UserId(my_id))
-        .unwrap();
-
-    users.lock().unwrap().insert(my_id, tx);
-
-    let mapped = rx.map(|msg| match msg {
-        ChatUIMessage::UserId(my_id) => Ok(Event::default().event("user").data(my_id.to_string())),
+/*
+    ReceiverStream::new(rx).map(|msg| match msg {
+        ChatUIMessage::UserId(session_id) => Ok(Event::default().event("user").data(session_id.to_string())),
         ChatUIMessage::Fragment(fragment) => Ok(Event::default().event("fragment").data(fragment)),
         ChatUIMessage::Reply(reply) => Ok(Event::default().data(reply)),
         ChatUIMessage::FunctionCall {
@@ -248,18 +284,11 @@ async fn user_connected(users, Query(params): Query<HashMap<String, String>>)
                 "params": params,
                 "result": result
             });
-            println!("OK 2");
             Ok(Event::default()
-                .event("functionCall")
-                .data(data.to_string()))
+            .event("functionCall")
+            .data(data.to_string()))
         }
-    })
-
-    sse_streams
-        .cache
-        .insert(session_id, (tx.clone()));
-
-    mapped
+    }) */
 }
 
 

@@ -57,6 +57,7 @@ impl AgentManager {
 
         let (sender, mut receiver) = flume::bounded(500);
         let (reply_sender, reply_receiver) = flume::bounded(500);
+
         session_cache
             .cache
             .insert(id, (sender.clone(), reply_receiver.clone()));
