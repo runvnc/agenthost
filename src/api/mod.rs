@@ -284,7 +284,7 @@ async fn logging_middleware(
     req: Request<Body>,
     next: Next<Body>,
 ) -> Result<Response<Body>, Infallible> {
-    println!("Path: {}", req.uri().path());
+    println!("Request URI: {}", req.uri());
     println!("Headers: {:?}", req.headers());
     let response = next.run(req).await;
     let (parts, body) = response.into_parts();
