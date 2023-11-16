@@ -31,9 +31,10 @@ async function login(username, password) {
 }
 
 function openEventSource(relurl) {
+  
   console.log('openEventSource(',relurl,')')
   const token = localStorage.getItem('token')
-  const url = relurl + `?token=${encodeURIComponent(token)}&session_id=10`
+  const url = relurl + `?token=${encodeURIComponent(token)}&session_id=${window.session_id}`
   return new EventSource(url)
 }
 
