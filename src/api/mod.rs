@@ -69,36 +69,35 @@ async fn chat_send_handler(
         )
     }
 }
+*/
 
-async fn handle_msg(
-    my_id: usize,
-    username: String,
-    msg: String,
-    users: Users,
-    manager: AgentManager,
-) -> Result<(), (StatusCode, &str)> {
-    let (sender, reply_receiver) = manager
-        .get_or_create_agent(username, my_id, s!("scripts/dm.rhai"))
+async fn user_input(params: Query<HashMap<String, String>>, Extension(claims): Extension<Claims>,
+    Extension(connected_users): Extension<ConnectedUsers>) -> Result<(), (StatusCode, &str)> {
+
+    if let Some(session) = params.get("session_id") {
+        session_id = session.parse::<usize>().expect("Invalid session id");
+    }
+ 
+    msg
+
+    let (sender, reply_receiver) = agent_mgr
+        .get_or_create_agent(username, session_id, s!("scripts/dm.rhai"))
         .await;
 
-    sender
-        .send_async(msg)
-        .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to send message"))?;
+    sender.send_async(msg).await.unwrap();
 
-    if let Some(reply) = reply_receiver.recv_async().await {
-        let users_lock = users
-            .lock()
-            .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to lock users"))?;
-        if let Some(tx) = users_lock.get(&my_id) {
-            tx.send(ChatUIMessage::Reply(reply))
-                .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to send reply"))?;
-        }
+    loop {
+      let reply = reply_receiver.recv_async().await.unwrap();
+      {
+        let users_lock = users.lock().unwrap();
+        let tx = users_lock.get(&my_id).unwrap().clone();
+        tx.send(reply); 
+      }
     }
 
     Ok(())
 }
-*/
+
 
 async fn login_handler(
     Json(credentials): Json<Credentials>,
@@ -132,6 +131,7 @@ pub struct SessionSseStreams {
     cache: HashMap<usize, UnboundedSender<ChatUIMessage>>
 }
 
+
 #[derive(Debug, Clone)]
 pub struct ConnectedUsers {
     user_cache: Arc<Mutex<HashMap<String, SessionSseStreams>>>,
@@ -143,19 +143,12 @@ async fn chat_events(params: Query<HashMap<String, String>>, Extension(claims): 
      -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
     println!("username: {}", claims.username);
     let mut session_id = 1;
-    /*let mut session_id = 1; */
     if let Some(session) = params.get("session_id") {
         session_id = session.parse::<usize>().expect("Invalid session id");
-    } //else {
-      //  return Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid session id"));
-    //}
+    }
     println!("{}", session_id);
     let stream = user_connected(&claims, &connected_users, session_id);
-    //println!("{}", stream);
     Sse::new(stream)
-    //println!("ok");
-    //Ok(s!("OK"))
-    //"test"
 }
 
 pub async fn server() -> Result<(), hyper::Error> {
@@ -171,6 +164,7 @@ pub async fn server() -> Result<(), hyper::Error> {
         .route("/hello", get(hello_world))
         .route("/login", post(login_handler))
         .route("/chat", get(chat_events))
+        .route("/send", get(user_input))
         .layer(middleware::from_fn(logging_middleware))
         .fallback(get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
             (
@@ -254,7 +248,6 @@ fn user_connected(claims: &Claims, users: &ConnectedUsers, session_id: usize)
             params,
             result,
         } => {
-            println!("Sending fn call as json");
             let data = serde_json::json!({
                 "name": name,
                 "params": params,
