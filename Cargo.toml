@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.75"
 async-openai = "0.14.3"
-axum = "0.6.20"
+axum = { version = "0.6.20", features = [ "tokio" ] }
 bytes = "1.5.0"
 chrono = "0.4.31"
 flume = { version = "0.11.0" }

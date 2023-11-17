@@ -12,7 +12,7 @@ use crate::{s};
 
 const CODE: &str = "cvx$^G#%^nh3t9y83h$%^@#isfdhioeroisd";
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub username: String,
     pub exp: usize,
