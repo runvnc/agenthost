@@ -79,8 +79,8 @@
         }
         var msg = text.value;
         xhr = new XMLHttpRequest();
-
-        xhr.open("POST", window.location.host + '/' + window.session_id, true);
+        let paramstr = `session_id=${window.session_id}&msg=${msg}`
+        xhr.open("GET", window.location.host + '/send' + paramstr, true);
         xhr.send(msg);
         text.value = '';
         message(msg, 'You');

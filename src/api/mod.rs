@@ -52,28 +52,6 @@ async fn hello_world() -> &'static str {
     "Hello, world!"
 }
 
-/*
-async fn chat_send_handler(
-    Path(user_id): Path<usize>,
-    Header(authorization): Header<String>,
-    ContentLengthLimit(Json(msg)): ContentLengthLimit<Json<String>, { 500 }>,
-) -> Result<AxumJson<&'static str>, StatusCode> {
-    let token = authorization
-        .strip_prefix("Bearer ")
-        .ok_or((StatusCode::BAD_REQUEST, "Invalid token format"))?;
-    let claims = verify_token(token).map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid token"))?;
-
-    // Call the existing handle_msg function to process the message
-    match handle_msg(user_id, claims.username, msg, users, manager).await {
-        Ok(_) => AxumJson("ok"),
-        Err(_) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Failed to handle message"
-        )
-    }
-}
-*/
-
 async fn user_input(params: Query<HashMap<String, String>>, Extension(claims): Extension<Claims>,
     Extension(connected_users): Extension<ConnectedUsers>) -> Result<Json<HashMap<&'static str,bool>>, (StatusCode, &'static str)> {
     let mut session_id = 1;
