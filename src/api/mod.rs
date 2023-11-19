@@ -45,6 +45,9 @@ use std::pin::Pin;
 use std::task::Waker;
 use serde::Deserialize;
 
+use maplit::hashmap;
+
+
 async fn hello_world() -> &'static str {
     "Hello, world!"
 }
@@ -72,30 +75,37 @@ async fn chat_send_handler(
 */
 
 async fn user_input(params: Query<HashMap<String, String>>, Extension(claims): Extension<Claims>,
-    Extension(connected_users): Extension<ConnectedUsers>) -> Result<(), (StatusCode, &str)> {
-
+    Extension(connected_users): Extension<ConnectedUsers>) -> Result<Json<HashMap<&'static str,bool>>, (StatusCode, &'static str)> {
+    let mut session_id = 1;
     if let Some(session) = params.get("session_id") {
         session_id = session.parse::<usize>().expect("Invalid session id");
     }
- 
-    msg
+    let mut msg = s!("Error: no msg");
 
-    let (sender, reply_receiver) = agent_mgr
-        .get_or_create_agent(username, session_id, s!("scripts/dm.rhai"))
+    if let Some(msg_) = params.get("msg") {
+        msg = msg_.clone();
+    }
+
+    let (sender, reply_receiver) = agent_mgr.get()
+        .expect("Could not access Agent Manager.")
+        .get_or_create_agent(claims.username.clone(), session_id, s!("scripts/dm.rhai"))
         .await;
 
     sender.send_async(msg).await.unwrap();
 
     loop {
-      let reply = reply_receiver.recv_async().await.unwrap();
-      {
-        let users_lock = users.lock().unwrap();
-        let tx = users_lock.get(&my_id).unwrap().clone();
+        let reply = reply_receiver.recv_async().await.unwrap();
+        let mut locked_users = connected_users.user_cache.lock().unwrap();
+        let sse_streams = locked_users
+            .get(&claims.username.clone());
+        let tx = sse_streams.ok_or_else(|| (StatusCode::INTERNAL_SERVER_ERROR, "User stream not found"))?
+            .cache.get(&session_id)
+            .ok_or_else( || (StatusCode::INTERNAL_SERVER_ERROR, "Session not found"))?;
+
         tx.send(reply); 
-      }
     }
 
-    Ok(())
+    Ok(Json(hashmap! {"ok" => true}))
 }
 
 
@@ -262,7 +272,7 @@ fn user_connected(claims: &Claims, users: &ConnectedUsers, session_id: usize)
 
     sse_streams
         .cache
-        .insert(session_id, (tx.clone()));
+        .insert(session_id, tx.clone());
 
     mapped
 }
