@@ -35,6 +35,7 @@ function openEventSource(relurl) {
   const token = localStorage.getItem('token')
   const queryParams = new URLSearchParams(window.location.search);
   window.session_id = queryParams.get('session_id') || '10';
+  window.token = token;
   const url = relurl + `?token=${encodeURIComponent(token)}&session_id=${session_id}`
   return new EventSource(url)
 }

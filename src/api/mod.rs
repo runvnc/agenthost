@@ -8,7 +8,7 @@ use axum::{
     response::IntoResponse,
     response::sse::{Event, Sse},
     routing::{get, post, get_service},
-    Router,
+    Router
 };
 use http::header;
 use std::collections::HashMap;
@@ -79,7 +79,7 @@ async fn user_input(params: Query<HashMap<String, String>>, Extension(claims): E
         let tx = sse_streams.ok_or_else(|| (StatusCode::INTERNAL_SERVER_ERROR, "User stream not found"))?
             .cache.get(&session_id)
             .ok_or_else( || (StatusCode::INTERNAL_SERVER_ERROR, "Session not found"))?;
-
+        println!("Received reply:");
         tx.send(reply); 
     }
 
@@ -130,12 +130,13 @@ async fn chat_events(params: Query<HashMap<String, String>>, Extension(claims): 
     Extension(connected_users): Extension<ConnectedUsers>)
      -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
     println!("username: {}", claims.username);
-    let mut session_id = 1;
+    let mut session_id = 10;
     if let Some(session) = params.get("session_id") {
         session_id = session.parse::<usize>().expect("Invalid session id");
     }
     println!("{}", session_id);
     let stream = user_connected(&claims, &connected_users, session_id);
+    println!("Returning Ssse stream!");
     Sse::new(stream)
 }
 
@@ -147,13 +148,13 @@ pub async fn server() -> Result<(), hyper::Error> {
     let connected_users = ConnectedUsers { user_cache: Arc::new(Mutex::new(HashMap::new())) };
 
     let app = Router::new()
-        .layer(middleware::from_fn(auth_middleware)) 
-        .layer(Extension(connected_users))
         .route("/hello", get(hello_world))
         .route("/login", post(login_handler))
         .route("/chat", get(chat_events))
         .route("/send", get(user_input))
+        .layer(Extension(connected_users))
         .layer(middleware::from_fn(logging_middleware))
+        .layer(middleware::from_fn(auth_middleware))  
         .fallback(get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -166,9 +167,9 @@ pub async fn server() -> Result<(), hyper::Error> {
         .route(chat_send_handler)
     */
 
-    println!("Listening at http://45.79.139.237:3132/");
+    println!("Listening at https://hostdev.padhub.xyz/");
 
-    axum::Server::bind(&"0.0.0.0:3132".parse().unwrap())
+    axum::Server::bind(&"127.0.0.1:3132".parse().unwrap())
         .serve(app.into_make_service_with_connect_info::<std::net::SocketAddr>())
         .await
 }
@@ -214,22 +215,27 @@ pub enum ChatUIMessage {
 
 fn user_connected(claims: &Claims, users: &ConnectedUsers, session_id: usize) 
   -> impl Stream<Item = Result<Event, Infallible>> + Send + 'static {
+    println!("user_connected");
     let mut locked_users = users.user_cache.lock().unwrap();
     let sse_streams = locked_users
         .entry(claims.username.clone())
         .or_insert_with(|| SessionSseStreams {
             cache: HashMap::new(),
         });
-
+    println!("Got locked users");
     let (tx, rx) = mpsc::unbounded_channel();
     let rx = UnboundedReceiverStream::new(rx);
 
     tx.send(ChatUIMessage::UserId(claims.username.clone()))
         .unwrap();
+    println!("sent userid msg");
 
     let mapped = rx.map(|msg| match msg {
         ChatUIMessage::UserId(my_id) => Ok(Event::default().event("user").data(my_id.to_string())),
-        ChatUIMessage::Fragment(fragment) => Ok(Event::default().event("fragment").data(fragment)),
+        ChatUIMessage::Fragment(fragment) => {
+            print!("[{}]", fragment);
+            Ok(Event::default().event("fragment").data(fragment))
+        },
         ChatUIMessage::Reply(reply) => Ok(Event::default().data(reply)),
         ChatUIMessage::FunctionCall {
             name,
@@ -251,7 +257,7 @@ fn user_connected(claims: &Claims, users: &ConnectedUsers, session_id: usize)
     sse_streams
         .cache
         .insert(session_id, tx.clone());
-
+    println!("returning from user_connected");
     mapped
 }
 
@@ -276,13 +282,17 @@ async fn auth_middleware(
     let needs_auth = vec!["/chat", "/send"];
 
     if needs_auth.iter().any(|path| req.uri().path().starts_with(path)) {
+        println!("Needs auth");
         if let Some(query_string) = req.uri().query() {
+            println!("Found query");
             let query_params: HashMap<String, String> = serde_urlencoded::from_str(query_string).unwrap_or_default();
         
             if let Some(token) = query_params.get("token") {
                 println!("Token: {}", token);
                 let claims = verify_token(token).expect("Invalid token");
+                println!("Inserting claims!");
                 req.extensions_mut().insert(claims);
+                println!("Claims extension inserted.");
             } else {
                 return Err((StatusCode::INTERNAL_SERVER_ERROR, "Auth failed"));
             }

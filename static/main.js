@@ -37,9 +37,11 @@
       rawMarkdown = '';
     }
     sse.addEventListener("user", function(msg) {
+        console.log({user: msg.data})
         user_id = msg.data;
     });
     sse.addEventListener("fragment", function(frag) {
+      console.log("fragment", frag.data);
       if (rawMarkdown == '__WAITING__') {
         message('', 'Agent')
         rawMarkdown = ''
@@ -79,8 +81,8 @@
         }
         var msg = text.value;
         xhr = new XMLHttpRequest();
-        let paramstr = `session_id=${window.session_id}&msg=${msg}`
-        xhr.open("GET", window.location.host + '/send' + paramstr, true);
+        let paramstr = `?session_id=${window.session_id}&token=${window.token}&msg=${msg}`
+        xhr.open("GET", '/send' + paramstr, true);
         xhr.send(msg);
         text.value = '';
         message(msg, 'You');
