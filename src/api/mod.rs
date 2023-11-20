@@ -80,7 +80,8 @@ async fn user_input(params: Query<HashMap<String, String>>, Extension(claims): E
             .cache.get(&session_id)
             .ok_or_else( || (StatusCode::INTERNAL_SERVER_ERROR, "Session not found"))?;
         println!("Received reply:");
-        tx.send(reply); 
+        tx.send(reply);
+        
     }
 
     Ok(Json(hashmap! {"ok" => true}))
@@ -135,7 +136,7 @@ async fn chat_events(params: Query<HashMap<String, String>>, Extension(claims): 
         session_id = session.parse::<usize>().expect("Invalid session id");
     }
     println!("{}", session_id);
-    let stream = user_connected(&claims, &connected_users, session_id);
+    let stream = user_connected(&claims, &connected_users, session_id).await;
     println!("Returning Ssse stream!");
     Sse::new(stream)
 }
@@ -213,7 +214,7 @@ pub enum ChatUIMessage {
     },
 }
 
-fn user_connected(claims: &Claims, users: &ConnectedUsers, session_id: usize) 
+async fn user_connected(claims: &Claims, users: &ConnectedUsers, session_id: usize) 
   -> impl Stream<Item = Result<Event, Infallible>> + Send + 'static {
     println!("user_connected");
     let mut locked_users = users.user_cache.lock().unwrap();
@@ -256,7 +257,7 @@ fn user_connected(claims: &Claims, users: &ConnectedUsers, session_id: usize)
 
     sse_streams
         .cache
-        .insert(session_id, tx.clone());
+        .insert(session_id, tx);
     println!("returning from user_connected");
     mapped
 }
