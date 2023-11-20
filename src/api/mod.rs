@@ -71,8 +71,7 @@ async fn user_input(params: Query<HashMap<String, String>>, Extension(claims): E
 
     sender.send_async(msg).await.unwrap();
 
-    loop {
-        let reply = reply_receiver.recv_async().await.unwrap();
+    while let Some(reply) = reply_receiver.recv_async().await {
         let mut locked_users = connected_users.user_cache.lock().unwrap();
         let sse_streams = locked_users
             .get(&claims.username.clone());
@@ -80,8 +79,11 @@ async fn user_input(params: Query<HashMap<String, String>>, Extension(claims): E
             .cache.get(&session_id)
             .ok_or_else( || (StatusCode::INTERNAL_SERVER_ERROR, "Session not found"))?;
         println!("Received reply:");
-        tx.send(reply);
-        
+        tx.send(reply.clone());
+
+        if let ChatUIMessage::Reply(_) = reply {
+            break;
+        }
     }
 
     Ok(Json(hashmap! {"ok" => true}))
