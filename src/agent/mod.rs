@@ -25,7 +25,8 @@ use tokio::sync::mpsc;
 use crate::{dyn_map, dyn_str, json_str, s};
 
 use crate::api;
-use crate::api::ChatUIMessage;
+use crate::api::chatuimessage::*;
+use crate::api::chatuimessage::ChatUIMessage;
 
 //unsafe impl Send for Agent {}
 
@@ -61,8 +62,8 @@ impl Agent {
     ) -> Result<Self> {
         println!("AgentHost 0.1 Startup agent..");
         chatlog::init();
-        let model = s!("gpt-3.5-turbo");
-        //let model = s!("gpt-4");
+        //let model = s!("gpt-3.5-turbo");
+        let model = s!("gpt-4-1106-preview");
         let mut log = ChatLog::new(username.clone(), session_id);
         let chat = OpenAIChat::new(model.clone());
         let mut handler = scripts::init(&script_path, session_id)?;
@@ -171,12 +172,36 @@ impl Agent {
         self.call_ret_string("renderUserMsg", json_string)
     }
 
+    async fn handle_command(&mut self, cmd: String) -> bool {
+        let cmd_prefix = "//";
+        if cmd.starts_with(cmd_prefix) {
+            println!("Found command");
+            match cmd.as_str() {
+                "//history" => {
+                    println!("Found history command.");
+                    for msg in &self.log.messages[..] { 
+                        self.reply_sender
+                        .send_async(msg.message.clone().into()).await.unwrap();
+                    }
+                    return true
+                },
+                _ => return false
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     pub async fn run(&mut self) -> Result<()> {
         println!("OK");
         let mut need_user_input = true;
         loop {
             if need_user_input {
                 let input_str = self.receiver.recv_async().await.context("error")?;
+                if self.handle_command(s!(input_str)).await {
+                    continue;
+                }
                 let msg = self.render_user_msg(s!(input_str))?;
                 self.log.add(user_msg(&msg)?);
             }
@@ -201,7 +226,11 @@ impl Agent {
             } else {
                 self.log.add(agent_msg(&text)?);
                 self.reply_sender
-                    .send_async(ChatUIMessage::Reply(text))
+                    .send_async(ChatUIMessage::Reply {
+                        name: s!("agent"),
+                        role: s!("assistant"),
+                        content: text
+                    })
                     .await?;
                 println!("Sent reply back to API endpoint.");
                 need_user_input = true;

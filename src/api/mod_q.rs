@@ -47,11 +47,10 @@ use serde::Deserialize;
 
 use maplit::hashmap;
 
-use rand::Rng;
-use tokio::time::{self, Duration};
 
-pub mod chatuimessage;
-use chatuimessage::*;
+async fn hello_world() -> &'static str {
+    "Hello, world!"
+}
 
 async fn user_input(params: Query<HashMap<String, String>>, Extension(claims): Extension<Claims>,
     Extension(connected_users): Extension<ConnectedUsers>) -> Result<Json<HashMap<&'static str,bool>>, (StatusCode, &'static str)> {
@@ -73,7 +72,6 @@ async fn user_input(params: Query<HashMap<String, String>>, Extension(claims): E
     sender.send_async(msg).await.unwrap();
 
     loop {
-        println!("****************************** TOP OF LOOP **************************");
         let reply = reply_receiver.recv_async().await.unwrap();
         let mut locked_users = connected_users.user_cache.lock().unwrap();
         let sse_streams = locked_users
@@ -84,7 +82,6 @@ async fn user_input(params: Query<HashMap<String, String>>, Extension(claims): E
         println!("Received reply:");
         tx.send(reply.clone());
         if let ChatUIMessage::Reply(_) = reply { 
-             println!("////////////////////////////////////////////////////////////////////////////");
              break;                                                                                                                                    
         } 
     }
@@ -107,6 +104,18 @@ async fn login_handler(
     }
 }
 
+/*
+
+async fn auth_route_handler(
+    Header(authorization): Header<String>,
+) -> Result<Json<Claims>, (StatusCode, &'static str)> {
+    let token = authorization
+        .strip_prefix("Bearer ")
+        .ok_or((StatusCode::BAD_REQUEST, "Invalid token format"))?;
+    let claims = verify_token(token).map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid token"))?;
+    Ok(Json(claims))
+}
+*/
 
 #[derive(Debug, Clone)]
 pub struct SessionSseStreams {
@@ -119,9 +128,9 @@ pub struct ConnectedUsers {
     user_cache: Arc<Mutex<HashMap<String, SessionSseStreams>>>,
 }
 
-async fn chat_events(params: Query<HashMap<String, String>>, Extension(claims): Extension<Claims>,
+
+fn chat_events(params: Query<HashMap<String, String>>, Extension(claims): Extension<Claims>,
     Extension(connected_users): Extension<ConnectedUsers>)
-    //-> impl IntoResponse {
      -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
     println!("username: {}", claims.username);
     let mut session_id = 10;
@@ -129,19 +138,8 @@ async fn chat_events(params: Query<HashMap<String, String>>, Extension(claims): 
         session_id = session.parse::<usize>().expect("Invalid session id");
     }
     println!("{}", session_id);
-    
-    /* let stream = tokio_stream::wrappers::IntervalStream::new(time::interval(Duration::from_secs(
-        1,
-    )))
-    .map(|_| {
-        let mut rng = rand::thread_rng();
-        let random_number: u32 = rng.gen();
-        Ok::<_, Infallible>(Event::default().data(random_number.to_string()))
-    }); */
-
-    
     let stream = user_connected(&claims, &connected_users, session_id);
-    println!("Returning Ssse stream!");
+    println!("Returning Sse stream!");
     Sse::new(stream)
 }
 
@@ -153,6 +151,7 @@ pub async fn server() -> Result<(), hyper::Error> {
     let connected_users = ConnectedUsers { user_cache: Arc::new(Mutex::new(HashMap::new())) };
 
     let app = Router::new()
+        .route("/hello", get(hello_world))
         .route("/login", post(login_handler))
         .route("/chat", get(chat_events))
         .route("/send", get(user_input))
@@ -166,6 +165,11 @@ pub async fn server() -> Result<(), hyper::Error> {
             )
         }));
 
+    /*
+        .route(chat_recv)
+        .route(chat_send_handler)
+    */
+
     println!("Listening at https://hostdev.padhub.xyz/");
 
     axum::Server::bind(&"127.0.0.1:3132".parse().unwrap())
@@ -173,6 +177,44 @@ pub async fn server() -> Result<(), hyper::Error> {
         .await
 }
 
+/*
+async fn chat_input(
+    userid: String,
+    session_id: usize,
+    msg: String,
+) -> Result<impl warp::Reply, Infallible> {
+    let (sender, reply_receiver) = manager
+        .get_or_create_agent(userid, session_id, s!("scripts/dm.rhai"))
+        .await?;
+
+    println!("Received: {}", msg);
+
+    sender.send_async(msg).await.unwrap();
+
+    loop {
+        let reply = reply_receiver.recv_async().await.unwrap();
+        println!(reply)
+        {
+            let users_lock = users.lock().unwrap();
+            let tx = users_lock.get(&my_id).unwrap().clone();
+            tx.send(reply);
+        }
+    }
+
+    Ok("ok")
+} */
+
+#[derive(Clone, Debug)]
+pub enum ChatUIMessage {
+    UserId(String),
+    Reply(String),
+    Fragment(String),
+    FunctionCall {
+        name: String,
+        params: String,
+        result: String,
+    },
+}
 
 fn user_connected(claims: &Claims, users: &ConnectedUsers, session_id: usize) 
   -> impl Stream<Item = Result<Event, Infallible>> + Send + 'static {
@@ -186,29 +228,13 @@ fn user_connected(claims: &Claims, users: &ConnectedUsers, session_id: usize)
     println!("Got locked users");
     let (tx, rx) = mpsc::unbounded_channel();
     let rx = UnboundedReceiverStream::new(rx);
-
-    tx.send(ChatUIMessage::UserId(claims.username.clone()))
-        .unwrap();
-    println!("sent userid msg");
-
     let mapped = rx.map(|msg| match msg {
         ChatUIMessage::UserId(my_id) => Ok(Event::default().event("user").data(my_id.to_string())),
         ChatUIMessage::Fragment(fragment) => {
             print!("[{}]", fragment);
             Ok(Event::default().event("fragment").data(fragment))
         },
-        ChatUIMessage::Reply {
-            name,
-            role,
-            content
-        } => { 
-            let data = serde_json::json!({
-                "name": name,
-                "role": role,
-                "content": content
-            });
-            Ok(Event::default().data(s!(data)))
-        },
+        ChatUIMessage::Reply(reply) => Ok(Event::default().data(reply)),
         ChatUIMessage::FunctionCall {
             name,
             params,
@@ -225,10 +251,14 @@ fn user_connected(claims: &Claims, users: &ConnectedUsers, session_id: usize)
                 .data(data.to_string()))
         }
     });
-
     sse_streams
         .cache
-        .insert(session_id, tx);
+        .insert(session_id, tx.clone());
+ 
+    tx.send(ChatUIMessage::UserId(claims.username.clone()))
+        .unwrap();
+    println!("sent userid msg");
+
     println!("returning from user_connected");
     mapped
 }
@@ -247,14 +277,12 @@ struct LoginResponse {
 
 async fn auth_middleware(
     mut req: Request<Body>,
-    next: Next<Body>
-) -> impl IntoResponse {
-//) -> Result<Response<Body>, (StatusCode, &'static str) > {
+    next: Next<Body>,
+) -> Result<Response<Body>, (StatusCode, &'static str) > {
     println!("Request URI: {}", req.uri());
     println!("Headers: {:?}", req.headers());
     let needs_auth = vec!["/chat", "/send"];
-    //let claims = Claims { username: s!("bob"), exp: 1800446206315 };
-    //req.extensions_mut().insert(claims);
+
     if needs_auth.iter().any(|path| req.uri().path().starts_with(path)) {
         println!("Needs auth");
         if let Some(query_string) = req.uri().query() {
@@ -275,23 +303,20 @@ async fn auth_middleware(
         }
     }
     let response = next.run(req).await;
-    Ok(response)
-    /* let (parts, body) = response.into_parts();
+    let (parts, body) = response.into_parts();
     let body = Body::from(hyper::body::to_bytes(body).await.unwrap());
-    Ok(Response::from_parts(parts, body)) */
+    Ok(Response::from_parts(parts, body))
 }
 
 
 async fn logging_middleware(
     req: Request<Body>,
     next: Next<Body>,
-) -> impl IntoResponse {
+) -> Result<Response<Body>, Infallible> {
     println!("Request URI: {}", req.uri());
     println!("Headers: {:?}", req.headers());
-    next.run(req).await
-    
-    /*
+    let response = next.run(req).await;
     let (parts, body) = response.into_parts();
     let body = Body::from(hyper::body::to_bytes(body).await.unwrap());
-    Ok(Response::from_parts(parts, body)) */
+    Ok(Response::from_parts(parts, body))
 }

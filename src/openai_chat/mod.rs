@@ -20,7 +20,7 @@ use flume::*;
 
 use crate::s;
 
-use crate::api::ChatUIMessage;
+use crate::api::chatuimessage::ChatUIMessage;
 
 pub struct OpenAIChat {
     model: String,

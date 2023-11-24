@@ -1,5 +1,5 @@
 use crate::agent::Agent;
-use crate::api::ChatUIMessage;
+use crate::api::chatuimessage::ChatUIMessage;
 use flume::*;
 use std::collections::HashMap;
 use std::sync::Arc;

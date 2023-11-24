@@ -12,7 +12,7 @@ static BPE: OnceCell<CoreBPE> = OnceCell::new();
 
 //mod shorthands;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ChatMessage {
     pub message: ChatCompletionRequestMessage,
     pub length: usize,
@@ -46,7 +46,7 @@ use std::path::Path;
 #[derive(Serialize, Deserialize)]
 pub struct ChatLog {
     session_id: usize,
-    messages: Vec<ChatMessage>,
+    pub messages: Vec<ChatMessage>,
 }
 
 pub fn sys_msg(text: &String) -> Result<ChatMessage> {

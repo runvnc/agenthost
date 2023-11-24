@@ -1,6 +1,3 @@
-window.baseURL = window.baseURL || window.location.href.replace(/\/$/, '') + '/'
-console.log({baseURL: window.baseURL})
-
 async function anonymousLogin() {
   console.log('anonymouseLogin()')
   let user = localStorage.getItem('username')
@@ -14,11 +11,8 @@ async function anonymousLogin() {
 }
 
 async function login(username, password) {
-  if (!window.baseURL) {
-    throw new Error("No baseURL")
-  }
-  console.log('logging in',window.baseURL);
-  fetch(window.baseURL + 'login', {
+  console.log('logging in');
+  fetch('/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
@@ -41,14 +35,11 @@ function openEventSource(relurl) {
 }
 
 async function Request(relurl, params) {
-  if (!window.baseURL) {
-    throw new Error("No baseURL")
-  }
   const token = localStorage.getItem('token')
   if (!token) throw new Error("No access token")
 
   if (!params.headers) params.headers = {}
   Object.assign(params.headers, {'Authorization': `Bearer ${token}`})
-  const resp = await fetch( window.baseURL + relurl, params )
+  const resp = await fetch( relurl, params )
   return await resp.json()
 }

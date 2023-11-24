@@ -16,6 +16,7 @@
         currParagraph = document.createElement('p');
         currParagraph.innerHTML += data;
         msgElement.appendChild(currParagraph);
+        console.log('message()')
         rawMarkdown = '';
         chat.appendChild(msgElement);
     }
@@ -42,15 +43,18 @@
     });
     sse.addEventListener("fragment", function(frag) {
       console.log("fragment", frag.data);
-      if (rawMarkdown == '__WAITING__') {
-        message('', 'Agent')
-        rawMarkdown = ''
-      }
-      let text = frag.data.substr(1, frag.data.length-2);
-      rawMarkdown += text;
-      let html = markdownit().render(rawMarkdown);
-      currParagraph.innerHTML = html;
-      chat.scrollTop = chat.scrollHeight;
+      setTimeout(()=> {
+        if (rawMarkdown == '__WAITING__') {
+          message('', 'Agent')
+          rawMarkdown = ''
+        }
+        let text = frag.data.substr(1, frag.data.length-2);
+        rawMarkdown += text;
+        let html = markdownit().render(rawMarkdown);
+        currParagraph.innerHTML = html;
+        console.log("updated innerHTML", html);
+        chat.scrollTop = chat.scrollHeight;
+      }, 5);
     });
     sse.addEventListener("functionCall", function(fn) {
       console.log({functionCall: fn.data});
