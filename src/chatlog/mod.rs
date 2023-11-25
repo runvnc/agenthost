@@ -33,7 +33,7 @@ impl ChatMessage {
         let tokens = BPE
             .get()
             .expect("No tokenizer")
-            .encode_with_special_tokens(&(self.message.as_deref().unwrap_or("")));
+            .encode_with_special_tokens(&(self.message.content.as_deref().unwrap_or("")));
 
         self.length = tokens.len()
     }

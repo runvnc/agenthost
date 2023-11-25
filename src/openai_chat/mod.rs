@@ -6,7 +6,7 @@ use std::io::{stdout, Write};
 use async_openai::{
     types::{
         ChatCompletionFunctions, ChatCompletionFunctionsArgs, ChatCompletionRequestMessage,
-        CreateChatCompletionRequestArgs,
+        CreateChatCompletionRequestArgs, FinishReason,
     },
     Client,
 };
