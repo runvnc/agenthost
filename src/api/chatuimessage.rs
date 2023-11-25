@@ -1,7 +1,11 @@
 use async_openai::types::{
-    ChatCompletionRequestMessage, ChatCompletionRequestMessageArgs, FunctionCall, Role,
+    ChatCompletionRequestMessage, FunctionCall, Role,
 };
 
+use async_openai::types::{
+    ChatCompletionRequestUserMessage, ChatCompletionRequestAssistantMessage,
+    ChatCompletionRequestUserMessageContent
+};
 
 #[derive(Clone, Debug)]
 pub enum ChatUIMessage {
@@ -23,7 +27,7 @@ pub enum ChatUIMessage {
 impl From<ChatCompletionRequestMessage> for ChatUIMessage {
     fn from(item: ChatCompletionRequestMessage) -> Self {
         match item {
-            ChatCompletionRequestMessage::User(user_message) => {
+            ChatCompletionRequestUserMessage(user_message) => {
                 match user_message.content {
                     Some(ChatCompletionRequestUserMessageContent::Text(text)) => {
                         ChatUIMessage::Reply {
@@ -35,7 +39,7 @@ impl From<ChatCompletionRequestMessage> for ChatUIMessage {
                     _ => ChatUIMessage::Fragment("Unsupported User Message Content".to_string()),
                 }
             },
-            ChatCompletionRequestMessage::Assistant(assistant_message) => {
+            ChatCompletionRequestAssistantMessage(assistant_message) => {
                 if let Some(content) = assistant_message.content {
                     ChatUIMessage::Reply {
                         role: assistant_message.role.to_string(),
