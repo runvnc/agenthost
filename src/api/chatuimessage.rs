@@ -27,7 +27,7 @@ pub enum ChatUIMessage {
 impl From<ChatCompletionRequestMessage> for ChatUIMessage {
     fn from(item: ChatCompletionRequestMessage) -> Self {
         match item {
-            ChatCompletionRequestUserMessage(user_message) => {
+            ChatCompletionRequestUserMessage { content: user_message, role, .. } => {
                 match user_message.content {
                     Some(ChatCompletionRequestUserMessageContent::Text(text)) => {
                         ChatUIMessage::Reply {
@@ -39,7 +39,7 @@ impl From<ChatCompletionRequestMessage> for ChatUIMessage {
                     _ => ChatUIMessage::Fragment("Unsupported User Message Content".to_string()),
                 }
             },
-            ChatCompletionRequestAssistantMessage(assistant_message) => {
+            ChatCompletionRequestAssistantMessage { content: assistant_message, role, .. } => {
                 if let Some(content) = assistant_message.content {
                     ChatUIMessage::Reply {
                         role: assistant_message.role.to_string(),

@@ -3,7 +3,7 @@ use once_cell::sync::OnceCell;
 use termion::style;
 
 use async_openai::types::{
-    ChatCompletionRequestMessage, ChatCompletionRequestMessageArgs, FunctionCall, Role,
+    ChatCompletionRequestMessage, FunctionCall, Role,
 };
 
 use tiktoken_rs::{cl100k_base, CoreBPE};
@@ -33,7 +33,7 @@ impl ChatMessage {
         let tokens = BPE
             .get()
             .expect("No tokenizer")
-            .encode_with_special_tokens(&(self.message.content.as_deref().unwrap_or("")));
+            .encode_with_special_tokens(&(self.message.as_deref().unwrap_or("")));
 
         self.length = tokens.len()
     }
@@ -121,7 +121,7 @@ impl ChatLog {
         }
         let content: String = self.messages[0]
             .message
-            .content
+            .message
             .as_ref()
             .expect("The value is None")
             .to_string();
