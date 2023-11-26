@@ -49,6 +49,8 @@ use maplit::hashmap;
 
 use rand::Rng;
 use tokio::time::{self, Duration};
+use tokio::fs::read_to_string;
+use axum::response::Html;
 
 pub mod chatuimessage;
 use chatuimessage::*;
@@ -146,7 +148,7 @@ pub async fn server() -> Result<(), hyper::Error> {
         .route("/login", post(login_handler))
         .route("/chat", get(chat_events))
         .route("/send", get(user_input))
-        .route("/", get(get_service(ServeDir::new("static/index.html"))))
+        .route("/", get(index_handler))
         .layer(Extension(connected_users))
         .layer(middleware::from_fn(logging_middleware))
         .layer(middleware::from_fn(auth_middleware))  
