@@ -29,10 +29,9 @@ impl From<ChatCompletionRequestMessage> for ChatUIMessage {
         match item {
             ChatCompletionRequestMessage::User(ChatCompletionRequestUserMessage { content: user_message, role, .. }) => {
                 match user_message {
-                    Some(content) => {
                     Some(ChatCompletionRequestUserMessageContent::Text(text)) => {
                         ChatUIMessage::Reply {
-                            role: user_message.role.to_string(),
+                            role: role.to_string(),
                             name: "User".to_string(), // Name is set as "User"
                             content: text,
                         }
@@ -41,9 +40,9 @@ impl From<ChatCompletionRequestMessage> for ChatUIMessage {
                 }
             },
             ChatCompletionRequestMessage::Assistant(ChatCompletionRequestAssistantMessage { content: assistant_message, role, .. }) => {
-                if let Some(content) = assistant_message.content {
+                if let Some(content) = assistant_message {
                     ChatUIMessage::Reply {
-                        role: assistant_message.role.to_string(),
+                        role: role.to_string(),
                         name: "Assistant".to_string(), // Name is set as "Assistant"
                         content,
                     }
