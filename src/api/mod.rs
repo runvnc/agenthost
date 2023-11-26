@@ -25,8 +25,14 @@ use tokio_stream::wrappers::{UnboundedReceiverStream};
 use tower_http::{
     cors::{CorsLayer},
     trace::TraceLayer,
-    services::{ServeDir}
+    services::{ServeDir},
+    ServiceBuilder,
 };
+use hyper::{Request, Response, Body, service::Service};
+use std::task::{Context, Poll};
+use std::pin::Pin;
+use std::future::Future;
+use std::convert::Infallible;
 
 use flume::*;
 use rhai::Engine;
@@ -149,12 +155,15 @@ pub async fn server() -> Result<(), hyper::Error> {
         .layer(Extension(connected_users))
         .layer(middleware::from_fn(logging_middleware))
         .layer(middleware::from_fn(auth_middleware))  
-        .fallback(get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Unhandled internal error: {}", error),
-            )
-        }));
+        .fallback(ServiceBuilder::new()
+            .layer(middleware::from_fn(strip_query_string))
+            .service(ServeDir::new("static"))
+            .handle_error(|error: std::io::Error| async move {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Unhandled internal error: {}", error),
+                )
+            }));
 
     println!("Listening at https://hostdev.padhub.xyz/");
 
@@ -284,4 +293,12 @@ async fn logging_middleware(
     let (parts, body) = response.into_parts();
     let body = Body::from(hyper::body::to_bytes(body).await.unwrap());
     Ok(Response::from_parts(parts, body)) */
+}
+async fn strip_query_string(
+    req: Request<Body>,
+    next: impl Service<Request<Body>, Response = Response<Body>, Error = Infallible> + Clone + Send + 'static,
+) -> Result<Response<Body>, Infallible> {
+    let (mut parts, body) = req.into_parts();
+    parts.uri = parts.uri.path().parse().unwrap();
+    next.call(Request::from_parts(parts, body)).await
 }
