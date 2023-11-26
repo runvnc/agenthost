@@ -95,7 +95,10 @@ impl OpenAIChat {
                 }
 
                 Err(err) => {
-                    println!("error: {err}");
+                    println!("error: {:?}", err);
+                    if let Some(cause) = err.source() {
+                        println!("caused by: {:?}", cause);
+                    }
                 }
             }
             stdout().flush()?;
