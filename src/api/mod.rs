@@ -76,7 +76,7 @@ async fn user_input(
         .get_or_create_agent(
             claims.username.clone(),
             session_id,
-            s!("scripts/basic.rhai"),
+            s!("scripts/dm.rhai"),
         )
         .await;
 

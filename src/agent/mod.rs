@@ -200,14 +200,18 @@ impl Agent {
         let mut need_user_input = true;
         loop {
             if need_user_input {
+                println!("need user input");
                 let input_str = self.receiver.recv_async().await.context("error")?;
                 if self.handle_command(s!(input_str)).await {
+                    println!("Handled command");
                     continue;
                 }
+                println!("Adding user message");
                 let msg = self.render_user_msg(s!(input_str))?;
                 self.log.add(user_msg(&msg)?);
+                println!("Added user message");
             }
-
+            println!("updated sys message");
             self.update_sys_msg();
             println!("Added message and updated sys log.");
 

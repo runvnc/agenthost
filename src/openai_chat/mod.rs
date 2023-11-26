@@ -10,6 +10,7 @@ use async_openai::{
     },
     Client,
 };
+use async_openai::types::ChatCompletionRequestUserMessageArgs;
 use async_openai::error::OpenAIError;
 
 use async_openai::config::OpenAIConfig;
@@ -54,13 +55,24 @@ impl OpenAIChat {
         functions: Vec<ChatCompletionFunctions>,
         reply_sender: flume::Sender<ChatUIMessage>,
     ) -> Result<(String, String, String)> {
+
+/*        let request = CreateChatCompletionRequestArgs::default()
+        .model("gpt-3.5-turbo")
+        .max_tokens(512u16)
+        .messages([ChatCompletionRequestUserMessageArgs::default()
+            .content("Write a marketing blog praising and introducing Rust library async-openai")
+            .build()?
+            .into()])
+        .build()?; */
         let request = CreateChatCompletionRequestArgs::default()
             .model(&*self.model)
+            .max_tokens(512u16)
             .messages(messages)
             .functions(functions)
             .function_call("auto")
             .build()?;
 
+        println!("Request data: {:?}", request);
         let mut stream = self.client.chat().create_stream(request).await?;
 
         let mut fn_name = String::new();
@@ -98,6 +110,12 @@ impl OpenAIChat {
                 Err(error) => match error {
                     OpenAIError::ApiError(api_error) => {
                         println!("API Error: {:?}", api_error);
+                    }
+                    OpenAIError::Reqwest(er) => {
+                        println!("Reqwest error: {:?}", er);
+                    }
+                    OpenAIError::StreamError(msg) => {
+                        println!("Stream Error: {:?}", msg);
                     }
                     _ => {
                         println!("Other OpenAI Error: {:?}", error);

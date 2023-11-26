@@ -55,6 +55,7 @@ pub struct ChatLog {
 
 pub fn sys_msg(text: &String) -> Result<ChatMessage> {
     let msg = ChatCompletionRequestSystemMessageArgs::default()
+        .content(text)
         .build()?
         .into();
     Ok(ChatMessage::new(msg))
@@ -118,8 +119,10 @@ impl ChatLog {
 
     pub fn change_sys_msg(&mut self, msg: ChatMessage) {
         if self.messages.len() > 0 {
+            println!("change sys message at 0");
             self.messages[0] = msg;
         } else {
+            println!("change sys message, push");
             self.messages.push(msg);
         }
         self.save();
@@ -132,21 +135,26 @@ impl ChatLog {
     }
 
     pub fn to_request_msgs(&mut self, model: &str) -> Result<Vec<ChatCompletionRequestMessage>> {
-        let _i: i32 = 0;
         let max_tokens = match model {
             "gpt-3.5-turbo" => 3000,
             _other => 7000,
         };
         let mut msgs: Vec<ChatCompletionRequestMessage> = vec![self.messages[0].message.clone()];
         let mut tokens = self.messages[0].length;
+        let mut i: usize = 0;
+
+        println!("to request messages len: {}", self.messages.len());
 
         for msg in self.messages.iter().rev() {
             tokens += msg.length;
-            if tokens <= max_tokens {
+            if tokens <= max_tokens && i < (self.messages.len()-1) {
+                println!("to request msgs adding message");
                 msgs.insert(1, msg.message.clone());
             } else {
+                println!("to request msgs break");
                 break;
             }
+            i += 1;
         }
         //println!("{}({} of {} max tokens)", style::Reset,tokens, max_tokens);
         Ok(msgs)
