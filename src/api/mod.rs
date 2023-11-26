@@ -67,7 +67,7 @@ async fn user_input(params: Query<HashMap<String, String>>, Extension(claims): E
 
     let (sender, reply_receiver) = agent_mgr.get()
         .expect("Could not access Agent Manager.")
-        .get_or_create_agent(claims.username.clone(), session_id, s!("scripts/dm.rhai"))
+        .get_or_create_agent(claims.username.clone(), session_id, s!("scripts/basic.rhai"))
         .await;
 
     sender.send_async(msg).await.unwrap();
@@ -129,16 +129,6 @@ async fn chat_events(params: Query<HashMap<String, String>>, Extension(claims): 
         session_id = session.parse::<usize>().expect("Invalid session id");
     }
     println!("{}", session_id);
-    
-    /* let stream = tokio_stream::wrappers::IntervalStream::new(time::interval(Duration::from_secs(
-        1,
-    )))
-    .map(|_| {
-        let mut rng = rand::thread_rng();
-        let random_number: u32 = rng.gen();
-        Ok::<_, Infallible>(Event::default().data(random_number.to_string()))
-    }); */
-
     
     let stream = user_connected(&claims, &connected_users, session_id);
     println!("Returning Ssse stream!");
