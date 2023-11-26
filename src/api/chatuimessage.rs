@@ -28,7 +28,8 @@ impl From<ChatCompletionRequestMessage> for ChatUIMessage {
     fn from(item: ChatCompletionRequestMessage) -> Self {
         match item {
             ChatCompletionRequestMessage::User(ChatCompletionRequestUserMessage { content: user_message, role, .. }) => {
-                match user_message.content {
+                match user_message {
+                    Some(content) => {
                     Some(ChatCompletionRequestUserMessageContent::Text(text)) => {
                         ChatUIMessage::Reply {
                             role: user_message.role.to_string(),

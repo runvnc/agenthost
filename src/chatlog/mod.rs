@@ -50,7 +50,7 @@ pub struct ChatLog {
 }
 
 pub fn sys_msg(text: &String) -> Result<ChatMessage> {
-    let msg = ChatCompletionRequestMessageArgs::default()
+    let msg = ChatCompletionRequestMessage::default()
         .role(Role::System)
         .content(text.as_str())
         .build()?;
