@@ -25,8 +25,8 @@ use tokio::sync::mpsc;
 use crate::{dyn_map, dyn_str, json_str, s};
 
 use crate::api;
-use crate::api::chatuimessage::*;
 use crate::api::chatuimessage::ChatUIMessage;
+use crate::api::chatuimessage::*;
 
 //unsafe impl Send for Agent {}
 
@@ -179,13 +179,15 @@ impl Agent {
             match cmd.as_str() {
                 "//history" => {
                     println!("Found history command.");
-                    for msg in &self.log.messages[..] { 
+                    for msg in &self.log.messages[..] {
                         self.reply_sender
-                        .send_async(msg.message.clone().into()).await.unwrap();
+                            .send_async(msg.message.clone().into())
+                            .await
+                            .unwrap();
                     }
-                    return true
-                },
-                _ => return false
+                    return true;
+                }
+                _ => return false,
             }
             return true;
         } else {
@@ -229,7 +231,7 @@ impl Agent {
                     .send_async(ChatUIMessage::Reply {
                         name: s!("agent"),
                         role: s!("assistant"),
-                        content: text
+                        content: text,
                     })
                     .await?;
                 println!("Sent reply back to API endpoint.");

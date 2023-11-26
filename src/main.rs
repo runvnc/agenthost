@@ -29,4 +29,3 @@ async fn main() -> Result<()> {
     api::server().await;
     Ok(())
 }
-

@@ -3,11 +3,9 @@ use once_cell::sync::OnceCell;
 use termion::style;
 
 use async_openai::types::{
-    ChatCompletionRequestMessage, FunctionCall, Role,
-    ChatCompletionRequestUserMessageArgs,
-    ChatCompletionRequestAssistantMessageArgs,
-    ChatCompletionRequestSystemMessageArgs,
-    ChatCompletionRequestFunctionMessageArgs
+    ChatCompletionRequestAssistantMessageArgs, ChatCompletionRequestFunctionMessageArgs,
+    ChatCompletionRequestMessage, ChatCompletionRequestSystemMessageArgs,
+    ChatCompletionRequestUserMessageArgs, FunctionCall, Role,
 };
 
 use tiktoken_rs::{cl100k_base, CoreBPE};
@@ -39,7 +37,7 @@ impl ChatMessage {
             .get()
             .expect("No tokenizer")
             .encode_with_special_tokens(str_msg.as_ref());
-            //#.encode_with_special_tokens(&(self.message.content.as_deref().unwrap_or("")));
+        //#.encode_with_special_tokens(&(self.message.content.as_deref().unwrap_or("")));
 
         self.length = tokens.len()
     }
@@ -57,21 +55,24 @@ pub struct ChatLog {
 
 pub fn sys_msg(text: &String) -> Result<ChatMessage> {
     let msg = ChatCompletionRequestSystemMessageArgs::default()
-        .build()?.into();
+        .build()?
+        .into();
     Ok(ChatMessage::new(msg))
 }
 
 pub fn user_msg(text: &String) -> Result<ChatMessage> {
     let msg = ChatCompletionRequestUserMessageArgs::default()
         .content(text.as_ref())
-        .build()?.into();
+        .build()?
+        .into();
     Ok(ChatMessage::new(msg))
 }
 
 pub fn agent_msg(text: &String) -> Result<ChatMessage> {
     let msg = ChatCompletionRequestAssistantMessageArgs::default()
         .content(text)
-        .build()?.into();
+        .build()?
+        .into();
     Ok(ChatMessage::new(msg))
 }
 
@@ -81,7 +82,8 @@ pub fn fn_call_msg(fn_name: &String, args_json: &String) -> Result<ChatMessage> 
             name: fn_name.to_string(),
             arguments: args_json.to_string(),
         })
-        .build()?.into();
+        .build()?
+        .into();
     Ok(ChatMessage::new(msg))
 }
 
@@ -89,7 +91,8 @@ pub fn fn_result_msg(fn_name: &String, result: &String) -> Result<ChatMessage> {
     let msg = ChatCompletionRequestFunctionMessageArgs::default()
         .name(fn_name)
         .content(result)
-        .build()?.into();
+        .build()?
+        .into();
     Ok(ChatMessage::new(msg))
 }
 

@@ -1,10 +1,8 @@
-use async_openai::types::{
-    ChatCompletionRequestMessage, FunctionCall, Role,
-};
+use async_openai::types::{ChatCompletionRequestMessage, FunctionCall, Role};
 
 use async_openai::types::{
-    ChatCompletionRequestUserMessage, ChatCompletionRequestAssistantMessage,
-    ChatCompletionRequestUserMessageContent
+    ChatCompletionRequestAssistantMessage, ChatCompletionRequestUserMessage,
+    ChatCompletionRequestUserMessageContent,
 };
 
 #[derive(Clone, Debug)]
@@ -13,7 +11,7 @@ pub enum ChatUIMessage {
     Reply {
         role: String,
         name: String,
-        content: String
+        content: String,
     },
     Fragment(String),
     FunctionCall {
@@ -23,11 +21,14 @@ pub enum ChatUIMessage {
     },
 }
 
-
 impl From<ChatCompletionRequestMessage> for ChatUIMessage {
     fn from(item: ChatCompletionRequestMessage) -> Self {
         match item {
-            ChatCompletionRequestMessage::User(ChatCompletionRequestUserMessage { content: user_message, role, .. }) => {
+            ChatCompletionRequestMessage::User(ChatCompletionRequestUserMessage {
+                content: user_message,
+                role,
+                ..
+            }) => {
                 match user_message {
                     Some(ChatCompletionRequestUserMessageContent::Text(text)) => {
                         ChatUIMessage::Reply {
@@ -35,11 +36,15 @@ impl From<ChatCompletionRequestMessage> for ChatUIMessage {
                             name: "User".to_string(), // Name is set as "User"
                             content: text,
                         }
-                    },
+                    }
                     _ => ChatUIMessage::Fragment("Unsupported User Message Content".to_string()),
                 }
-            },
-            ChatCompletionRequestMessage::Assistant(ChatCompletionRequestAssistantMessage { content: assistant_message, role, .. }) => {
+            }
+            ChatCompletionRequestMessage::Assistant(ChatCompletionRequestAssistantMessage {
+                content: assistant_message,
+                role,
+                ..
+            }) => {
                 if let Some(content) = assistant_message {
                     ChatUIMessage::Reply {
                         role: role.to_string(),
@@ -49,7 +54,7 @@ impl From<ChatCompletionRequestMessage> for ChatUIMessage {
                 } else {
                     ChatUIMessage::Fragment("Empty Assistant Message".to_string())
                 }
-            },
+            }
             _ => ChatUIMessage::Fragment("Unsupported Message Type".to_string()),
         }
     }

@@ -10,6 +10,7 @@ use async_openai::{
     },
     Client,
 };
+use async_openai::error::OpenAIError;
 
 use async_openai::config::OpenAIConfig;
 use futures::StreamExt;
@@ -94,12 +95,14 @@ impl OpenAIChat {
                     }
                 }
 
-                Err(err) => {
-                    println!("error: {:?}", err);
-                    if let Some(cause) = err.source() {
-                        println!("caused by: {:?}", cause);
+                Err(error) => match error {
+                    OpenAIError::ApiError(api_error) => {
+                        println!("API Error: {:?}", api_error);
                     }
-                }
+                    _ => {
+                        println!("Other OpenAI Error: {:?}", error);
+                    }
+                },
             }
             stdout().flush()?;
         }

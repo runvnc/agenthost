@@ -1,6 +1,7 @@
 use crate::agent::Agent;
 use crate::api::chatuimessage::ChatUIMessage;
 use flume::*;
+use once_cell::sync::OnceCell;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -9,7 +10,6 @@ use tokio::runtime::Runtime;
 use tokio::runtime::*;
 use tokio::sync::mpsc;
 use tokio::*;
-use once_cell::sync::OnceCell;
 
 pub static agent_mgr: OnceCell<AgentManager> = OnceCell::new();
 
@@ -26,7 +26,9 @@ pub struct AgentManager {
 pub fn init() {
     if !(agent_mgr.get().is_some()) {
         println!("agentmgr: init..");
-        agent_mgr.set(AgentManager::new()).expect("Failed to set AgentManager");
+        agent_mgr
+            .set(AgentManager::new())
+            .expect("Failed to set AgentManager");
     }
 }
 

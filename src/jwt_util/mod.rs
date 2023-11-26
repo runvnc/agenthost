@@ -1,14 +1,12 @@
 extern crate jsonwebtoken as jwt;
-use jwt::{decode, encode, Algorithm, Header, get_current_timestamp, Validation, errors::{ErrorKind}};
-use serde::{Deserialize, Serialize};
+use axum::http::{Request, Response, StatusCode};
 use hyper::http;
-use axum::{
-    http::{
-        Request, Response, StatusCode
-    }, 
+use jwt::{
+    decode, encode, errors::ErrorKind, get_current_timestamp, Algorithm, Header, Validation,
 };
+use serde::{Deserialize, Serialize};
 
-use crate::{s};
+use crate::s;
 
 const CODE: &str = "cvx$^G#%^nh3t9y83h$%^@#isfdhioeroisd";
 
@@ -18,11 +16,10 @@ pub struct Claims {
     pub exp: usize,
 }
 
-
 pub fn create_token(user_id: &str) -> Result<String, (StatusCode, &'static str)> {
     let my_claims = Claims {
         username: user_id.to_owned(),
-        exp: (get_current_timestamp() + 60*60*24*7) as usize,
+        exp: (get_current_timestamp() + 60 * 60 * 24 * 7) as usize,
     };
     let encoding_key = jwt::EncodingKey::from_secret(CODE.as_ref());
     let token = encode(&Header::default(), &my_claims, &encoding_key)
@@ -72,4 +69,3 @@ pub fn verify_token(token: &str) -> Result<Claims, (StatusCode, &'static str)> {
         .map_err(|_| (StatusCode::UNAUTHORIZED, "Token verification failed."))
         .map(|data| data.claims)
 } */
-
