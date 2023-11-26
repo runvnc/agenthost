@@ -83,7 +83,7 @@ async fn user_input(params: Query<HashMap<String, String>>, Extension(claims): E
             .ok_or_else( || (StatusCode::INTERNAL_SERVER_ERROR, "Session not found"))?;
         println!("Received reply:");
         tx.send(reply.clone());
-        if let ChatUIMessage::Reply(_) = reply { 
+        if let ChatUIMessage::Reply { role, name, content } = reply { 
              println!("////////////////////////////////////////////////////////////////////////////");
              break;                                                                                                                                    
         } 

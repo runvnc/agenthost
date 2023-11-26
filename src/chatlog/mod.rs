@@ -4,6 +4,10 @@ use termion::style;
 
 use async_openai::types::{
     ChatCompletionRequestMessage, FunctionCall, Role,
+    ChatCompletionRequestUserMessageArgs,
+    ChatCompletionRequestAssistantMessageArgs,
+    ChatCompletionRequestSystemMessageArgs,
+    ChatCompletionRequestFunctionMessageArgs
 };
 
 use tiktoken_rs::{cl100k_base, CoreBPE};
@@ -30,10 +34,12 @@ impl ChatMessage {
     }
 
     pub fn calc_length(&mut self) {
+        let str_msg = format!("{:?}", self.message);
         let tokens = BPE
             .get()
             .expect("No tokenizer")
-            .encode_with_special_tokens(&(self.message.content.as_deref().unwrap_or("")));
+            .encode_with_special_tokens(str_msg.as_ref());
+            //#.encode_with_special_tokens(&(self.message.content.as_deref().unwrap_or("")));
 
         self.length = tokens.len()
     }
@@ -50,46 +56,40 @@ pub struct ChatLog {
 }
 
 pub fn sys_msg(text: &String) -> Result<ChatMessage> {
-    let msg = ChatCompletionRequestMessage::default()
-        .role(Role::System)
-        .content(text.as_str())
-        .build()?;
+    let msg = ChatCompletionRequestSystemMessageArgs::default()
+        .build()?.into();
     Ok(ChatMessage::new(msg))
 }
 
 pub fn user_msg(text: &String) -> Result<ChatMessage> {
-    let msg = ChatCompletionRequestMessageArgs::default()
-        .role(Role::User)
-        .content(text)
-        .build()?;
+    let msg = ChatCompletionRequestUserMessageArgs::default()
+        .content(text.as_ref())
+        .build()?.into();
     Ok(ChatMessage::new(msg))
 }
 
 pub fn agent_msg(text: &String) -> Result<ChatMessage> {
-    let msg = ChatCompletionRequestMessageArgs::default()
-        .role(Role::Assistant)
+    let msg = ChatCompletionRequestAssistantMessageArgs::default()
         .content(text)
-        .build()?;
+        .build()?.into();
     Ok(ChatMessage::new(msg))
 }
 
 pub fn fn_call_msg(fn_name: &String, args_json: &String) -> Result<ChatMessage> {
-    let msg = ChatCompletionRequestMessageArgs::default()
-        .role(Role::Assistant)
+    let msg = ChatCompletionRequestAssistantMessageArgs::default()
         .function_call(FunctionCall {
             name: fn_name.to_string(),
             arguments: args_json.to_string(),
         })
-        .build()?;
+        .build()?.into();
     Ok(ChatMessage::new(msg))
 }
 
 pub fn fn_result_msg(fn_name: &String, result: &String) -> Result<ChatMessage> {
-    let msg = ChatCompletionRequestMessageArgs::default()
-        .role(Role::Function)
+    let msg = ChatCompletionRequestFunctionMessageArgs::default()
         .name(fn_name)
         .content(result)
-        .build()?;
+        .build()?.into();
     Ok(ChatMessage::new(msg))
 }
 
@@ -119,13 +119,6 @@ impl ChatLog {
         } else {
             self.messages.push(msg);
         }
-        let content: String = self.messages[0]
-            .message
-            .message
-            .as_ref()
-            .expect("The value is None")
-            .to_string();
-        println!("System message changed to:\n{}", content);
         self.save();
     }
 
