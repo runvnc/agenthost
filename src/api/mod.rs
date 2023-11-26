@@ -146,6 +146,7 @@ pub async fn server() -> Result<(), hyper::Error> {
         .route("/login", post(login_handler))
         .route("/chat", get(chat_events))
         .route("/send", get(user_input))
+        .route("/", get(get_service(ServeDir::new("static/index.html"))))
         .layer(Extension(connected_users))
         .layer(middleware::from_fn(logging_middleware))
         .layer(middleware::from_fn(auth_middleware))  
