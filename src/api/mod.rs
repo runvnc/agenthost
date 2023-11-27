@@ -73,11 +73,7 @@ async fn user_input(
     let (sender, reply_receiver) = agent_mgr
         .get()
         .expect("Could not access Agent Manager.")
-        .get_or_create_agent(
-            claims.username.clone(),
-            session_id,
-            s!("scripts/dm.rhai"),
-        )
+        .get_or_create_agent(claims.username.clone(), session_id, s!("scripts/dm.rhai"))
         .await;
 
     sender.send_async(msg).await.unwrap();
@@ -100,7 +96,6 @@ async fn user_input(
         } = reply
         {
             println!("ok");
-            break;
         }
     }
 
@@ -245,6 +240,7 @@ fn user_connected(
     });
 
     sse_streams.cache.insert(session_id, tx);
+    
     println!("returning from user_connected");
     mapped
 }

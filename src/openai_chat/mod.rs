@@ -3,6 +3,8 @@
 use anyhow::Result;
 use std::io::{stdout, Write};
 
+use async_openai::error::OpenAIError;
+use async_openai::types::ChatCompletionRequestUserMessageArgs;
 use async_openai::{
     types::{
         ChatCompletionFunctions, ChatCompletionFunctionsArgs, ChatCompletionRequestMessage,
@@ -10,8 +12,6 @@ use async_openai::{
     },
     Client,
 };
-use async_openai::types::ChatCompletionRequestUserMessageArgs;
-use async_openai::error::OpenAIError;
 
 use async_openai::config::OpenAIConfig;
 use futures::StreamExt;
@@ -55,8 +55,7 @@ impl OpenAIChat {
         functions: Vec<ChatCompletionFunctions>,
         reply_sender: flume::Sender<ChatUIMessage>,
     ) -> Result<(String, String, String)> {
-
-/*        let request = CreateChatCompletionRequestArgs::default()
+        /*        let request = CreateChatCompletionRequestArgs::default()
         .model("gpt-3.5-turbo")
         .max_tokens(512u16)
         .messages([ChatCompletionRequestUserMessageArgs::default()

@@ -102,12 +102,12 @@ impl ChatLog {
     pub fn new(username: String, session_id: usize) -> Self {
         let path = format!("data/{}/sessions/{}.json", username, session_id);
         if Path::new(&path).exists() {
-            println!("Found json file, loading chat log from {}", path); 
+            println!("Found json file, loading chat log from {}", path);
             let data = fs::read_to_string(&path).unwrap();
             serde_json::from_str(&data).unwrap()
         } else {
             println!("Did not find json file, creating dir and returning empty log.");
-            fs::create_dir_all(format!("data/{}", username)).unwrap();
+            fs::create_dir_all(format!("data/{}/sessions", username)).unwrap();
             Self {
                 username,
                 session_id,
@@ -152,7 +152,7 @@ impl ChatLog {
 
         for msg in self.messages.iter().rev() {
             tokens += msg.length;
-            if tokens <= max_tokens && i < (self.messages.len()-1) {
+            if tokens <= max_tokens && i < (self.messages.len() - 1) {
                 println!("to request msgs adding message");
                 msgs.insert(1, msg.message.clone());
             } else {

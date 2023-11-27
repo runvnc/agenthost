@@ -1,8 +1,26 @@
     await anonymousLogin()
     var sse = openEventSource('chat');
+
+    loadSession();
+
     var user_id;
     var currParagraph;
     var rawMarkdown = '';
+    window.sessionLoaded = false;
+
+    async function loadSession() {
+      sendMsg("//history");
+    }
+
+    function removeSysLines(msg) {
+      let lines = msg.split('\n')
+      let out = []
+      for (let line of lines)
+        if (!line.startsWith('SYSTEM: '))
+          out.push(line)
+      return out
+    }
+  
     function message(data, sender) {
         var msgElement = document.createElement('div');
         var avatarElement = document.createElement('img');
@@ -42,6 +60,9 @@
         user_id = msg.data;
     });
     sse.addEventListener("msg", function(msg) {
+        msg = JSON.parse(msg.data)
+        let content = removeSysLines(msg.content)
+        
         message(msg.content, msg.role == 'User' ? 'You' : 'Agent')
         console.log('MESSAGE!', msg)
     }); 
@@ -81,7 +102,12 @@
         }
     });
     var xhr;
+
     send.onclick = function() {
+      sendMsg(text.value);
+    }
+
+    function sendMsg(msg, show=true) {
         if (xhr) {
           try {
             xhr.abort();
@@ -93,7 +119,9 @@
         let paramstr = `?session_id=${window.session_id}&token=${window.token}&msg=${msg}`
         xhr.open("GET", '/send' + paramstr, true);
         xhr.send(msg);
-        text.value = '';
-        message(msg, 'You');
+        if (show) {
+          text.value = '';
+          message(msg, 'You');
+        }
         rawMarkdown = '__WAITING__';
     };

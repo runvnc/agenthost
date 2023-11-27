@@ -1,9 +1,11 @@
 use async_openai::types::{ChatCompletionRequestMessage, FunctionCall, Role};
 
 use async_openai::types::{
-    ChatCompletionRequestAssistantMessage, ChatCompletionRequestUserMessage,
-    ChatCompletionRequestUserMessageContent,
+    ChatCompletionRequestAssistantMessage, ChatCompletionRequestSystemMessage,
+    ChatCompletionRequestUserMessage, ChatCompletionRequestUserMessageContent,
 };
+
+use crate::s;
 
 #[derive(Clone, Debug)]
 pub enum ChatUIMessage {
@@ -55,7 +57,22 @@ impl From<ChatCompletionRequestMessage> for ChatUIMessage {
                     ChatUIMessage::Fragment("Empty Assistant Message".to_string())
                 }
             }
-            _ => ChatUIMessage::Fragment("Unsupported Message Type".to_string()),
+            ChatCompletionRequestMessage::System(ChatCompletionRequestSystemMessage {
+                content: message,
+                role,
+                ..
+            }) => {
+                if let Some(content) = message {
+                    ChatUIMessage::Reply {
+                        role: s!(role),
+                        name: s!(""),
+                        content,
+                    }
+                } else {
+                    ChatUIMessage::Fragment("Empty System Message".to_string())
+                }
+            }
+            _ => ChatUIMessage::Fragment("Unsupported message type".to_string())
         }
     }
 }

@@ -20,14 +20,9 @@ ${this.location}
 }
 
 fn renderUserMsg(data) {
-`((
-    SYSTEM notes:
-    SYSTEM message above is updated with time and location on EACH message.
+`SYSTEM: [${data.timestamp}] ${show_fields(this, ["HP", "XP", "Gold", "inventory"])}
 
-    ${show_fields(this, ["HP", "XP", "Gold", "inventory"])}
-))
-
-[${data.timestamp}]:  ${data.user_msg}`;
+USER: ${data.user_msg}`;
 }
 
 fn evalExitStage(ignore) {

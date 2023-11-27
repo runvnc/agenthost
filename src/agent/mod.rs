@@ -12,14 +12,14 @@ use crate::openai_chat::{chat_fn, OpenAIChat};
 use chrono::{DateTime, Utc};
 use serde_json::json;
 
-use async_openai::types::ChatCompletionFunctions;
+use async_openai::types::{Role, ChatCompletionFunctions, ChatCompletionRequestMessage, ChatCompletionRequestSystemMessage};
 use serde_json::Value;
 use std::collections::HashMap;
 
 use std::sync::Arc;
-use tokio::sync::Mutex;
-use std::time::Duration;
 use std::thread;
+use std::time::Duration;
+use tokio::sync::Mutex;
 
 use flume::*;
 use tokio::sync::mpsc;
@@ -84,7 +84,7 @@ impl Agent {
 
         instance.functions = instance.load_actions()?;
         instance.update_sys_msg();
- 
+
         Ok(instance)
     }
 
@@ -185,10 +185,26 @@ impl Agent {
                     for msg in &self.log.messages[..] {
                         println!("Sending message..");
                         println!("{:?}", msg.message.clone());
-                        self.reply_sender
-                            .send_async(msg.message.clone().into())
-                            .await
-                            .unwrap();
+                        match &msg.message {
+                            ChatCompletionRequestMessage::System(ChatCompletionRequestSystemMessage {
+                                content,
+                                 role,
+                                  ..
+                            }) => {
+                                if *role != Role::System {
+                                    self.reply_sender
+                                    .send_async(msg.message.clone().into())
+                                    .await
+                                    .unwrap();
+                                } 
+                            }
+                            _ => {
+                                self.reply_sender
+                                .send_async(msg.message.clone().into())
+                                .await
+                                .unwrap();
+                            }
+                        }
                     }
                     return true;
                 }
@@ -209,10 +225,8 @@ impl Agent {
                 let input_str = self.receiver.recv_async().await.context("error")?;
                 if self.handle_command(s!(input_str)).await {
                     println!("Handled command");
-                    need_user_input = false;
-                    let delay = Duration::from_millis(500);
-                    thread::sleep(delay);
-                    break;
+                    need_user_input = true;
+                    continue;
                 }
                 println!("Adding user message");
                 let msg = self.render_user_msg(s!(input_str))?;
