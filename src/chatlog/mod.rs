@@ -49,6 +49,7 @@ use std::path::Path;
 
 #[derive(Serialize, Deserialize)]
 pub struct ChatLog {
+    username: String,
     session_id: usize,
     pub messages: Vec<ChatMessage>,
 }
@@ -101,11 +102,14 @@ impl ChatLog {
     pub fn new(username: String, session_id: usize) -> Self {
         let path = format!("data/{}/sessions/{}.json", username, session_id);
         if Path::new(&path).exists() {
+            println!("Found json file, loading chat log from {}", path); 
             let data = fs::read_to_string(&path).unwrap();
             serde_json::from_str(&data).unwrap()
         } else {
+            println!("Did not find json file, creating dir and returning empty log.");
             fs::create_dir_all(format!("data/{}", username)).unwrap();
             Self {
+                username,
                 session_id,
                 messages: Vec::<ChatMessage>::new(),
             }
@@ -129,9 +133,10 @@ impl ChatLog {
     }
 
     fn save(&self) {
-        let path = format!("data/sessions/{}.json", self.session_id);
+        let path = format!("data/{}/sessions/{}.json", self.username, self.session_id);
         let data = serde_json::to_string(self).unwrap();
         fs::write(&path, data).unwrap();
+        println!("Saved chat log to {}", path);
     }
 
     pub fn to_request_msgs(&mut self, model: &str) -> Result<Vec<ChatCompletionRequestMessage>> {

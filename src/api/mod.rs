@@ -83,7 +83,6 @@ async fn user_input(
     sender.send_async(msg).await.unwrap();
 
     loop {
-        println!("****************************** TOP OF LOOP **************************");
         let reply = reply_receiver.recv_async().await.unwrap();
         let mut locked_users = connected_users.user_cache.lock().unwrap();
         let sse_streams = locked_users.get(&claims.username.clone());
@@ -100,9 +99,7 @@ async fn user_input(
             content,
         } = reply
         {
-            println!(
-                "////////////////////////////////////////////////////////////////////////////"
-            );
+            println!("ok");
             break;
         }
     }
@@ -228,7 +225,7 @@ fn user_connected(
                 "role": role,
                 "content": content
             });
-            Ok(Event::default().data(s!(data)))
+            Ok(Event::default().event("msg").data(s!(data)))
         }
         ChatUIMessage::FunctionCall {
             name,

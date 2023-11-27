@@ -41,6 +41,10 @@
         console.log({user: msg.data})
         user_id = msg.data;
     });
+    sse.addEventListener("msg", function(msg) {
+        message(msg.content, msg.role == 'User' ? 'You' : 'Agent')
+        console.log('MESSAGE!', msg)
+    }); 
     sse.addEventListener("fragment", function(frag) {
       console.log("fragment", frag.data);
       setTimeout(()=> {
@@ -66,6 +70,7 @@
       rawMarkdown = '__WAITING__';
     });
     sse.onmessage = function(msg) {
+        console.log("MESSAGE COMPLETE:", msg);
         //message(msg.data);
     };
     var input = document.getElementById("text");
