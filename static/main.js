@@ -1,7 +1,6 @@
     await anonymousLogin()
     var sse = openEventSource('chat');
 
-    loadSession();
 
     var user_id;
     var currParagraph;
@@ -36,7 +35,7 @@
     function message(data, sender) {
         var msgElement = document.createElement('div');
         var avatarElement = document.createElement('img');
-        avatarElement.src = sender != 'You' ? '/user.webp' : '/agent.webp';
+        avatarElement.src = sender == 'You' ? '/user.webp' : '/agent.webp';
         avatarElement.classList.add('av');
         var nameElement = document.createElement('span');
         nameElement.textContent = sender;
@@ -53,6 +52,7 @@
     }
     sse.onopen = function() {
         chat.innerHTML = "<p><em>Connected!</em></p>";
+        loadSession();
     }
     sse.onerror = function(e) {
         console.error(e)
@@ -76,8 +76,8 @@
       setTimeout( () => {
         msg = JSON.parse(msg.data)
         let content = removeSysLines(msg.content)
-        
-        message(content, msg.role == 'User' ? 'You' : 'Agent')
+        console.log(msg.role) 
+        message(content, msg.role == 'user' ? 'You' : 'Agent')
         console.log('MESSAGE!', msg)
       }, 1)
     }); 
