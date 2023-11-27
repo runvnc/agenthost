@@ -9,16 +9,28 @@
     window.sessionLoaded = false;
 
     async function loadSession() {
-      sendMsg("//history");
+      let uri = encodeURIComponent("//history")
+      console.log({uri})
+      sendMsg(uri, false)
+    }
+
+    function removeUSERPrefix(lines) {
+      let out = []
+      for (let line of lines) {
+        if (line.startsWith('USER: '))
+          line = line.replace('USER: ', '')
+        out.push(line)
+      }
+      return out
     }
 
     function removeSysLines(msg) {
       let lines = msg.split('\n')
       let out = []
       for (let line of lines)
-        if (!line.startsWith('SYSTEM: '))
+        if (!(line.startsWith('SYSTEM: ')))
           out.push(line)
-      return out
+      return removeUSERPrefix(out).join('\n')
     }
   
     function message(data, sender) {
@@ -37,6 +49,7 @@
         console.log('message()')
         rawMarkdown = '';
         chat.appendChild(msgElement);
+        chat.scrollTop = chat.scrollHeight;
     }
     sse.onopen = function() {
         chat.innerHTML = "<p><em>Connected!</em></p>";
@@ -60,11 +73,13 @@
         user_id = msg.data;
     });
     sse.addEventListener("msg", function(msg) {
+      setTimeout( () => {
         msg = JSON.parse(msg.data)
         let content = removeSysLines(msg.content)
         
-        message(msg.content, msg.role == 'User' ? 'You' : 'Agent')
+        message(content, msg.role == 'User' ? 'You' : 'Agent')
         console.log('MESSAGE!', msg)
+      }, 1)
     }); 
     sse.addEventListener("fragment", function(frag) {
       console.log("fragment", frag.data);
@@ -79,7 +94,7 @@
         currParagraph.innerHTML = html;
         console.log("updated innerHTML", html);
         chat.scrollTop = chat.scrollHeight;
-      }, 5);
+      }, 1);
     });
     sse.addEventListener("functionCall", function(fn) {
       console.log({functionCall: fn.data});
@@ -114,7 +129,6 @@
           } catch (e) {
           }
         }
-        var msg = text.value;
         xhr = new XMLHttpRequest();
         let paramstr = `?session_id=${window.session_id}&token=${window.token}&msg=${msg}`
         xhr.open("GET", '/send' + paramstr, true);

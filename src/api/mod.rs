@@ -68,6 +68,7 @@ async fn user_input(
 
     if let Some(msg_) = params.get("msg") {
         msg = msg_.clone();
+        println!("************ READ MSG: {} ****************", msg);
     }
 
     let (sender, reply_receiver) = agent_mgr
