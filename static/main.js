@@ -33,6 +33,7 @@
     }
   
     function message(data, sender) {
+        console.log("Message handler")
         var msgElement = document.createElement('div');
         var avatarElement = document.createElement('img');
         avatarElement.src = sender == 'You' ? '/user.webp' : '/agent.webp';
@@ -43,11 +44,13 @@
         msgElement.appendChild(avatarElement);
         msgElement.appendChild(nameElement);
         currParagraph = document.createElement('p');
-        currParagraph.innerHTML += data;
+        //currParagraph.innerHTML += data;
         msgElement.appendChild(currParagraph);
         console.log('message()')
         rawMarkdown = '';
-        chat.appendChild(msgElement);
+        let html = markdownit().render(data);
+        currParagraph.innerHTML = html
+        chat.appendChild(msgElement)
         chat.scrollTop = chat.scrollHeight;
     }
     sse.onopen = function() {
@@ -76,8 +79,12 @@
       setTimeout( () => {
         msg = JSON.parse(msg.data)
         let content = removeSysLines(msg.content)
-        console.log(msg.role) 
-        message(content, msg.role == 'user' ? 'You' : 'Agent')
+        console.log(msg.role)
+        console.log({msg, name: msg.name})
+        if (msg.name == 'SYSTEM') {
+          // only show history messages, others are handled as fragments
+          message(content, msg.role == 'user' ? 'You' : 'Agent')
+        }
         console.log('MESSAGE!', msg)
       }, 1)
     }); 

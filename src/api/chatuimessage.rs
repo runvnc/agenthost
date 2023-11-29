@@ -65,7 +65,7 @@ impl From<ChatCompletionRequestMessage> for ChatUIMessage {
                 if let Some(content) = message {
                     ChatUIMessage::Reply {
                         role: s!(role),
-                        name: s!(""),
+                        name: s!("SYSTEM"),
                         content,
                     }
                 } else {
