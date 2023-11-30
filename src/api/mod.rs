@@ -158,6 +158,7 @@ pub async fn server() -> Result<(), hyper::Error> {
         .route("/login", post(login_handler))
         .route("/chat", get(chat_events))
         .route("/send", get(user_input))
+        .route("/sessions", get(list_sessions_handler))
         .route("/", get(index_handler))
         .layer(Extension(connected_users))
         .layer(middleware::from_fn(logging_middleware))
@@ -183,6 +184,17 @@ async fn index_handler() -> Result<Html<String>, StatusCode> {
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     Ok(Html(index_html))
+}
+
+async fn list_sessions_handler(
+    Extension(claims): Extension<Claims>,
+) -> Result<Json<Vec<String>>, (StatusCode, &'static str)> {
+    let sessions = agent_mgr
+        .get()
+        .expect("Could not access Agent Manager.")
+        .list_sessions(&claims.username)
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to list sessions"))?;
+    Ok(Json(sessions))
 }
 
 fn user_connected(
