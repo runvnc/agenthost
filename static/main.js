@@ -1,15 +1,16 @@
     await anonymousLogin();
-    loadSessions();
     var sse = openEventSource('chat');
 
+    loadSessions();
 
     var user_id;
     var currParagraph;
     var rawMarkdown = '';
     window.sessionLoaded = false;
 
-    async function loadSession() {
+    async function loadSession(session) {
       let uri = encodeURIComponent("//history")
+      window.session_id = session
       console.log({uri})
       sendMsg(uri, false)
     }
@@ -55,7 +56,7 @@
         chat.scrollTop = chat.scrollHeight;
     }
     async function loadSessions() {
-        const sessions = await Request('/sessions', { method: 'GET' });
+        const sessions = await Request(`/sessions?session_id=${window.session_id}&token=${window.token}`, { method: 'GET' });
         const sessionList = document.getElementById('session-list');
         sessionList.innerHTML = '';
         sessions.forEach(session => {
