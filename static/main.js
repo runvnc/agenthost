@@ -1,4 +1,5 @@
-    await anonymousLogin()
+    await anonymousLogin();
+    loadSessions();
     var sse = openEventSource('chat');
 
 
@@ -53,9 +54,23 @@
         chat.appendChild(msgElement)
         chat.scrollTop = chat.scrollHeight;
     }
+    async function loadSessions() {
+        const sessions = await Request('/sessions', { method: 'GET' });
+        const sessionList = document.getElementById('session-list');
+        sessionList.innerHTML = '';
+        sessions.forEach(session => {
+            const li = document.createElement('li');
+            li.textContent = session;
+            li.addEventListener('click', () => {
+                chat.innerHTML = "<p><em>Loading session...</em></p>";
+                loadSession(session);
+            });
+            sessionList.appendChild(li);
+        });
+    }
+
     sse.onopen = function() {
         chat.innerHTML = "<p><em>Connected!</em></p>";
-        loadSession();
     }
     sse.onerror = function(e) {
         console.error(e)

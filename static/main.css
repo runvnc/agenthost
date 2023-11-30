@@ -1,8 +1,21 @@
+        #sidebar {
+            max-height: 80vh;
+            overflow-y: scroll;
+            scrollbar-width: thin;
+            scrollbar-color: #4A5568 #2D3748;
+        }
         #chat {
-          max-height: 80vh;
-          overflow-y: scroll;
-          scrollbar-width: thin;
-          scrollbar-color: #4A5568 #2D3748;
+            max-height: 80vh;
+            overflow-y: scroll;
+            scrollbar-width: thin;
+            scrollbar-color: #4A5568 #2D3748;
+        }
+        #session-list li {
+            cursor: pointer;
+            margin-bottom: 0.5em;
+        }
+        #session-list li:hover {
+            text-decoration: underline;
         }
         /* Scrollbar styles for Webkit browsers */
         #chat::-webkit-scrollbar {
