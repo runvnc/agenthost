@@ -6,6 +6,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
+use std::fs;
+use std::path::Path;
 use tokio::runtime::Runtime;
 use tokio::runtime::*;
 use tokio::sync::mpsc;
@@ -37,6 +39,22 @@ impl AgentManager {
         AgentManager {
             user_cache: Arc::new(Mutex::new(HashMap::new())),
         }
+    }
+
+    pub fn list_sessions(&self, username: &str) -> Result<Vec<String>, std::io::Error> {
+        let path = format!("data/{}/sessions", username);
+        let mut sessions = Vec::new();
+
+        for entry in fs::read_dir(Path::new(&path))? {
+            let entry = entry?;
+            if entry.path().is_file() {
+                if let Some(session_id) = entry.path().file_stem() {
+                    sessions.push(session_id.to_string_lossy().into_owned());
+                }
+            }
+        }
+
+        Ok(sessions)
     }
 
     pub async fn get_or_create_agent(
