@@ -68,7 +68,7 @@ impl Agent {
         let model = s!("gpt-4-1106-preview");
         let mut log = ChatLog::new(username.clone(), session_id);
         let chat = OpenAIChat::new(model.clone());
-        let mut handler = scripts::init(&script_path, session_id, &self.username)?;
+        let mut handler = scripts::init(&script_path, session_id,&username)?;
 
         let mut instance = Self {
             username,
