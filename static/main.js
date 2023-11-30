@@ -13,6 +13,7 @@
       window.session_id = session
       console.log({uri})
       sendMsg(uri, false)
+      window.history.pushState({session_id: session}, "", "?session_id=" + session);
     }
 
     function removeUSERPrefix(lines) {
