@@ -4,6 +4,9 @@
             scrollbar-width: thin;
             scrollbar-color: #4A5568 #2D3748;
         }
+        #main {
+          flex-direction: column;
+        }
         #chat {
             max-height: 80vh;
             overflow-y: scroll;

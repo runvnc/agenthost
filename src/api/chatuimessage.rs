@@ -35,7 +35,7 @@ impl From<ChatCompletionRequestMessage> for ChatUIMessage {
                     Some(ChatCompletionRequestUserMessageContent::Text(text)) => {
                         ChatUIMessage::Reply {
                             role: role.to_string(),
-                            name: "User".to_string(), // Name is set as "User"
+                            name: "SYSTEM".to_string(), 
                             content: text,
                         }
                     }
@@ -50,7 +50,7 @@ impl From<ChatCompletionRequestMessage> for ChatUIMessage {
                 if let Some(content) = assistant_message {
                     ChatUIMessage::Reply {
                         role: role.to_string(),
-                        name: "Assistant".to_string(), // Name is set as "Assistant"
+                        name: "SYSTEM".to_string(),
                         content,
                     }
                 } else {

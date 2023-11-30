@@ -273,7 +273,7 @@ async fn auth_middleware(mut req: Request<Body>, next: Next<Body>) -> impl IntoR
     //) -> Result<Response<Body>, (StatusCode, &'static str) > {
     println!("Request URI: {}", req.uri());
     println!("Headers: {:?}", req.headers());
-    let needs_auth = vec!["/chat", "/send"];
+    let needs_auth = vec!["/chat", "/send", "/sessions"];
     //let claims = Claims { username: s!("bob"), exp: 1800446206315 };
     //req.extensions_mut().insert(claims);
     if needs_auth

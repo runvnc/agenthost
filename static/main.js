@@ -1,5 +1,5 @@
     await anonymousLogin();
-    var sse = openEventSource('chat');
+    openEventSource('/chat')
 
     loadSessions();
 
@@ -9,11 +9,17 @@
     window.sessionLoaded = false;
 
     async function loadSession(session) {
-      let uri = encodeURIComponent("//history")
       window.session_id = session
-      console.log({uri})
-      sendMsg(uri, false)
       window.history.pushState({session_id: session}, "", "?session_id=" + session);
+      try { 
+        window.sse.close()
+      } catch (e) { }
+      openEventSource('chat')
+      setTimeout( () => {
+        let uri = encodeURIComponent("//history")
+        console.log({uri})
+        sendMsg(uri, false)
+      }, 10)
     }
 
     function removeUSERPrefix(lines) {
@@ -71,13 +77,27 @@
         });
     }
 
+  function openEventSource(relurl) {
+    try {
+    window.sse.close()
+    } catch (e) {
+
+    }
+    console.log('openEventSource(',relurl,')')
+    const token = localStorage.getItem('token')
+    const queryParams = new URLSearchParams(window.location.search);
+    window.session_id = queryParams.get('session_id') || '10';
+    window.token = token;
+    const url = relurl + `?token=${encodeURIComponent(token)}&session_id=${session_id}`
+    window.sse = new EventSource(url)
+  
     sse.onopen = function() {
         chat.innerHTML = "<p><em>Connected!</em></p>";
     }
     sse.onerror = function(e) {
         console.error(e)
-        console.warn("Lost server connection, will reconnect in 5 seconds.")
-        sse.close()
+        //console.warn("Lost server connection, will reconnect in 5 seconds.")
+        //window.sse.close()
         //setTimeout( () => {
         //  sse = openEventSource('chat')
         //}, 5000)
@@ -133,6 +153,9 @@
         console.log("MESSAGE COMPLETE:", msg);
         //message(msg.data);
     };
+}
+
+
     var input = document.getElementById("text");
     input.addEventListener("keyup", function(event) {
         if (event.keyCode === 13) {

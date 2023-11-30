@@ -20,19 +20,11 @@ async function login(username, password) {
   .then(response => response.json())
   .then(data => {
       localStorage.setItem('token', data.token)
+      window.token = data.token
       console.log('token is ',data.token)
   })
 }
 
-function openEventSource(relurl) {
-  console.log('openEventSource(',relurl,')')
-  const token = localStorage.getItem('token')
-  const queryParams = new URLSearchParams(window.location.search);
-  window.session_id = queryParams.get('session_id') || '10';
-  window.token = token;
-  const url = relurl + `?token=${encodeURIComponent(token)}&session_id=${session_id}`
-  return new EventSource(url)
-}
 
 async function Request(relurl, params) {
   const token = localStorage.getItem('token')

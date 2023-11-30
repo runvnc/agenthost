@@ -11,19 +11,21 @@
 
 </head>
 
-<body class="h-screen flex flex-row justify-center items-center bg-gray-900 text-white">
+<body class="h-screen w-full flex flex-row justify-center items-center bg-gray-900 text-white">
     <div id="sidebar" class="w-1/4 h-full bg-gray-800 p-6 overflow-y-auto">
         <h2 class="text-2xl mb-4">Sessions</h2>
         <ul id="session-list" class="list-disc pl-5"></ul>
     </div>
-    <img class="logohead" src="/agentnexus.png">
-    <h1 class="text-4xl mb-8">Agent Chat</h1>
-    <div id="chat" class="w-full max-w-2xl bg-gray-800 rounded shadow-lg p-6">
-        <p><em>Connecting...</em></p>
-    </div>
-    <div class="mt-6">
-        <input type="text" id="text" class="border rounded w-full py-2 px-3 bg-gray-900 text-gray-300" placeholder="Type your message here..." />
-        <button type="button" id="send" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Send</button>
+    <div id="main" class="w-3/4 flex justify-center items-center mx-4">
+      <img class="logohead" src="/agentnexus.png">
+      <h1 class="text-4xl mb-8">Agent Chat</h1>
+      <div id="chat" class="w-3/4 justify-center items-center bg-gray-800 rounded shadow-lg p-6">
+          <p><em>Connecting...</em></p>
+      </div>
+      <div class="mt-9">
+          <input type="text" id="text" class="border rounded w-full py-2 px-3 bg-gray-900 text-gray-300" placeholder="Type your message here..." />
+          <button type="button" id="send" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Send</button>
+      </div>
     </div>
 <script src="/anon_user.js"></script>
 <script src="/login.js"></script>
