@@ -115,15 +115,18 @@ impl Agent {
         Ok(str_)
     }
 
-    pub fn call(&mut self, fn_name: &str, args_json: &str) -> Result<String> {
-        call_function(&mut self.handler, fn_name, args_json)
+    pub fn call(&mut self, fn_name: &str, args_json: &str, abort_receiver: &flume::Receiver<()>) -> Result<String> {
+        tokio::select! {
+            result = call_function(&mut self.handler, fn_name, args_json) => result,
+            _ = abort_receiver.recv_async() => Err(anyhow!("Aborted")),
+        }
     }
 
-    pub async fn process_fn_call(&mut self, fn_name: &str, fn_args: &str) -> Result<()> {
+    pub async fn process_fn_call(&mut self, fn_name: &str, fn_args: &str, abort_receiver: &flume::Receiver<()>) -> Result<()> {
         self.log
             .add(fn_call_msg(&fn_name.to_string(), &fn_args.to_string())?);
 
-        let output = self.call(fn_name, fn_args)?;
+        let output = self.call(fn_name, fn_args, abort_receiver)?;
         self.log
             .add(fn_result_msg(&s!(fn_name), &output.to_string())?);
         println!("Trying to send func call back");
