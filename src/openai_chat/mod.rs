@@ -3,7 +3,7 @@
 use anyhow::Result;
 use std::io::{stdout, Write};
 use tokio::stream::{StreamExt};
-use tokio_util::sync::CancellationToken;
+use tokio::sync::CancellationToken;
 
 use async_openai::error::OpenAIError;
 use async_openai::types::ChatCompletionRequestUserMessageArgs;
