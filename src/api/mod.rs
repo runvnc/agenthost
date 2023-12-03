@@ -192,9 +192,7 @@ async fn list_sessions_handler(
     let sessions = agent_mgr
         .get()
         .expect("Could not access Agent Manager.")
-        .list_sessions(&claims.username)
-        .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to list sessions"))?;
+        .list_sessions(&claims.username);
     Ok(Json(sessions))
 }
 
