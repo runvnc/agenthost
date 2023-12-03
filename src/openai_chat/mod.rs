@@ -2,6 +2,8 @@
 
 use anyhow::Result;
 use std::io::{stdout, Write};
+use tokio::stream::{StreamExt};
+use tokio_util::sync::CancellationToken;
 
 use async_openai::error::OpenAIError;
 use async_openai::types::ChatCompletionRequestUserMessageArgs;
@@ -54,6 +56,7 @@ impl OpenAIChat {
         messages: Vec<ChatCompletionRequestMessage>,
         functions: Vec<ChatCompletionFunctions>,
         reply_sender: flume::Sender<ChatUIMessage>,
+        token: CancellationToken,
     ) -> Result<(String, String, String)> {
         /*        let request = CreateChatCompletionRequestArgs::default()
         .model("gpt-3.5-turbo")
@@ -80,6 +83,10 @@ impl OpenAIChat {
 
         //let mut lock = stdout().lock();
         while let Some(result) = stream.next().await {
+            if token.is_cancelled() {
+                println!("Cancellation received. Stopping request.");
+                break;
+            }
             match result {
                 Ok(response) => {
                     for chat_choice in response.choices {
