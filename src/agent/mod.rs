@@ -214,9 +214,9 @@ impl Agent {
                 }
                 _ => return false,
             }
-            return true;
+            Ok(true)
         } else {
-            return false;
+            Ok(false)
         }
     }
 
@@ -227,10 +227,9 @@ impl Agent {
             if need_user_input {
                 println!("need user input");
                 let input_str = self.receiver.recv_async().await.context("error")?;
-                if self.handle_command(s!(input_str)).await {
+                if self.handle_command(s!(input_str)).await? {
                     println!("Handled command");
-                    need_user_input = true;
-                    continue;
+                    return Ok(());
                 }
                 println!("Adding user message");
                 let msg = self.render_user_msg(s!(input_str))?;
