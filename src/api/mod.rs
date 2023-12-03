@@ -249,8 +249,9 @@ fn user_connected(
                 .event("functionCall")
                 .data(data.to_string()))
         }
-    }).on_completion(move |_| {
-         println!(">>>>>>>>>>>>>>>>>>>>> Client disconnected");
+    }).then(move |_| async move {
+        println!(">>>>>>>>>>>>>>>>>>>>> Client disconnected");
+        futures::stream::iter(vec![].into_iter().map(Ok::<_, Infallible>))
     });
 
     sse_streams.cache.insert(session_id, tx);
