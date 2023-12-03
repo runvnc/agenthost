@@ -188,11 +188,12 @@ async fn index_handler() -> Result<Html<String>, StatusCode> {
 
 async fn list_sessions_handler(
     Extension(claims): Extension<Claims>,
-) -> Result<Json<Vec<String>>, (StatusCode, &'static str)> {
+) -> impl IntoResponse {
     let sessions = agent_mgr
         .get()
         .expect("Could not access Agent Manager.")
         .list_sessions(&claims.username)
+        .await
         .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to list sessions"))?;
     Ok(Json(sessions))
 }
