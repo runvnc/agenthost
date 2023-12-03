@@ -179,7 +179,7 @@ impl Agent {
         self.call_ret_string("renderUserMsg", json_string)
     }
 
-    async fn handle_command(&mut self, cmd: String) -> bool {
+    async fn handle_command(&mut self, cmd: String) -> Result<bool> {
         let cmd_prefix = "//";
         if cmd.starts_with(cmd_prefix) {
             println!("Found command");
