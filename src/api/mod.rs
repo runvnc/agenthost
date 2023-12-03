@@ -221,7 +221,7 @@ fn user_connected(
     let mapped = rx.map(|msg| match msg {
         // ... (rest of the match arms stay the same)
     })
-    .on_completion(move || {
+    .inspect(move |_| {
         println!("Client disconnected: {}", username);
     });
 
