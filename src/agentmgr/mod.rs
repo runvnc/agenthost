@@ -18,7 +18,7 @@ pub static agent_mgr: OnceCell<AgentManager> = OnceCell::new();
 
 #[derive(Debug, Clone)]
 pub struct SessionCache {
-    cache: HashMap<usize, (flume::Sender<String>, flume::Receiver<ChatUIMessage>)>,
+    cache: HashMap<usize, (flume::Sender<String>, flume::Receiver<ChatUIMessage>, CancellationToken)>,
 }
 
 #[derive(Debug, Clone)]
@@ -63,7 +63,7 @@ impl AgentManager {
         username: String,
         id: usize,
         script_path: String,
-    ) -> (flume::Sender<String>, flume::Receiver<ChatUIMessage>, ) {
+    ) -> (flume::Sender<String>, flume::Receiver<ChatUIMessage>, CancellationToken) {
         let mut user_cache = self.user_cache.lock().unwrap();
 
         let session_cache = user_cache
@@ -72,16 +72,17 @@ impl AgentManager {
                 cache: HashMap::new(),
             });
 
-        if let Some((sender, reply_receiver)) = session_cache.cache.get(&id) {
-            return (sender.clone(), reply_receiver.clone());
+        if let Some((sender, reply_receiver, cancellation_token)) = session_cache.cache.get(&id) {
+            return (sender.clone(), reply_receiver.clone(), cancellation_token.clone());
         }
 
         let (sender, mut receiver) = flume::bounded(500);
         let (reply_sender, reply_receiver) = flume::bounded(500);
+        let cancellation_token = CancellationToken::new();
 
         session_cache
             .cache
-            .insert(id, (sender.clone(), reply_receiver.clone()));
+            .insert(id, (sender.clone(), reply_receiver.clone(), cancellation_token.clone()));
         let session_id = id.clone();
 
         thread::spawn(move || {
@@ -95,6 +96,6 @@ impl AgentManager {
             rt.block_on(future);
         });
 
-        (sender, reply_receiver)
+        (sender, reply_receiver, cancellation_token)
     }
 }
