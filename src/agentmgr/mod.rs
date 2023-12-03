@@ -90,7 +90,7 @@ impl AgentManager {
                 let mut agent =
                     Agent::new(username, session_id, script_path, receiver, reply_sender)
                         .expect("no agent");
-                agent.run().await;
+                agent.run(cancellation_token.clone()).await;
             };
             let rt = Runtime::new().unwrap();
             rt.block_on(future);
