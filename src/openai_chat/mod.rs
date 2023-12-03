@@ -2,7 +2,6 @@
 
 use anyhow::Result;
 use std::io::{stdout, Write};
-use tokio::stream::{StreamExt};
 use tokio_util::sync::CancellationToken;
 
 use async_openai::error::OpenAIError;

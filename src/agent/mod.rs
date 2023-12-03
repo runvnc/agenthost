@@ -207,9 +207,9 @@ impl Agent {
                             }
                         }
                     }
-                    return true;
+                    return Ok(true);
                 }
-                _ => return false,
+                _ => return Ok(false),
             }
             Ok(true)
         } else {
@@ -218,27 +218,19 @@ impl Agent {
     }
 
     pub async fn run(&mut self, cancellation_token: CancellationToken) -> Result<()> {
-        println!("OK");
         let mut need_user_input = true;
         while !cancellation_token.is_cancelled() {
             if need_user_input {
-                println!("need user input");
                 let input_str = self.receiver.recv_async().await.context("error")?;
                 if self.handle_command(s!(input_str)).await? {
-                    println!("Handled command");
                     return Ok(());
                 }
-                println!("Adding user message");
                 let msg = self.render_user_msg(s!(input_str))?;
                 self.log.add(user_msg(&msg)?);
-                println!("Added user message");
             }
-            println!("updated sys message");
             self.update_sys_msg();
-            println!("Added message and updated sys log.");
 
             let msgs = self.log.to_request_msgs(self.model.as_str())?;
-            println!("Sending chat request");
             let token = cancellation_token.child_token();
             let (text, fn_name, fn_args) = self
                 .chat
@@ -249,7 +241,6 @@ impl Agent {
                     token.clone(),
                 )
                 .await?;
-            println!("In agent, received chat request response.");
             if fn_name != "" {
                 self.process_fn_call(&fn_name, &fn_args).await?;
                 need_user_input = false;
@@ -261,14 +252,10 @@ impl Agent {
                     content: text,
                 };
                 self.reply_sender.send_async(reply.clone()).await?;
-                println!("Sent reply back to API endpoint.");
-                if reply.role == "assistant" {
-                    break;
-                }
-                need_user_input = true;
+                break;
+                //need_user_input = true;
             }
         }
-        println!("Returning from agent.");
         Ok(())
     }
 }

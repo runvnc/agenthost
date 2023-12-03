@@ -71,7 +71,7 @@ async fn user_input(
         println!("************ READ MSG: {} ****************", msg);
     }
 
-    let (sender, reply_receiver) = agent_mgr
+    let (sender, reply_receiver, cancellation_token) = agent_mgr
         .get()
         .expect("Could not access Agent Manager.")
         .get_or_create_agent(claims.username.clone(), session_id, s!("scripts/dm.rhai"))
@@ -217,16 +217,46 @@ fn user_connected(
         .unwrap();
     println!("sent userid msg");
 
-    let username = claims.username.clone();
     let mapped = rx.map(|msg| match msg {
-        // ... (rest of the match arms stay the same)
-    })
-    .inspect(move |_| {
-        println!("Client disconnected: {}", username);
+        ChatUIMessage::UserId(my_id) => Ok(Event::default().event("user").data(my_id.to_string())),
+        ChatUIMessage::Fragment(fragment) => {
+            print!("[{}]", fragment);
+            Ok(Event::default().event("fragment").data(fragment))
+        }
+        ChatUIMessage::Reply {
+            name,
+            role,
+            content,
+        } => {
+            let data = serde_json::json!({
+                "name": name,
+                "role": role,
+                "content": content
+            });
+            Ok(Event::default().event("msg").data(s!(data)))
+        }
+        ChatUIMessage::FunctionCall {
+            name,
+            params,
+            result,
+        } => {
+            let data = serde_json::json!({
+                "name": name,
+                "params": params,
+                "result": result
+            });
+            println!("OK 2");
+            Ok(Event::default()
+                .event("functionCall")
+                .data(data.to_string()))
+        }
+    }).inspect(move |_| {
+         println!(">>>>>>>>>>>>>>>>>>>>> Client disconnected");
     });
 
     sse_streams.cache.insert(session_id, tx);
-
+    
+    println!("returning from user_connected");
     mapped
 }
 

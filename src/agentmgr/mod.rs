@@ -83,7 +83,7 @@ impl AgentManager {
 
         session_cache
             .cache
-            .insert(id, (sender.clone(), reply_receiver.clone(), cancellation_token_clone));
+            .insert(id, (sender.clone(), reply_receiver.clone(), cancellation_token_clone.clone()));
         let session_id = id.clone();
 
         thread::spawn(move || {
