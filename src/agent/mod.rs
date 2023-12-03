@@ -243,12 +243,14 @@ impl Agent {
 
             let msgs = self.log.to_request_msgs(self.model.as_str())?;
             println!("Sending chat request");
+            let token = CancellationToken::new();
             let (text, fn_name, fn_args) = self
                 .chat
                 .send_request(
                     msgs.clone(),
                     self.functions.clone(),
                     self.reply_sender.clone(),
+                    token.clone(),
                 )
                 .await?;
             println!("In agent, received chat request response.");
