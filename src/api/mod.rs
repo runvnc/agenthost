@@ -249,7 +249,7 @@ fn user_connected(
                 .event("functionCall")
                 .data(data.to_string()))
         }
-    }).inspect(move |_| {
+    }).on_completion(move |_| {
          println!(">>>>>>>>>>>>>>>>>>>>> Client disconnected");
     });
 
