@@ -42,20 +42,21 @@ impl AgentManager {
         }
     }
 
-    pub fn list_sessions(&self, username: &str) -> Result<Vec<String>, std::io::Error> {
+    pub fn list_sessions(&self, username: &str) -> Vec<String> {
         let path = format!("data/{}/sessions", username);
         let mut sessions = Vec::new();
 
-        for entry in fs::read_dir(Path::new(&path))? {
-            let entry = entry?;
-            if entry.path().is_file() {
-                if let Some(session_id) = entry.path().file_stem() {
-                    sessions.push(session_id.to_string_lossy().into_owned());
+        if let Ok(entries) = fs::read_dir(Path::new(&path)) {
+            for entry in entries.flatten() {
+                if entry.path().is_file() {
+                    if let Some(session_id) = entry.path().file_stem() {
+                        sessions.push(session_id.to_string_lossy().into_owned());
+                    }
                 }
             }
         }
 
-        Ok(sessions)
+        sessions
     }
 
     pub async fn get_or_create_agent(
