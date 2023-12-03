@@ -249,10 +249,7 @@ fn user_connected(
                 .event("functionCall")
                 .data(data.to_string()))
         }
-    }).then(move |_| {
-        println!(">>>>>>>>>>>>>>>>>>>>> Client disconnected");
-        futures::stream::once(async move { Ok(Event::default().event("disconnect").data("disconnected")) })
-    });
+    }).chain(futures::stream::once(async move { Ok(Event::default().event("disconnect").data("disconnected")) }))
 
     sse_streams.cache.insert(session_id, tx);
     
