@@ -36,5 +36,3 @@ tokio-stream = "0.1.14"
 tokio-util = "0.7.10"
 tower-http = { version = "0.3", features = ["fs", "trace", "cors"] }
 
-[dependencies]
-tokio_util = "0.6"
