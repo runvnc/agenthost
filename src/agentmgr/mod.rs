@@ -12,6 +12,7 @@ use tokio::runtime::Runtime;
 use tokio::runtime::*;
 use tokio::sync::mpsc;
 use tokio::*;
+use tokio_util::sync::CancellationToken;
 
 pub static agent_mgr: OnceCell<AgentManager> = OnceCell::new();
 
@@ -62,7 +63,7 @@ impl AgentManager {
         username: String,
         id: usize,
         script_path: String,
-    ) -> (flume::Sender<String>, flume::Receiver<ChatUIMessage>) {
+    ) -> (flume::Sender<String>, flume::Receiver<ChatUIMessage>, ) {
         let mut user_cache = self.user_cache.lock().unwrap();
 
         let session_cache = user_cache
