@@ -79,10 +79,11 @@ impl AgentManager {
         let (sender, mut receiver) = flume::bounded(500);
         let (reply_sender, reply_receiver) = flume::bounded(500);
         let cancellation_token = CancellationToken::new();
+        let cancellation_token_clone = cancellation_token.clone();
 
         session_cache
             .cache
-            .insert(id, (sender.clone(), reply_receiver.clone(), cancellation_token.clone()));
+            .insert(id, (sender.clone(), reply_receiver.clone(), cancellation_token_clone));
         let session_id = id.clone();
 
         thread::spawn(move || {
@@ -90,12 +91,12 @@ impl AgentManager {
                 let mut agent =
                     Agent::new(username, session_id, script_path, receiver, reply_sender)
                         .expect("no agent");
-                agent.run(cancellation_token.clone()).await;
+                agent.run(cancellation_token).await;
             };
             let rt = Runtime::new().unwrap();
             rt.block_on(future);
         });
 
-        (sender, reply_receiver, cancellation_token)
+        (sender, reply_receiver, cancellation_token_clone)
     }
 }
