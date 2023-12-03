@@ -251,7 +251,7 @@ fn user_connected(
         }
     }).then(move |_| async move {
         println!(">>>>>>>>>>>>>>>>>>>>> Client disconnected");
-        futures::stream::iter(vec![].into_iter().map(Ok::<_, Infallible>))
+        futures::stream::once(async { Ok(Event::default().event("disconnect").data("disconnected")) })
     });
 
     sse_streams.cache.insert(session_id, tx);
