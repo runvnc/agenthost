@@ -220,10 +220,10 @@ impl Agent {
         }
     }
 
-    pub async fn run(&mut self) -> Result<()> {
+    pub async fn run(&mut self, cancellation_token: CancellationToken) -> Result<()> {
         println!("OK");
         let mut need_user_input = true;
-        loop {
+        while !cancellation_token.is_cancelled() {
             if need_user_input {
                 println!("need user input");
                 let input_str = self.receiver.recv_async().await.context("error")?;
@@ -243,7 +243,7 @@ impl Agent {
 
             let msgs = self.log.to_request_msgs(self.model.as_str())?;
             println!("Sending chat request");
-            let token = CancellationToken::new();
+            let token = cancellation_token.child_token();
             let (text, fn_name, fn_args) = self
                 .chat
                 .send_request(
@@ -259,14 +259,16 @@ impl Agent {
                 need_user_input = false;
             } else {
                 self.log.add(agent_msg(&text)?);
-                self.reply_sender
-                    .send_async(ChatUIMessage::Reply {
-                        name: s!("agent"),
-                        role: s!("assistant"),
-                        content: text,
-                    })
-                    .await?;
+                let reply = ChatUIMessage::Reply {
+                    name: s!("agent"),
+                    role: s!("assistant"),
+                    content: text,
+                };
+                self.reply_sender.send_async(reply.clone()).await?;
                 println!("Sent reply back to API endpoint.");
+                if reply.role == "assistant" {
+                    break;
+                }
                 need_user_input = true;
             }
         }
