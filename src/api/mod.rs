@@ -216,43 +216,50 @@ fn user_connected(
         .unwrap();
     println!("sent userid msg");
 
-    let mapped = rx.map(|msg| match msg {
-        ChatUIMessage::UserId(my_id) => Ok(Event::default().event("user").data(my_id.to_string())),
-        ChatUIMessage::Fragment(fragment) => {
-            print!("[{}]", fragment);
-            Ok(Event::default().event("fragment").data(fragment))
-        }
-        ChatUIMessage::Reply {
-            name,
-            role,
-            content,
-        } => {
-            let data = serde_json::json!({
-                "name": name,
-                "role": role,
-                "content": content
-            });
-            Ok(Event::default().event("msg").data(s!(data)))
-        }
-        ChatUIMessage::FunctionCall {
-            name,
-            params,
-            result,
-        } => {
-            let data = serde_json::json!({
-                "name": name,
-                "params": params,
-                "result": result
-            });
-            println!("OK 2");
-            Ok(Event::default()
-                .event("functionCall")
-                .data(data.to_string()))
-        }
-    }).chain(futures::stream::once(async move { Ok(Event::default().event("disconnect").data("disconnected")) }));
+    let mapped = rx
+        .map(|msg| match msg {
+            ChatUIMessage::UserId(my_id) => {
+                Ok(Event::default().event("user").data(my_id.to_string()))
+            }
+            ChatUIMessage::Fragment(fragment) => {
+                print!("[{}]", fragment);
+                Ok(Event::default().event("fragment").data(fragment))
+            }
+            ChatUIMessage::Reply {
+                name,
+                role,
+                content,
+            } => {
+                let data = serde_json::json!({
+                    "name": name,
+                    "role": role,
+                    "content": content
+                });
+                Ok(Event::default().event("msg").data(s!(data)))
+            }
+            ChatUIMessage::FunctionCall {
+                name,
+                params,
+                result,
+            } => {
+                let data = serde_json::json!({
+                    "name": name,
+                    "params": params,
+                    "result": result
+                });
+                println!("OK 2");
+                Ok(Event::default()
+                    .event("functionCall")
+                    .data(data.to_string()))
+            }
+        })
+        .chain(futures::stream::once(async move {
+            println!("Detected client disconnect from event source!!!!!!!!!!!");
+            Ok(Event::default().event("disconnect").data("disconnected"))
+        }));
 
     sse_streams.cache.insert(session_id, tx);
-    
+
     println!("returning from user_connected");
     mapped
 }
@@ -304,6 +311,8 @@ async fn auth_middleware(mut req: Request<Body>, next: Next<Body>) -> impl IntoR
     let body = Body::from(hyper::body::to_bytes(body).await.unwrap());
     Ok(Response::from_parts(parts, body)) */
 }
+
+// https://github.com/hyperium/hyper/issues/707 detect client disconnected
 
 async fn logging_middleware(req: Request<Body>, next: Next<Body>) -> impl IntoResponse {
     println!("Request URI: {}", req.uri());
