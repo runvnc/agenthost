@@ -58,7 +58,7 @@
         console.log('message()')
         rawMarkdown = '';
         let html = data;
-        if (render) html = markdownit().render(data);
+        if (markdown) html = markdownit().render(data);
         window.requestAnimationFrame( () => {
           currParagraph.innerHTML = html
           chat.appendChild(msgElement)
@@ -131,17 +131,15 @@
     }); 
     sse.addEventListener("fragment", function(frag) {
       console.log("fragment", frag.data);
-      setTimeout(()=> {
         if (rawMarkdown == '__WAITING__') {
           message('', 'Agent')
           rawMarkdown = ''
         }
         let text = frag.data.substr(1, frag.data.length-2);
         rawMarkdown += text;
-        let html = markdownit().render(rawMarkdown);
         window.requestAnimationFrame( () => {
+          let html = markdownit().render(rawMarkdown);
           currParagraph.innerHTML = html;
-          console.log("updated innerHTML", html);
           chat.scrollTop = chat.scrollHeight;
         })
     });

@@ -223,7 +223,7 @@ fn user_connected(
                 Ok(Event::default().event("user").data(my_id.to_string()))
             }
             ChatUIMessage::Fragment(fragment) => {
-                print!("[{}]", fragment);
+                //print!("[{}]", fragment);
                 Ok(Event::default().event("fragment").data(fragment))
             }
             ChatUIMessage::Reply {
