@@ -169,6 +169,25 @@
       sendMsg(text.value);
     }
 
+    // Add event listener for the Interrupt button
+    document.getElementById("interrupt").addEventListener("click", function() {
+      // Call the stopHandler function when the Interrupt button is clicked
+      stopHandler();
+    });
+
+    // Define the stopHandler function to send a request to the /stop route
+    async function stopHandler() {
+      try {
+        const response = await fetch(`/stop?session_id=${window.session_id}&token=${window.token}`, {
+          method: 'GET'
+        });
+        const result = await response.json();
+        console.log('Interrupt sent:', result);
+      } catch (error) {
+        console.error('Error sending interrupt:', error);
+      }
+    }
+
     function sendMsg(msg, show=true) {
         if (xhr) {
           try {
