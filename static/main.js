@@ -41,7 +41,7 @@
       return removeUSERPrefix(out).join('\n')
     }
   
-    function message(data, sender) {
+    function message(data, sender, markdown=true) {
         console.log("Message handler")
         var msgElement = document.createElement('div');
         var avatarElement = document.createElement('img');
@@ -57,11 +57,15 @@
         msgElement.appendChild(currParagraph);
         console.log('message()')
         rawMarkdown = '';
-        let html = markdownit().render(data);
-        currParagraph.innerHTML = html
-        chat.appendChild(msgElement)
-        chat.scrollTop = chat.scrollHeight;
+        let html = data;
+        if (render) html = markdownit().render(data);
+        window.requestAnimationFrame( () => {
+          currParagraph.innerHTML = html
+          chat.appendChild(msgElement)
+          chat.scrollTop = chat.scrollHeight;
+        } );
     }
+
     async function loadSessions() {
         const sessions = await Request(`/sessions?session_id=${window.session_id}&token=${window.token}`, { method: 'GET' });
         const sessionList = document.getElementById('session-list');
@@ -135,10 +139,11 @@
         let text = frag.data.substr(1, frag.data.length-2);
         rawMarkdown += text;
         let html = markdownit().render(rawMarkdown);
-        currParagraph.innerHTML = html;
-        console.log("updated innerHTML", html);
-        chat.scrollTop = chat.scrollHeight;
-      }, 1);
+        window.requestAnimationFrame( () => {
+          currParagraph.innerHTML = html;
+          console.log("updated innerHTML", html);
+          chat.scrollTop = chat.scrollHeight;
+        })
     });
     sse.addEventListener("functionCall", function(fn) {
       console.log({functionCall: fn.data});
@@ -146,7 +151,7 @@
       params = JSON.parse(params);
       let html = showFunctionCall(name, params, result);
       console.log(html);
-      message(html, 'Agent');
+      message(html, 'Agent', false);
       rawMarkdown = '__WAITING__';
     });
     sse.onmessage = function(msg) {
@@ -154,7 +159,6 @@
         //message(msg.data);
     };
 }
-
 
     var input = document.getElementById("text");
     input.addEventListener("keyup", function(event) {

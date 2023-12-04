@@ -88,7 +88,7 @@ async fn user_input(
             .cache
             .get(&session_id)
             .ok_or_else(|| (StatusCode::INTERNAL_SERVER_ERROR, "Session not found"))?;
-        println!("Received reply:");
+        //println!("Received reply:");
         tx.send(reply.clone());
         if let ChatUIMessage::Reply {
             role,
