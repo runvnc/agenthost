@@ -223,7 +223,8 @@ impl Agent {
             if need_user_input {
                 let input_str = self.receiver.recv_async().await.context("error")?;
                 if self.handle_command(s!(input_str)).await? {
-                    return Ok(());
+                    continue;
+                    //return Ok(());
                 }
                 let msg = self.render_user_msg(s!(input_str))?;
                 self.log.add(user_msg(&msg)?);

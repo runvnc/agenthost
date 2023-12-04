@@ -120,7 +120,7 @@ impl AgentManager {
             let rt = Runtime::new().unwrap();
             rt.block_on(future);
             let mut user_cache = user_cache_clone.lock().unwrap();
-            if let Some(session_cache) = user_cache.get_mut(&username_clone) {
+            if let Some(session_cache) = user_cache.get_mut(&(username.clone())) {
                 session_cache.cache.remove(&session_id);
             }
         });
