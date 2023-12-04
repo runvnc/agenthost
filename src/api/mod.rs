@@ -158,6 +158,7 @@ pub async fn server() -> Result<(), hyper::Error> {
         .route("/login", post(login_handler))
         .route("/chat", get(chat_events))
         .route("/send", get(user_input))
+        .route("/stop", get(stop_handler))
         .route("/sessions", get(list_sessions_handler))
         .route("/", get(index_handler))
         .layer(Extension(connected_users))
@@ -323,4 +324,24 @@ async fn logging_middleware(req: Request<Body>, next: Next<Body>) -> impl IntoRe
     let (parts, body) = response.into_parts();
     let body = Body::from(hyper::body::to_bytes(body).await.unwrap());
     Ok(Response::from_parts(parts, body)) */
+}
+async fn stop_handler(
+    params: Query<HashMap<String, String>>,
+    Extension(claims): Extension<Claims>,
+    Extension(connected_users): Extension<ConnectedUsers>,
+) -> Result<Json<HashMap<&'static str, bool>>, (StatusCode, &'static str)> {
+    let mut session_id = 1;
+    if let Some(session) = params.get("session_id") {
+        session_id = session.parse::<usize>().expect("Invalid session id");
+    }
+
+    let (_, _, cancellation_token) = agent_mgr
+        .get()
+        .expect("Could not access Agent Manager.")
+        .get_or_create_agent(claims.username.clone(), session_id, s!("scripts/dm.rhai"))
+        .await;
+
+    cancellation_token.cancel();
+
+    Ok(Json(hashmap! {"ok" => true}))
 }
