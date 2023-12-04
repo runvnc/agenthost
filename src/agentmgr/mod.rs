@@ -108,21 +108,23 @@ impl AgentManager {
         let session_id = id.clone();
 
         let user_cache_clone = Arc::clone(&self.user_cache);
+        let username_clone = username.clone(); // Clone username before moving it
+        let cancellation_token_clone_for_return = cancellation_token_clone.clone(); // Clone token for return
         thread::spawn(move || {
             let future = async move {
                 let mut agent =
-                    Agent::new(username.clone(), session_id, script_path, receiver, reply_sender)
+                    Agent::new(username_clone, session_id, script_path, receiver, reply_sender)
                         .expect("no agent");
                 agent.run(cancellation_token_clone).await;
             };
             let rt = Runtime::new().unwrap();
             rt.block_on(future);
             let mut user_cache = user_cache_clone.lock().unwrap();
-            if let Some(session_cache) = user_cache.get_mut(&username) {
+            if let Some(session_cache) = user_cache.get_mut(&username_clone) {
                 session_cache.cache.remove(&session_id);
             }
         });
 
-        (sender, reply_receiver, cancellation_token_clone)
+        (sender, reply_receiver, cancellation_token_clone_for_return) // Use the cloned token for return
     }
 }
