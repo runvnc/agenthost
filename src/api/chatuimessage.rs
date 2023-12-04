@@ -30,18 +30,14 @@ impl From<ChatCompletionRequestMessage> for ChatUIMessage {
                 content: user_message,
                 role,
                 ..
-            }) => {
-                match user_message {
-                    Some(ChatCompletionRequestUserMessageContent::Text(text)) => {
-                        ChatUIMessage::Reply {
-                            role: role.to_string(),
-                            name: "SYSTEM".to_string(), 
-                            content: text,
-                        }
-                    }
-                    _ => ChatUIMessage::Fragment("Unsupported User Message Content".to_string()),
-                }
-            }
+            }) => match user_message {
+                Some(ChatCompletionRequestUserMessageContent::Text(text)) => ChatUIMessage::Reply {
+                    role: role.to_string(),
+                    name: "SYSTEM".to_string(),
+                    content: text,
+                },
+                _ => ChatUIMessage::Fragment("Unsupported User Message Content".to_string()),
+            },
             ChatCompletionRequestMessage::Assistant(ChatCompletionRequestAssistantMessage {
                 content: assistant_message,
                 role,
@@ -72,7 +68,7 @@ impl From<ChatCompletionRequestMessage> for ChatUIMessage {
                     ChatUIMessage::Fragment("Empty System Message".to_string())
                 }
             }
-            _ => ChatUIMessage::Fragment("Unsupported message type".to_string())
+            _ => ChatUIMessage::Fragment("Unsupported message type".to_string()),
         }
     }
 }

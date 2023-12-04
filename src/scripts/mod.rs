@@ -87,7 +87,8 @@ fn get_directory(file_path: &str) -> String {
 
 #[cfg(not(feature = "no_function"))]
 #[cfg(not(feature = "no_object"))]
-pub fn init(path: &str, session_id: usize, username: &str) -> Result<Handler> { // Add username parameter
+pub fn init(path: &str, session_id: usize, username: &str) -> Result<Handler> {
+    // Add username parameter
     let dir = get_directory(path);
     let username = username.to_owned(); // Clone the username to store in the Handler
 
@@ -106,7 +107,7 @@ pub fn init(path: &str, session_id: usize, username: &str) -> Result<Handler> { 
     engine.register_fn("path", sandboxed_path);
 
     let states_file = format!("data/sessions/{username}/states-{}.json", session_id); // Include username in the path
-    // Create the directory for the user if it doesn't exist
+                                                                                      // Create the directory for the user if it doesn't exist
     let user_dir = Path::new("data/sessions").join(&username);
     fs::create_dir_all(&user_dir)?;
 
@@ -257,10 +258,14 @@ fn sandboxed_path(str_path: &str) -> Result<PathBuf, Box<EvalAltResult>> {
     .ok_or_else(|| "Path out of bounds".into())
 }
 
-fn save_states(handler: &Handler) -> Result<()> { // Remove session_id parameter as it's now part of the handler
+fn save_states(handler: &Handler) -> Result<()> {
+    // Remove session_id parameter as it's now part of the handler
     let states_map = dyn_map!(handler.states, "Could not access states as map.")?;
     let data = serde_json::to_string(&states_map)?;
-    let states_file = format!("data/sessions/{}/states-{}.json", handler.username, handler.session_id); // Include username in the path
+    let states_file = format!(
+        "data/sessions/{}/states-{}.json",
+        handler.username, handler.session_id
+    ); // Include username in the path
     fs::write(&states_file, data)?;
     Ok(())
 }

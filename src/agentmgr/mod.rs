@@ -3,11 +3,11 @@ use crate::api::chatuimessage::ChatUIMessage;
 use flume::*;
 use once_cell::sync::OnceCell;
 use std::collections::HashMap;
+use std::fs;
+use std::path::Path;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
-use std::fs;
-use std::path::Path;
 use tokio::runtime::Runtime;
 use tokio::runtime::*;
 use tokio::sync::mpsc;
@@ -18,7 +18,14 @@ pub static agent_mgr: OnceCell<AgentManager> = OnceCell::new();
 
 #[derive(Debug, Clone)]
 pub struct SessionCache {
-    cache: HashMap<usize, (flume::Sender<String>, flume::Receiver<ChatUIMessage>, CancellationToken)>,
+    cache: HashMap<
+        usize,
+        (
+            flume::Sender<String>,
+            flume::Receiver<ChatUIMessage>,
+            CancellationToken,
+        ),
+    >,
 }
 
 #[derive(Debug, Clone)]
@@ -64,7 +71,11 @@ impl AgentManager {
         username: String,
         id: usize,
         script_path: String,
-    ) -> (flume::Sender<String>, flume::Receiver<ChatUIMessage>, CancellationToken) {
+    ) -> (
+        flume::Sender<String>,
+        flume::Receiver<ChatUIMessage>,
+        CancellationToken,
+    ) {
         let mut user_cache = self.user_cache.lock().unwrap();
 
         let session_cache = user_cache
@@ -74,7 +85,11 @@ impl AgentManager {
             });
 
         if let Some((sender, reply_receiver, cancellation_token)) = session_cache.cache.get(&id) {
-            return (sender.clone(), reply_receiver.clone(), cancellation_token.clone());
+            return (
+                sender.clone(),
+                reply_receiver.clone(),
+                cancellation_token.clone(),
+            );
         }
 
         let (sender, mut receiver) = flume::bounded(500);
@@ -82,9 +97,14 @@ impl AgentManager {
         let cancellation_token = CancellationToken::new();
         let cancellation_token_clone = cancellation_token.clone();
 
-        session_cache
-            .cache
-            .insert(id, (sender.clone(), reply_receiver.clone(), cancellation_token_clone.clone()));
+        session_cache.cache.insert(
+            id,
+            (
+                sender.clone(),
+                reply_receiver.clone(),
+                cancellation_token_clone.clone(),
+            ),
+        );
         let session_id = id.clone();
 
         thread::spawn(move || {

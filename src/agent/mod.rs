@@ -12,7 +12,9 @@ use crate::openai_chat::{chat_fn, OpenAIChat};
 use chrono::{DateTime, Utc};
 use serde_json::json;
 
-use async_openai::types::{Role, ChatCompletionFunctions, ChatCompletionRequestMessage, ChatCompletionRequestSystemMessage};
+use async_openai::types::{
+    ChatCompletionFunctions, ChatCompletionRequestMessage, ChatCompletionRequestSystemMessage, Role,
+};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -69,7 +71,7 @@ impl Agent {
         let model = s!("gpt-4-1106-preview");
         let mut log = ChatLog::new(username.clone(), session_id);
         let chat = OpenAIChat::new(model.clone());
-        let mut handler = scripts::init(&script_path, session_id,&username)?;
+        let mut handler = scripts::init(&script_path, session_id, &username)?;
 
         let mut instance = Self {
             username,
@@ -187,23 +189,21 @@ impl Agent {
                         println!("Sending message..");
                         println!("{:?}", msg.message.clone());
                         match &msg.message {
-                            ChatCompletionRequestMessage::System(ChatCompletionRequestSystemMessage {
-                                content,
-                                 role,
-                                  ..
-                            }) => {
+                            ChatCompletionRequestMessage::System(
+                                ChatCompletionRequestSystemMessage { content, role, .. },
+                            ) => {
                                 if *role != Role::System {
                                     self.reply_sender
-                                    .send_async(msg.message.clone().into())
-                                    .await
-                                    .unwrap();
-                                } 
+                                        .send_async(msg.message.clone().into())
+                                        .await
+                                        .unwrap();
+                                }
                             }
                             _ => {
                                 self.reply_sender
-                                .send_async(msg.message.clone().into())
-                                .await
-                                .unwrap();
+                                    .send_async(msg.message.clone().into())
+                                    .await
+                                    .unwrap();
                             }
                         }
                     }
@@ -256,6 +256,7 @@ impl Agent {
                 //need_user_input = true;
             }
         }
+        println!("Agent finished running.");
         Ok(())
     }
 }
