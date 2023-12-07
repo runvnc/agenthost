@@ -48,6 +48,8 @@ pub fn deserialize_message(json_str: &str) -> Result<ChatCompletionRequestMessag
             name: Some(name),
             role: role_enum,
             content: Some(content),
+            function_call: None, // or provide a value
+            tool_calls: None, // or provide a value
         })),
         // ... handle other roles
     }
