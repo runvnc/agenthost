@@ -1,7 +1,5 @@
 use serde_json::json;
 
-use serde_json::json;
-
 pub fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
     match message {
         ChatCompletionRequestMessage::User(user_msg) => {
@@ -59,3 +57,4 @@ pub fn deserialize_message(json_str: &str) -> Result<ChatCompletionRequestMessag
 // Remove the test code or move it inside a function if it was intended for testing purposes.
 
 
+use crate::chatlog::{ChatCompletionRequestMessage, ChatCompletionRequestUserMessage, ChatCompletionRequestSystemMessage, ChatCompletionRequestAssistantMessage, Role};
