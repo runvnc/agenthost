@@ -1,4 +1,6 @@
-fn serialize_message(message: &ChatCompletionRequestMessage) -> (String, String, String) {
+use serde_json::json;
+
+fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
     match message {
         ChatCompletionRequestMessage::User(user_msg) => {
             let name = user_msg.name.clone().unwrap_or_default();
