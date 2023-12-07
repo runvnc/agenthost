@@ -5,7 +5,7 @@ pub fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
         ChatCompletionRequestMessage::User(user_msg) => {
             let name = user_msg.name.clone().unwrap_or_default();
             let role = format!("{:?}", user_msg.role);
-            let content = user_msg.content.clone().unwrap_or("".to_string());
+            let content = user_msg.content.clone().unwrap_or(async_openai::types::ChatCompletionRequestUserMessageContent::Text("".to_string()));
             json!({ "name": name, "role": role, "content": content }).to_string()
         },
         ChatCompletionRequestMessage::System(system_msg) => {
@@ -37,7 +37,7 @@ pub fn deserialize_message(json_str: &str) -> Result<ChatCompletionRequestMessag
         Role::User => Ok(ChatCompletionRequestMessage::User(ChatCompletionRequestUserMessage {
             name: Some(name),
             role: role_enum,
-            content: Some(content),
+            content: Some(async_openai::types::ChatCompletionRequestUserMessageContent::Text(content)),
         })),
         Role::System => Ok(ChatCompletionRequestMessage::System(ChatCompletionRequestSystemMessage {
             name: Some(name),
