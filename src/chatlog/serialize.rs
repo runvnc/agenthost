@@ -2,7 +2,7 @@ use serde_json::json;
 
 use serde_json::json;
 
-fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
+pub fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
     match message {
         ChatCompletionRequestMessage::User(user_msg) => {
             let name = user_msg.name.clone().unwrap_or_default();
@@ -28,7 +28,7 @@ fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
 
 use serde_json::{Value, from_value};
 
-fn deserialize_message(json_str: &str) -> Result<ChatCompletionRequestMessage, serde_json::Error> {
+pub fn deserialize_message(json_str: &str) -> Result<ChatCompletionRequestMessage, serde_json::Error> {
     let json_value: Value = serde_json::from_str(json_str)?;
     let name = json_value["name"].as_str().unwrap_or_default().to_string();
     let role = json_value["role"].as_str().unwrap_or_default().to_string();
@@ -56,13 +56,6 @@ fn deserialize_message(json_str: &str) -> Result<ChatCompletionRequestMessage, s
 }
 
 
-let msg = ChatCompletionRequestMessage::User(ChatCompletionRequestUserMessage {
-    content: Some("Hello, World!".to_string()),
-    role: Role::User,
-    name: Some("Alice".to_string()),
-});
-
-let serialized = serialize_message(&msg);
-let deserialized = deserialize_message(serialized.0, serialized.1, serialized.2);
+// Remove the test code or move it inside a function if it was intended for testing purposes.
 
 
