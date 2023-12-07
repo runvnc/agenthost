@@ -5,7 +5,7 @@ pub fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
         ChatCompletionRequestMessage::User(user_msg) => {
             let name = user_msg.name.clone().unwrap_or_default();
             let role = format!("{:?}", user_msg.role);
-            let content = user_msg.content.clone().unwrap_or_default();
+            let content = user_msg.content.clone().unwrap_or("".to_string());
             json!({ "name": name, "role": role, "content": content }).to_string()
         },
         ChatCompletionRequestMessage::System(system_msg) => {
@@ -57,4 +57,5 @@ pub fn deserialize_message(json_str: &str) -> Result<ChatCompletionRequestMessag
 // Remove the test code or move it inside a function if it was intended for testing purposes.
 
 
-use crate::chatlog::{ChatCompletionRequestMessage, ChatCompletionRequestUserMessage, ChatCompletionRequestSystemMessage, ChatCompletionRequestAssistantMessage, Role};
+use crate::chatlog::{ChatCompletionRequestMessage, Role};
+use async_openai::types::{ChatCompletionRequestUserMessage, ChatCompletionRequestSystemMessage, ChatCompletionRequestAssistantMessage};
