@@ -20,6 +20,9 @@ pub fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
             let content = assistant_msg.content.clone().unwrap_or("".to_string());
             json!({ "name": name, "role": role, "content": content }).to_string()
         },
+        ChatCompletionRequestMessage::Tool(_) | ChatCompletionRequestMessage::Function(_) => {
+            unimplemented!()
+        }
     }
 }
 
@@ -51,7 +54,9 @@ pub fn deserialize_message(json_str: &str) -> Result<ChatCompletionRequestMessag
             function_call: None, // or provide a value
             tool_calls: None, // or provide a value
         })),
-        // ... handle other roles
+        Role::Tool | Role::Function => {
+            unimplemented!()
+        }
     }
 }
 
