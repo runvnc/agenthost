@@ -11,13 +11,13 @@ pub fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
         ChatCompletionRequestMessage::System(system_msg) => {
             let name = system_msg.name.clone().unwrap_or_default();
             let role = format!("{:?}", system_msg.role);
-            let content = system_msg.content.clone().unwrap_or_default();
+            let content = system_msg.content.clone().unwrap_or("".to_string());
             json!({ "name": name, "role": role, "content": content }).to_string()
         },
         ChatCompletionRequestMessage::Assistant(assistant_msg) => {
             let name = assistant_msg.name.clone().unwrap_or_default();
             let role = format!("{:?}", assistant_msg.role);
-            let content = assistant_msg.content.clone().unwrap_or_default();
+            let content = assistant_msg.content.clone().unwrap_or("".to_string());
             json!({ "name": name, "role": role, "content": content }).to_string()
         },
     }
