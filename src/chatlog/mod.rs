@@ -46,6 +46,7 @@ impl ChatMessage {
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
+use crate::chatlog::serialize::{serialize_message, deserialize_message};
 
 #[derive(Serialize, Deserialize)]
 pub struct ChatLog {
@@ -104,7 +105,20 @@ impl ChatLog {
         if Path::new(&path).exists() {
             println!("Found json file, loading chat log from {}", path);
             let data = fs::read_to_string(&path).unwrap();
-            serde_json::from_str(&data).unwrap()
+            let messages: Vec<ChatMessage> = serde_json::from_str::<Vec<String>>(&data)
+                .unwrap()
+                .into_iter()
+                .map(|serialized_msg| {
+                    let message = deserialize_message(&serialized_msg).unwrap();
+                    let length = serialized_msg.len(); // This is a simplification, actual token length should be calculated
+                    ChatMessage::new_with_len(message, length)
+                })
+                .collect();
+            Self {
+                username,
+                session_id,
+                messages,
+            }
         } else {
             println!("Did not find json file, creating dir and returning empty log.");
             fs::create_dir_all(format!("data/{}/sessions", username)).unwrap();
@@ -134,7 +148,11 @@ impl ChatLog {
 
     fn save(&self) {
         let path = format!("data/{}/sessions/{}.json", self.username, self.session_id);
-        let data = serde_json::to_string(self).unwrap();
+        let serialized_messages: Vec<String> = self.messages
+            .iter()
+            .map(|msg| serialize_message(&msg.message))
+            .collect();
+        let data = serde_json::to_string(&serialized_messages).unwrap();
         fs::write(&path, data).unwrap();
         println!("Saved chat log to {}", path);
     }
