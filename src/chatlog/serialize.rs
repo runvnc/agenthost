@@ -16,6 +16,12 @@ fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
             let content = system_msg.content.clone().unwrap_or_default();
             json!({ "name": name, "role": role, "content": content }).to_string()
         },
+        ChatCompletionRequestMessage::Assistant(assistant_msg) => {
+            let name = assistant_msg.name.clone().unwrap_or_default();
+            let role = format!("{:?}", assistant_msg.role);
+            let content = assistant_msg.content.clone().unwrap_or_default();
+            json!({ "name": name, "role": role, "content": content }).to_string()
+        },
     }
 }
 
@@ -36,6 +42,11 @@ fn deserialize_message(json_str: &str) -> Result<ChatCompletionRequestMessage, s
             content: Some(content),
         })),
         Role::System => Ok(ChatCompletionRequestMessage::System(ChatCompletionRequestSystemMessage {
+            name: Some(name),
+            role: role_enum,
+            content: Some(content),
+        })),
+        Role::Assistant => Ok(ChatCompletionRequestMessage::Assistant(ChatCompletionRequestAssistantMessage {
             name: Some(name),
             role: role_enum,
             content: Some(content),
