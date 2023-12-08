@@ -31,17 +31,11 @@ pub fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
 
 use serde_json::{Value, from_value};
 
-pub fn deserialize_message(json_str: &str) -> Result<ChatCompletionRequestMessage, serde_json::Error> {
-    println!("1");
-    let json_value: Value = serde_json::from_str(json_str)?;
-    println!("2");
-    let name = json_value["name"].as_str().unwrap_or_default().to_string();
-    println!("3");
-    let role = json_value["role"].as_str().unwrap_or_default().to_string();
-    println!("4");
-    let content = json_value["content"].as_str().unwrap_or_default().to_string();
-    println!("5");
-    let role_enum = from_value(json_value["role"].clone())?;
+pub fn deserialize_message(json_value: HashMap<String, Value>) -> Result<ChatCompletionRequestMessage, serde_json::Error> {
+    let name = json_value.get("name").and_then(Value::as_str).unwrap_or_default().to_string();
+    let role = json_value.get("role").and_then(Value::as_str).unwrap_or_default().to_string();
+    let content = json_value.get("content").and_then(Value::as_str).unwrap_or_default().to_string();
+    let role_enum = from_value(json_value.get("role").cloned().unwrap_or(Value::Null))?;
     println!("6");
     match role_enum {
         Role::User => Ok(ChatCompletionRequestMessage::User(ChatCompletionRequestUserMessage {
