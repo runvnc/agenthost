@@ -80,6 +80,7 @@ async fn user_input(
     sender.send_async(msg).await.unwrap();
 
     loop {
+        println!("Top of loop");
         let reply = reply_receiver.recv_async().await.unwrap();
         let mut locked_users = connected_users.user_cache.lock().unwrap();
         let sse_streams = locked_users.get(&claims.username.clone());
@@ -96,6 +97,10 @@ async fn user_input(
             content,
         } = reply
         {
+            if name == "__READY__" {
+                println!("Agent ready for more input.");
+                break;
+            }
             println!("ok");
         }
     }

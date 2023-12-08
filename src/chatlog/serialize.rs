@@ -23,7 +23,7 @@ pub fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
             json!({ "name": name, "role": role, "content": content }).to_string()
         },
         ChatCompletionRequestMessage::Tool(_) | ChatCompletionRequestMessage::Function(_) => {
-            unimplemented!()
+            s!(json!({ "name": s!(""), "role": s!("system"), "content":s!("")}))
         }
     }
 }

@@ -217,14 +217,15 @@ impl Agent {
         }
     }
 
+
     pub async fn run(&mut self, cancellation_token: CancellationToken) -> Result<()> {
         let mut need_user_input = true;
         while !cancellation_token.is_cancelled() {
             if need_user_input {
                 let input_str = self.receiver.recv_async().await.context("error")?;
                 if self.handle_command(s!(input_str)).await? {
-                    continue;
-                    //return Ok(());
+                    //continue;
+                    break;
                 }
                 let msg = self.render_user_msg(s!(input_str))?;
                 self.log.add(user_msg(&msg)?);
@@ -257,6 +258,13 @@ impl Agent {
                 //need_user_input = true;
             }
         }
+        let reply = ChatUIMessage::Reply {
+            name: s!("__READY__"),
+            role: s!("SYSTEM"),
+            content: s!(""),
+        };
+        self.reply_sender.send_async(reply.clone()).await?;
+ 
         println!("Agent finished running.");
         Ok(())
     }

@@ -56,7 +56,8 @@
         msgElement.appendChild(avatarElement);
         msgElement.appendChild(nameElement);
         var xParagraph = document.createElement('p');
-        //currParagraph.innerHTML += data;
+        currParagraph = xParagraph;
+
         msgElement.appendChild(xParagraph);
         console.log('message()')
         rawMarkdown = '';
@@ -102,6 +103,7 @@
         chat.innerHTML = "<p><em>Connected!</em></p>";
     }
     sse.onerror = function(e) {
+      sse.close()
         console.error(e)
         //console.warn("Lost server connection, will reconnect in 5 seconds.")
         //window.sse.close()
