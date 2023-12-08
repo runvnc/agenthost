@@ -156,9 +156,9 @@ impl ChatLog {
         let path = format!("data/{}/sessions/{}.json", self.username, self.session_id);
         let mut outjson = s!("[\n");
         let mut i: u32 = 0;
-        for msg in self.messages {
+        for msg in &self.messages {
             if i > 0 { outjson.push_str(",\n") }
-            let json = serialize_message(&msg.message.clone());
+            let json = serialize_message(&msg.message);
             outjson.push_str(&json);
             i += 1;
         }
