@@ -115,7 +115,7 @@ impl ChatLog {
                 .into_iter()
                 .map(|serialized_msg| {
                     println!("A");
-                    let message = deserialize_message(serialized_msg.into_iter().map(|(k, v)| (k, Value::String(v))).collect()).unwrap();
+                    let message = deserialize_message(serialized_msg.clone().into_iter().map(|(k, v)| (k, Value::String(v))).collect()).unwrap();
                     println!("B");
                     let length = serialized_msg.len(); // This is a simplification, actual token length should be calculated
                     println!("C");
