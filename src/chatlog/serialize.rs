@@ -29,6 +29,7 @@ pub fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
 }
 
 
+use std::collections::HashMap;
 use serde_json::{Value, from_value};
 
 pub fn deserialize_message(json_value: HashMap<String, Value>) -> Result<ChatCompletionRequestMessage, serde_json::Error> {
