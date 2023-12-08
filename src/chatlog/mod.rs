@@ -2,6 +2,8 @@ use anyhow::Result;
 use once_cell::sync::OnceCell;
 use termion::style;
 
+use crate::s;
+
 use async_openai::types::{
     ChatCompletionRequestAssistantMessageArgs, ChatCompletionRequestFunctionMessageArgs,
     ChatCompletionRequestMessage, ChatCompletionRequestSystemMessageArgs,
@@ -110,8 +112,11 @@ impl ChatLog {
                 .unwrap()
                 .into_iter()
                 .map(|serialized_msg| {
+                    println!("A");
                     let message = deserialize_message(&serialized_msg).unwrap();
+                    println!("B");
                     let length = serialized_msg.len(); // This is a simplification, actual token length should be calculated
+                    println!("C");
                     ChatMessage::new_with_len(message, length)
                 })
                 .collect();
@@ -149,12 +154,17 @@ impl ChatLog {
 
     fn save(&self) {
         let path = format!("data/{}/sessions/{}.json", self.username, self.session_id);
-        let serialized_messages: Vec<String> = self.messages
-            .iter()
-            .map(|msg| serialize_message(&msg.message))
-            .collect();
-        let data = serde_json::to_string(&serialized_messages).unwrap();
-        fs::write(&path, data).unwrap();
+        let mut outjson = s!("[\n");
+        let mut i: u32 = 0;
+        for msg in self.messages {
+            if i > 0 { outjson.push_str(",\n") }
+            let json = serialize_message(&msg.message.clone());
+            outjson.push_str(&json);
+            i += 1;
+        }
+        outjson.push_str("]");
+        fs::write(&path, outjson).unwrap();
+        
         println!("Saved chat log to {}", path);
     }
 
