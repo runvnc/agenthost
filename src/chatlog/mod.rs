@@ -1,6 +1,7 @@
 use anyhow::Result;
 use once_cell::sync::OnceCell;
 use termion::style;
+use std::collections::HashMap;
 
 use crate::s;
 
@@ -108,7 +109,7 @@ impl ChatLog {
         if Path::new(&path).exists() {
             println!("Found json file, loading chat log from {}", path);
             let data = fs::read_to_string(&path).unwrap();
-            let messages: Vec<ChatMessage> = serde_json::from_str::<Vec<String>>(&data)
+            let messages: Vec<ChatMessage> = serde_json::from_str::<Vec<HashMap<String, String>>>(&data)
                 .unwrap()
                 .into_iter()
                 .map(|serialized_msg| {
