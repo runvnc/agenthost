@@ -20,6 +20,9 @@
         console.log({uri})
         sendMsg(uri, false)
       }, 10)
+      setTimeout( () => {
+        window.sessionLoaded = true;
+      }, 3000)
     }
 
     function removeUSERPrefix(lines) {
@@ -52,15 +55,15 @@
         nameElement.classList.add('name');
         msgElement.appendChild(avatarElement);
         msgElement.appendChild(nameElement);
-        currParagraph = document.createElement('p');
+        var xParagraph = document.createElement('p');
         //currParagraph.innerHTML += data;
-        msgElement.appendChild(currParagraph);
+        msgElement.appendChild(xParagraph);
         console.log('message()')
         rawMarkdown = '';
         let html = data;
         if (markdown) html = markdownit().render(data);
         window.requestAnimationFrame( () => {
-          currParagraph.innerHTML = html
+          xParagraph.innerHTML = html
           chat.appendChild(msgElement)
           chat.scrollTop = chat.scrollHeight;
         } );
@@ -119,11 +122,12 @@
     sse.addEventListener("msg", function(msg) {
       setTimeout( () => {
         msg = JSON.parse(msg.data)
+        console.log("orig content", msg.content)
         let content = removeSysLines(msg.content)
+        console.log("new content", content)
         console.log(msg.role)
         console.log({msg, name: msg.name})
-        if (msg.name == 'SYSTEM') {
-          // only show history messages, others are handled as fragments
+        if (msg.name == 'SYSTEM' || !(window.sessionLoaded)) {
           message(content, msg.role == 'user' ? 'You' : 'Agent')
         }
         console.log('MESSAGE!', msg)

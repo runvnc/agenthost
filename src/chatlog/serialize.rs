@@ -5,19 +5,19 @@ use crate::s;
 pub fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
     match message {
         ChatCompletionRequestMessage::User(user_msg) => {
-            let name = user_msg.name.clone().unwrap_or_default();
+            let name = s!("test");// user_msg.name.clone().unwrap_or_default();
             let role = format!("{:?}", user_msg.role).to_lowercase();
             let content = user_msg.content.clone().unwrap_or(async_openai::types::ChatCompletionRequestUserMessageContent::Text("".to_string()));
             json!({ "name": name, "role": role, "content": content }).to_string()
         },
         ChatCompletionRequestMessage::System(system_msg) => {
-            let name = system_msg.name.clone().unwrap_or_default();
+            let name = s!("test");// system_msg.name.clone().unwrap_or_default();
             let role = format!("{:?}", system_msg.role).to_lowercase();
             let content = system_msg.content.clone().unwrap_or("".to_string());
             json!({ "name": name, "role": role, "content": content }).to_string()
         },
         ChatCompletionRequestMessage::Assistant(assistant_msg) => {
-            let name = assistant_msg.name.clone().unwrap_or_default();
+            let name = s!("test");// assistant_msg.name.clone().unwrap_or_default();
             let role = format!("{:?}", assistant_msg.role).to_lowercase();
             let content = assistant_msg.content.clone().unwrap_or("".to_string());
             json!({ "name": name, "role": role, "content": content }).to_string()
@@ -33,7 +33,7 @@ use std::collections::HashMap;
 use serde_json::{Value, from_value};
 
 pub fn deserialize_message(json_value: HashMap<String, Value>) -> Result<ChatCompletionRequestMessage, serde_json::Error> {
-    let name = json_value.get("name").and_then(Value::as_str).unwrap_or_default().to_string();
+    let name = s!("test");// json_value.get("name").and_then(Value::as_str).unwrap_or_default().to_string();
     let role = json_value.get("role").and_then(Value::as_str).unwrap_or_default().to_string();
     let content = json_value.get("content").and_then(Value::as_str).unwrap_or_default().to_string();
     let role_enum = from_value(json_value.get("role").cloned().unwrap_or(Value::Null))?;
