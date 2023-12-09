@@ -5,7 +5,9 @@
             scrollbar-color: #4A5568 #2D3748;
         }
         #main {
+          display: flex;
           flex-direction: column;
+          justify-content: space-between;
           height: 100vh;
         }
         #chat {
@@ -98,3 +100,9 @@
           height: 46px;
           margin: 20px;
         }
+.input-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
