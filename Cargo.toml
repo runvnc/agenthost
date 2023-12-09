@@ -6,11 +6,14 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+accelerate-src = { version = "*", optional = true }
 anyhow = "1.0.75"
 async-openai = "0.17.0"
 axum = { version = "0.6.20", features = [ "tokio" ] }
 bytes = "1.5.0"
+candle-examples = "*"
 chrono = "0.4.31"
+cudarc = { version = "*", optional = true }
 flume = { version = "0.11.0" }
 futures = "0.3.28"
 futures-util = "0.3.28"
@@ -35,4 +38,48 @@ tokio = { version = "1.33.0", features = [ "full" ] }
 tokio-stream = "0.1.14"
 tokio-util = "0.7.10"
 tower-http = { version = "0.3", features = ["fs", "trace", "cors"] }
+
+candle-core = { version = "0.3.1" }
+candle-datasets = { version = "0.3.1" }
+candle-nn = { version = "0.3.1" }
+candle-transformers = { version = "0.3.1" }
+candle-flash-attn = { version = "0.3.1", optional = true }
+candle-onnx = { version = "*", optional = true }
+half = { version = "*", optional = true }
+image = "*"
+intel-mkl-src = { optional = true }
+num-traits = {  }
+pyo3 = { version = "0.20.0", features = ["auto-initialize"], optional = true }
+rayon = "*"
+safetensors = "*"
+tokenizers = "*"
+
+
+[build-dependencies]
+anyhow = "*"
+byteorder = "*"
+clap = "*"
+hf-hub = "*"
+imageproc = "*"
+memmap2 = "*"
+rand = "*"
+rusttype = "*"
+tracing = "*"
+tracing-chrome = "*"
+tracing-subscriber = "*"
+wav = "*"
+# Necessary to disambiguate with tokio in wasm examples which are 1.28.1
+#
+tokio = "1.29.1"
+
+[features]
+default = []
+accelerate = ["dep:accelerate-src", "candle-core/accelerate", "candle-nn/accelerate", "candle-transformers/accelerate"]
+cuda = ["candle-core/cuda", "candle-nn/cuda", "candle-transformers/cuda"]
+cudnn = ["candle-core/cudnn"]
+flash-attn = ["cuda", "candle-transformers/flash-attn", "dep:candle-flash-attn"]
+mkl = ["dep:intel-mkl-src", "candle-core/mkl", "candle-nn/mkl", "candle-transformers/mkl"]
+nccl = ["cuda", "cudarc/nccl", "dep:half"]
+onnx = ["candle-onnx"]
+
 
