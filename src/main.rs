@@ -6,7 +6,7 @@ extern crate accelerate_src;
 
 use clap::{Parser, ValueEnum};
 use std::io::Write;
-use tokenizers::Tokenizer;
+use tokenizers::tokenizer::Tokenizer;
 
 use candle_core::quantized::{ggml_file, gguf_file};
 use candle_core::{Device, Tensor};
@@ -297,6 +297,7 @@ fn format_size(size_in_bytes: usize) -> String {
         format!("{:.2}GB", size_in_bytes as f64 / 1e9)
     }
 }
+
 
 fn main() -> anyhow::Result<()> {
     use tracing_chrome::ChromeLayerBuilder;
