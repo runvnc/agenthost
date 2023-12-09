@@ -1,11 +1,12 @@
         #sidebar {
-            max-height: 80vh;
+            height: 100vh;
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: #4A5568 #2D3748;
         }
         #main {
           flex-direction: column;
+          height: 100vh;
         }
         #chat {
             max-height: 80vh;
