@@ -100,16 +100,17 @@
     window.sse = new EventSource(url)
   
     sse.onopen = function() {
-        chat.innerHTML = "<p><em>Connected!</em></p>";
+        if (chat.innerHTML == null || chat.innerHTML == "")
+          chat.innerHTML = "<p><em>Connected!</em></p>";
     }
     sse.onerror = function(e) {
       sse.close()
         console.error(e)
         //console.warn("Lost server connection, will reconnect in 5 seconds.")
         //window.sse.close()
-        //setTimeout( () => {
-        //  sse = openEventSource('chat')
-        //}, 5000)
+        setTimeout( () => {
+          sse = openEventSource('chat')
+        }, 3000)
     }
 
     function addBlankMessage() {

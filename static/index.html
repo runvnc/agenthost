@@ -4,28 +4,31 @@
   <meta charset="UTF-8">
   <title>Agent Chat</title>
   <link rel="icon" type="image/png" href="agentnexus.png">
-  <link href="/tailwind.css" rel="stylesheet">
+ <link href="/tailwind.css" rel="stylesheet">
   <link href="main.css" rel="stylesheet">
   <script src="markdown-it.min.js"></script>
   <script src="https://unpkg.com/tailwindcss-jit-cdn"></script>
-
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons+Outlined" rel="stylesheet">
+ 
 </head>
 <body class="h-screen w-full flex flex-row bg-gray-900 text-white">
     <div id="sidebar" class="w-1/4 overflow-y-auto">
         <h2 class="text-2xl mb-4">Sessions</h2>
         <ul id="session-list" class="pl-5"></ul>
     </div>
-    <div id="main" class="w-3/4 bg-gray-800 flex flex-col justify-center items-center">
-      <img class="logohead" src="/agentnexus.png">
-      <h2 class="text-2xl mb-2">Agent Chat</h2>
+    <div id="main" class="w-3/4 bg-gray-800 flex flex-col justify-start items-center">
+      <div>
+        <img class="logohead" src="/agentnexus.png">
+        <h2 class="text-2xl mb-2">Agent Chat</h2>
+      </div>
       <div id="chat" class="w-3/4 justify-center items-center bg-gray-800 rounded shadow-lg p-2">
           <p><em>Connecting...</em></p>
       </div>
-      <div class="input-area mt-9">
-          <input type="text" id="text" class="border rounded w-full py-2 px-3 bg-gray-900 text-gray-300" placeholder="Type your message here..." />
-          <div>
-              <button type="button" id="send" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Send</button>
-              <button type="button" id="interrupt" class="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Interrupt</button>
+      <div class="input-area" class="w-3/4">
+          <input type="text" id="text" class="border rounded w-3/4 py-2 px-3 bg-gray-900 text-gray-300" placeholder="Type your message here..." />
+          <div id="inputs">
+              <button type="button" id="send" class="text-white font-bold py-2 px-4 rounded"><span class="material-icons">send</span></button>
+              <button type="button" id="interrupt" class="ml-2 text-white font-bold py-2 px-4 rounded"><span class="material-icons">stop</span></button>
           </div>
       </div>
     </div>

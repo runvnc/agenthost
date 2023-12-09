@@ -1,108 +1,138 @@
-        #sidebar {
-            height: 100vh;
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: #4A5568 #2D3748;
-        }
-        #main {
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          height: 100vh;
-        }
-        #chat {
-            max-height: 80vh;
-            overflow-y: scroll;
-            scrollbar-width: thin;
-            scrollbar-color: #4A5568 #2D3748;
-        }
-        #session-list li {
-            cursor: pointer;
-            margin-bottom: 0.5em;
-        }
-        #session-list li:hover {
-            text-decoration: underline;
-        }
-        /* Scrollbar styles for Webkit browsers */
-        #chat::-webkit-scrollbar {
-          width: 8px;
-        }
-        #chat::-webkit-scrollbar-track {
-          background: #2D3748;
-        }
-        #chat::-webkit-scrollbar-thumb {
-          background-color: #4A5568;
-          border-radius: 4px;
-          border: 2px solid #2D3748;
-        }
-        #chat ul {
-            list-style: disc;
-            padding-left: 1em;
-        }
-        #chat ol {
-            list-style: decimal;
-            padding-left: 1em;
-        }
-        .av {
-          width: 40px;
-          height: 40px;
-          margin-right: 30px;
-        }
-        .name {
-          display: none;
-          padding-left: 5px;
-          padding-right: 5px;
-        }
-        #chat blockquote {
-            border-left: 4px solid #ddd;
-            padding-left: 1em;
-            color: #aaa;
-        }
-        #chat div {
-            /* background-color: #eee; */
-            padding: 0.5em;
-            margin-bottom: 1em;
-            display: flex;
-            align-items: start;
-        }
-        #chat p {
-            margin-bottom: 1em;
-        }
-        #chat code {
-            font-family: monospace;
-        }
-        .fn_name {
-            color: #FFA500; /* orange */
-        }
-        .fn_result {
-          margin-bottom: 0 !important;
-        }
-        .param_name {
-            color: #FFFF00; /* yellow */
-        }
+    #sidebar {
+        height: 100vh;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #4A5568 #2D3748;
+    }
+    #main {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      height: 100vh;
+    }
+    #chat {
+        flex-grow: 1;
+        overflow-y: scroll;
+        scrollbar-width: thin;
+        scrollbar-color: #4A5568 #2D3748;
+    }
+    #session-list li {
+        cursor: pointer;
+        margin-bottom: 0.5em;
+    }
+    #session-list li:hover {
+        text-decoration: underline;
+    }
+    /* Scrollbar styles for Webkit browsers */
+    #chat::-webkit-scrollbar {
+      width: 8px;
+    }
+    #chat::-webkit-scrollbar-track {
+      background: #2D3748;
+    }
+    #chat::-webkit-scrollbar-thumb {
+      background-color: #4A5568;
+      border-radius: 4px;
+      border: 2px solid #2D3748;
+    }
+    #chat ul {
+        list-style: disc;
+        padding-left: 1em;
+    }
+    #chat ol {
+        list-style: decimal;
+        padding-left: 1em;
+    }
+    .av {
+      width: 40px;
+      height: 40px;
+      margin-right: 30px;
+    }
+    .name {
+      display: none;
+      padding-left: 5px;
+      padding-right: 5px;
+    }
+    #chat blockquote {
+        border-left: 4px solid #ddd;
+        padding-left: 1em;
+        color: #aaa;
+    }
+    #chat div {
+        /* background-color: #eee; */
+        padding: 0.5em;
+        margin-bottom: 1em;
+        display: flex;
+        align-items: start;
+    }
+    #chat p {
+        margin-bottom: 1em;
+    }
+    #chat code {
+        font-family: monospace;
+    }
+    .fn_name {
+        color: #FFA500; /* orange */
+    }
+    .fn_result {
+      margin-bottom: 0 !important;
+    }
+    .param_name {
+        color: #FFFF00; /* yellow */
+    }
 
-        .param_value {
-            color: #00FFFF; /* cyan */
-        }
-      
-        .action span {
-          padding-left: 2px;
-          padding-right: 3px;
-        }
-        .action {
-          display: block !important;
-        }
-        .action details {
-          display: block;
-        }
-        .logohead {
-          width: 46px;
-          height: 46px;
-          margin: 20px;
-        }
-.input-area {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
+    .param_value {
+        color: #00FFFF; /* cyan */
+    }
+  
+    .action span {
+      padding-left: 2px;
+      padding-right: 3px;
+    }
+    .action {
+      display: block !important;
+    }
+    .action details {
+      display: block;
+    }
+    .logohead {
+      width: 46px;
+      height: 46px;
+      margin: 20px;
+    }
+  .input-area {
+    display: flex;
+    position: sticky;
+    bottom: 0;
+    flex-shrink: 0;
+    justify-content: space-between;
+    align-items: center;
+    width: 69%;
+  }
+
+  .material-icons {
+    font-family: 'Material Icons Outlined' !important;
+  }
+
+  @font-face {
+  font-family: 'Material Icons Outlined';
+  font-style: normal;
+  font-weight: 400;
+  src: url(https://fonts.gstatic.com/s/materialiconsoutlined/v109/gok-H7zzDkdnRel8-DQ6KAXJ69wP1tGnf4ZGhUce.woff2) format('woff2');
+}
+
+.material-icons-outlined {
+  font-family: 'Material Icons Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
 }
