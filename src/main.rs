@@ -318,10 +318,10 @@ fn main() -> anyhow::Result<()> {
 
     println!(
         "avx: {}, neon: {}, simd128: {}, f16c: {}",
-        candle::utils::with_avx(),
-        candle::utils::with_neon(),
-        candle::utils::with_simd128(),
-        candle::utils::with_f16c()
+        candle_core::utils::with_avx(),
+        candle_core::utils::with_neon(),
+        candle_core::utils::with_simd128(),
+        candle_core::utils::with_f16c()
     );
     println!(
         "temp: {:.2} repeat-penalty: {:.2} repeat-last-n: {}",
@@ -498,7 +498,7 @@ fn main() -> anyhow::Result<()> {
                 break;
             };
         }
-        if let Some(rest) = tos.decode_rest().map_err(candle::Error::msg)? {
+        if let Some(rest) = tos.decode_rest().map_err(candle_core::Error::msg)? {
             print!("{rest}");
         }
         std::io::stdout().flush()?;

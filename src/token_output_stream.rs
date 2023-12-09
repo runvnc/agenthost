@@ -1,5 +1,6 @@
 use candle_core::Result;
 
+
 /// This is a wrapper around a tokenizer to ensure that tokens can be returned to the user in a
 /// streaming way rather than having to wait for the full decoding.
 pub struct TokenOutputStream {
@@ -26,7 +27,7 @@ impl TokenOutputStream {
     fn decode(&self, tokens: &[u32]) -> Result<String> {
         match self.tokenizer.decode(tokens, true) {
             Ok(str) => Ok(str),
-            Err(err) => candle::bail!("cannot decode: {err}"),
+            Err(err) => candle_core::bail!("cannot decode: {err}"),
         }
     }
 
