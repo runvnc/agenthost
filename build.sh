@@ -1,6 +1,5 @@
 #!/bin/bash
-export LLAMA_CUDA_DMMV_X=32
-export LLAMA_CUDA_DMMV_Y=1
-export LLAMA_CUDA_KQUANTS_ITER=2
+export LLAMA_CUBLAS=1
+export CUDA_DOCKER_ARCH=all
 
 cargo build --release

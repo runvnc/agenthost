@@ -8,5 +8,6 @@ edition = "2021"
 
 [dependencies]
 
-llama_cpp_rs = { version = "*", features = [ "cuda" ] }
+
+llama_cpp_rs = { git = "https://github.com/runvnc/rust-llama.cpp", features = [ "cuda" ] }
 

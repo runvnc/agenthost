@@ -5,7 +5,7 @@ use llama_cpp_rs::{
 
 fn main() {
     let model_options = ModelOptions {
-        n_gpu_layers: 12,
+        n_gpu_layers: 1000,
         ..Default::default()
     };
 
