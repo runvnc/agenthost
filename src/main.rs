@@ -1,39 +1,34 @@
-use llama_cpp::LlamaModel;
-use tokio::select;
-use tokio::time::Instant;
-use std::time::Duration;
+use llama_cpp_rs::{
+    options::{ModelOptions, PredictOptions},
+    LLama,
+};
 
+fn main() {
+    let model_options = ModelOptions {
+        n_gpu_layers: 12,
+        ..Default::default()
+    };
 
-#[tokio::main]
-async fn main() {
+    let llama = LLama::new("models/starling-lm.gguf".into(), &model_options).unwrap();
 
-    // Create a model from anything that implements `AsRef<Path>`:
-    let model = LlamaModel::load_from_file_async("path_to_model.gguf").await.expect("Could not load model");
+    let predict_options = PredictOptions {
+        tokens: 0,
+        threads: 10,
+        temperature: 0.001,
+        top_k: 90,
+        top_p: 0.86,
+        token_callback: Some(Box::new(|token| {
+            println!("token1: {}", token);
 
-    // A `LlamaModel` holds the weights shared across many _sessions_; while your model may be
-    // several gigabytes large, a session is typically a few dozen to a hundred megabytes!
-    let mut ctx = model.create_session();
+            true
+        })),
+        ..Default::default()
+    };
 
-    // You can feed anything that implements `AsRef<[u8]>` into the model's context.
-    ctx.advance_context("This is the story of a man named Stanley.").unwrap();
-
-    // LLMs are typically used to predict the next word in a sequence. Let's generate some tokens!
-    let max_tokens = 1024;
-    let mut decoded_tokens = 0;
-    let timeout_by = Instant::now() + Duration::from_secs(5);
-
-    // `ctx.get_completions` creates a worker thread that generates tokens. When the completion
-    // handle is dropped, tokens stop generating!
-    let mut completions = ctx.start_completing();
-
-    loop {
-        select! {
-            _ = tokio::time::sleep_until(timeout_by) => {
-                break;
-            }
-            _completion = completions.next_token_async() => {
-                continue;
-            }
-        }
-    }
+    llama
+        .predict(
+            "what are the national animals of india".into(),
+            predict_options,
+        )
+        .unwrap();
 }
