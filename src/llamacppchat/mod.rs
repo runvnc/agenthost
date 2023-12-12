@@ -2,12 +2,20 @@ use llama_cpp_rs::{
     options::{ModelOptions, PredictOptions},
     LLama,
 };
-
+use tokio_util::sync::CancellationToken;
 use download_model::*;
-
 use std::io::{self, Write};
-
 use std::env;
+use async_openai::{
+    types::{
+        //ChatCompletionFunctions,
+        ChatCompletionRequestMessage
+    }
+};
+
+use flume::Sender;
+
+use crate::api::chatuimessage::*;
 
 const AGENTHOST_MODEL: &str = "models/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf";
 const AGENTHOST_MODEL_URL: &str = "https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf?download=true"; 
@@ -19,7 +27,7 @@ struct LlamaCppChat {
 }
 
 impl LlamaCppChat {
-    fn new(model_file: String) {
+    async fn new(model_file: String) {
         let model_options = ModelOptions {
             n_gpu_layers: 1000,
             ..Default::default()
@@ -33,11 +41,11 @@ impl LlamaCppChat {
         }
     } -> LLamaCppChat;
 
-    fn new_default_model() -> LLamaCppChat {
+    async fn new_default_model() -> LLamaCppChat {
         let model_file = env::var("AGENTHOST_MODEL").unwrap_or(AGENTHOST_MODEL.to_string());
         let model_url = env::var("AGENTHOST_MODEL_URL").unwrap_or(AGENTHOST_MODEL_URL.to_string());
  
-        download_model_if_not_exist(&model_url, &model_file);
+        download_model_if_not_exist(&model_url, &model_file).await.unwrap();
 
         LlamaCppChat::new(model_file)
     }
@@ -46,34 +54,31 @@ impl LlamaCppChat {
                 messages: Vec<ChatCompletionRequestMessage>,
                 reply_sender: flume::Sender<ChatUIMessage>,
                 token: CancellationToken,
-       ) {
-        let args: Vec<String> = env::args().collect();
-
-        let mut layers = 1000;
-        if args.len() > 2 {
-            layers = args[2].parse::<i32>().unwrap().into()
-        }
+       ) -> (String, String, String) {
 
         let predict_options = PredictOptions {
             tokens: 0,
             threads: 10,
-            temperature: 0.001,
-            //top_k: 90,
-            //top_p: 0.86,
+            layers: 1000,
+            temperature: 0.0001,
             token_callback: Some(Box::new(|token| {
-                print!("{}", token);
-                io::stdout().flush().unwrap();
+            reply_sender
+                .send_async(ChatUIMessage::Fragment(format!("*{}*", token)))
+                .await?;
                 true
             })),
             ..Default::default()
         };
-
+        //top_k: 90,
+        //top_p: 0.86,
+ 
         llama
             .predict(
-                "what are the national animals of india".into(),
+                messages.into(),
                 predict_options,
             )
             .unwrap();
+        (s!("ok"), s!(""), s!(""))
     }
 
 }
