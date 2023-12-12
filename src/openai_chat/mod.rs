@@ -42,6 +42,8 @@ pub fn chat_fn(
         .build()?)
 }
 
+
+
 impl OpenAIChat {
     pub fn new(model: String) -> Self {
         Self {
@@ -50,7 +52,7 @@ impl OpenAIChat {
         }
     }
 
-    pub async fn send_request(
+    pub async fn generate_text(
         &self,
         messages: Vec<ChatCompletionRequestMessage>,
         functions: Vec<ChatCompletionFunctions>,
