@@ -2,13 +2,20 @@ use llama_cpp_rs::{
     options::{ModelOptions, PredictOptions},
     LLama,
 };
-use std::env;
+
+use download_model::*;
+
 use std::io::{self, Write};
 
-Struct LlamaCppChat {
+use std::env;
+
+const AGENTHOST_MODEL: &str = "models/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf";
+const AGENTHOST_MODEL_URL: &str = "https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf?download=true"; 
+
+struct LlamaCppChat {
   model_options: ModelOptions,
   model_file: String,
-  llama: &Llama
+  llama: Llama
 }
 
 impl LlamaCppChat {
@@ -17,7 +24,22 @@ impl LlamaCppChat {
             n_gpu_layers: 1000,
             ..Default::default()
         };
-        let llama = LLama::new(model_file, &model_options).unwrap();
+        let llama = LLama::new(&model_file, &model_options).unwrap();
+
+        LlamaCppChat {
+            model_options,
+            model_file,
+            llama
+        }
+    } -> LLamaCppChat;
+
+    fn new_default_model() -> LLamaCppChat {
+        let model_file = env::var("AGENTHOST_MODEL").unwrap_or(AGENTHOST_MODEL.to_string());
+        let model_url = env::var("AGENTHOST_MODEL_URL").unwrap_or(AGENTHOST_MODEL_URL.to_string());
+ 
+        download_model_if_not_exist(&model_url, &model_file);
+
+        LlamaCppChat::new(model_file)
     }
 
     async fn generate(self: &LlamaCppChat, 
