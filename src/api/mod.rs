@@ -178,7 +178,7 @@ pub async fn server() -> Result<(), hyper::Error> {
             },
         ));
 
-    println!("Listening at https://hostdev.padhub.xyz/");
+    println!("Listening at port 3132");
 
     axum::Server::bind(&"127.0.0.1:3132".parse().unwrap())
         .serve(app.into_make_service_with_connect_info::<std::net::SocketAddr>())
