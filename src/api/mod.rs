@@ -17,6 +17,7 @@ use std::sync::{
     Arc, Mutex,
 };
 use std::env;
+use tracing::{error, instrument, info};
 
 use serde_urlencoded::*;
 
@@ -180,8 +181,7 @@ pub async fn server() -> Result<(), hyper::Error> {
         ));
 
     let port = env::var("AGENTHOST_PORT").unwrap_or(s!("3132"));
-    let host = env::var("AGENTHOST_HOST").unwrap_or(s!("0.0.0.0"));
-
+    let host = env::var("AGENTHOST_HOST").unwrap_or(s!("[::0]"));
     println!("Listening at {}:{}", host, port);
     let host =
     axum::Server::bind( &format!("{}:{}",host, port).parse().unwrap() )
@@ -327,7 +327,14 @@ async fn auth_middleware(mut req: Request<Body>, next: Next<Body>) -> impl IntoR
 async fn logging_middleware(req: Request<Body>, next: Next<Body>) -> impl IntoResponse {
     println!("Request URI: {}", req.uri());
     println!("Headers: {:?}", req.headers());
-    next.run(req).await
+    let response = next.run(req).await;
+    match response.status() {
+        StatusCode::INTERNAL_SERVER_ERROR => {
+            error!("Internal Server Error occurred: {:?}", response);            
+        }
+        _ => info!("Request processed with status: {}", response.status()),
+    }
+    response
 
     /*
     let (parts, body) = response.into_parts();
