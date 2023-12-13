@@ -20,6 +20,9 @@ use crate::api::chatuimessage::ChatUIMessage;
 
 use download_model::*;
 
+mod mixtral;
+use mixtral::to_instruct_string;
+
 const AGENTHOST_MODEL: &str = "models/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf";
 const AGENTHOST_MODEL_URL: &str = "https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf?download=true"; 
 
@@ -28,8 +31,6 @@ pub struct LlamaCppChat {
   model_file: String,
   llama: LLama
 }
-
-//<s>[INST] Instruction [/INST] Model answer</s>[INST] Follow-up instruction [/INST]
 
 impl LlamaCppChat {
     pub async fn new(model_file: String) -> LlamaCppChat {
@@ -75,11 +76,10 @@ impl LlamaCppChat {
         };
         //top_k: 90,
         //top_p: 0.86,
- 
-       self.llama
+        
+        self.llama
             .predict(
-                //messages.into(),
-                s!("testing"),
+                to_instruct_string(&messages),
                 predict_options,
             )
             .unwrap();

@@ -2,11 +2,15 @@ use serde_json::json;
 
 use crate::s;
 
-struct AnyChatMessage {
-    name: String,
-    role: String,
-    content: String
+pub struct AnyChatMessage {
+    pub name: String,
+    pub role:  String,
+    pub content: String
 }
+
+use crate::chatlog::{ChatCompletionRequestMessage, Role};
+use async_openai::types::{ChatCompletionRequestUserMessage, ChatCompletionRequestUserMessageContent,
+    ChatCompletionRequestSystemMessage, ChatCompletionRequestAssistantMessage};
 
 pub fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
     match message {
@@ -34,28 +38,31 @@ pub fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
     }
 }
 
-pub fn to_anychatmessage(message: &ChatCompletionRequestMessage) -> String {
+pub fn to_anychatmessage(message: &ChatCompletionRequestMessage) -> AnyChatMessage {
     match message {
         ChatCompletionRequestMessage::User(user_msg) => {
-            let name = s!("test");// user_msg.name.clone().unwrap_or_default();
-            let role = format!("{:?}", user_msg.role).to_lowercase();
-            let content = user_msg.content.clone().unwrap_or(async_openai::types::ChatCompletionRequestUserMessageContent::Text("".to_string()));
-            AnyChatMessage(name, role, content)
+            let name = "test"; // user_msg.name.clone().unwrap_or_default();
+            let role = &format!("{:?}", user_msg.role).to_lowercase();
+            let content = match &user_msg.content {
+                Some(ChatCompletionRequestUserMessageContent::Text(text)) => text.to_string(),
+                _ => "".to_string(),
+            };
+            AnyChatMessage{name: s!(name), role: s!(role), content: s!(content)}
         },
         ChatCompletionRequestMessage::System(system_msg) => {
             let name = s!("test");// system_msg.name.clone().unwrap_or_default();
             let role = format!("{:?}", system_msg.role).to_lowercase();
             let content = system_msg.content.clone().unwrap_or("".to_string());
-            AnyChatMessage(name, role, content)
+            AnyChatMessage{name: s!(name), role: s!(role), content: s!(content)}
         },
         ChatCompletionRequestMessage::Assistant(assistant_msg) => {
             let name = s!("test");// assistant_msg.name.clone().unwrap_or_default();
             let role = format!("{:?}", assistant_msg.role).to_lowercase();
             let content = assistant_msg.content.clone().unwrap_or("".to_string());
-            AnyChatMessage(name, role, content)
+            AnyChatMessage{name: s!(name), role: s!(role), content: s!(content)}
         },
         ChatCompletionRequestMessage::Tool(_) | ChatCompletionRequestMessage::Function(_) => {
-            AnyChatMessage(name: s!(""), role: s!(""), content: s!("")
+            AnyChatMessage{ name: s!(""), role: s!(""), content: s!("")}
         }
     }
 }
@@ -96,5 +103,4 @@ pub fn deserialize_message(json_value: HashMap<String, Value>) -> Result<ChatCom
 
 
 
-use crate::chatlog::{ChatCompletionRequestMessage, Role};
-use async_openai::types::{ChatCompletionRequestUserMessage, ChatCompletionRequestSystemMessage, ChatCompletionRequestAssistantMessage};
+

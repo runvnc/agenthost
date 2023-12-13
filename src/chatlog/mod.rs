@@ -16,7 +16,7 @@ use tiktoken_rs::{cl100k_base, CoreBPE};
 
 static BPE: OnceCell<CoreBPE> = OnceCell::new();
 
-mod serialize;
+pub mod serialize;
 //mod shorthands;
 
 #[derive(Serialize, Deserialize, Clone)]
