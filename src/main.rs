@@ -1,43 +1,34 @@
-use llama_cpp_rs::{
-    options::{ModelOptions, PredictOptions},
-    LLama,
-};
-use std::env;
-use std::io::{self, Write};
+#![allow(warnings)]
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
+use std::io;
+use std::io::Read;
+use std::io::Write;
 
-    let mut layers = 1000;
-    if args.len() > 2 {
-        layers = args[2].parse::<i32>().unwrap().into()
-    }
+use anyhow::Result;
 
-    let model_options = ModelOptions {
-        n_gpu_layers: layers,
-        ..Default::default()
-    };
-    let model_file = args[1].clone();
-    let llama = LLama::new(model_file, &model_options).unwrap();
+//mod connector;
+mod agent;
+mod agentmgr;
+mod api;
+mod cat;
+mod chatlog;
 
-    let predict_options = PredictOptions {
-        tokens: 0,
-        threads: 40,
-        temperature: 0.001,
-        top_k: 90,
-        top_p: 0.86,
-        token_callback: Some(Box::new(|token| {
-            print!("{}", token);
-            io::stdout().flush().unwrap();
-            true
-        })),
-        ..Default::default()
-    };
+//mod errors;
+mod jwt_util;
+mod openai_chat;
+mod scripts;
+mod shorthands;
+mod llamacppchat;
 
-    llama
-        .predict(
-            "what are the national animals of india".into(),
-            predict_options,
-        )
-        .unwrap();
+use api::server;
+
+use jwt_util::*;
+
+#[cfg(not(feature = "no_function"))]
+#[cfg(not(feature = "no_object"))]
+#[tokio::main]
+async fn main() -> Result<()> {
+    api::server().await;
+    Ok(())
 }
+

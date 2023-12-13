@@ -114,7 +114,7 @@ impl AgentManager {
             let future = async move {
                 let mut agent =
                     Agent::new(username_clone, session_id, script_path, receiver, reply_sender)
-                        .expect("no agent");
+                        .await.expect("no agent");
                 agent.run(cancellation_token_clone).await;
             };
             let rt = Runtime::new().unwrap();

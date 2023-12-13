@@ -2,6 +2,12 @@ use serde_json::json;
 
 use crate::s;
 
+struct AnyChatMessage {
+    name: String,
+    role: String,
+    content: String
+}
+
 pub fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
     match message {
         ChatCompletionRequestMessage::User(user_msg) => {
@@ -24,6 +30,32 @@ pub fn serialize_message(message: &ChatCompletionRequestMessage) -> String {
         },
         ChatCompletionRequestMessage::Tool(_) | ChatCompletionRequestMessage::Function(_) => {
             s!(json!({ "name": s!(""), "role": s!("system"), "content":s!("")}))
+        }
+    }
+}
+
+pub fn to_anychatmessage(message: &ChatCompletionRequestMessage) -> String {
+    match message {
+        ChatCompletionRequestMessage::User(user_msg) => {
+            let name = s!("test");// user_msg.name.clone().unwrap_or_default();
+            let role = format!("{:?}", user_msg.role).to_lowercase();
+            let content = user_msg.content.clone().unwrap_or(async_openai::types::ChatCompletionRequestUserMessageContent::Text("".to_string()));
+            AnyChatMessage(name, role, content)
+        },
+        ChatCompletionRequestMessage::System(system_msg) => {
+            let name = s!("test");// system_msg.name.clone().unwrap_or_default();
+            let role = format!("{:?}", system_msg.role).to_lowercase();
+            let content = system_msg.content.clone().unwrap_or("".to_string());
+            AnyChatMessage(name, role, content)
+        },
+        ChatCompletionRequestMessage::Assistant(assistant_msg) => {
+            let name = s!("test");// assistant_msg.name.clone().unwrap_or_default();
+            let role = format!("{:?}", assistant_msg.role).to_lowercase();
+            let content = assistant_msg.content.clone().unwrap_or("".to_string());
+            AnyChatMessage(name, role, content)
+        },
+        ChatCompletionRequestMessage::Tool(_) | ChatCompletionRequestMessage::Function(_) => {
+            AnyChatMessage(name: s!(""), role: s!(""), content: s!("")
         }
     }
 }
@@ -62,8 +94,6 @@ pub fn deserialize_message(json_value: HashMap<String, Value>) -> Result<ChatCom
     }
 }
 
-
-// Remove the test code or move it inside a function if it was intended for testing purposes.
 
 
 use crate::chatlog::{ChatCompletionRequestMessage, Role};

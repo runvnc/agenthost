@@ -318,7 +318,6 @@ async fn auth_middleware(mut req: Request<Body>, next: Next<Body>) -> impl IntoR
     Ok(Response::from_parts(parts, body)) */
 }
 
-// https://github.com/hyperium/hyper/issues/707 detect client disconnected
 
 async fn logging_middleware(req: Request<Body>, next: Next<Body>) -> impl IntoResponse {
     println!("Request URI: {}", req.uri());

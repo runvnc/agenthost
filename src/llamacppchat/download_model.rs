@@ -3,7 +3,7 @@ use std::io::Write;
 use std::path::Path;
 use reqwest;
 
-async fn download_model_if_not_exists(url: &str, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn download_model_if_not_exists(url: &str, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
     if !Path::new(file_path).exists() {
         println!("File does not exist. Downloading from {}", url);
 

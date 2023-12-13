@@ -204,12 +204,3 @@ pub fn init() {
     }
 }
 
-/*
-    pub fn trimmed(&mut self, max_tokens: i64) -> Vec<ChatCompletionRequestMessage> {
-
-    }
-
-    pub fn add_function_call(&mut self, name: String, args: serde_json::Value) {
-
-    }
-*/
