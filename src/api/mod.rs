@@ -16,6 +16,7 @@ use std::sync::{
     atomic::{AtomicUsize, Ordering},
     Arc, Mutex,
 };
+use std::env;
 
 use serde_urlencoded::*;
 
@@ -178,14 +179,15 @@ pub async fn server() -> Result<(), hyper::Error> {
             },
         ));
 
-    let port = env::var("AGENTHOST_PORT").unwrap_or("3132");
-    let host = env::var("AGENTHOST_HOST").unwrap_or("0.0.0.0");
+    let port = env::var("AGENTHOST_PORT").unwrap_or(s!("3132"));
+    let host = env::var("AGENTHOST_HOST").unwrap_or(s!("0.0.0.0"));
 
     println!("Listening at {}:{}", host, port);
-   let host =
-    axum::Server::bind(&format!("{}:{}",host, port).parse().unwrap())
+    let host =
+    axum::Server::bind( &format!("{}:{}",host, port).parse().unwrap() )
         .serve(app.into_make_service_with_connect_info::<std::net::SocketAddr>())
-        .await
+        .await?;
+    Ok(())
 }
 
 async fn index_handler() -> Result<Html<String>, StatusCode> {
