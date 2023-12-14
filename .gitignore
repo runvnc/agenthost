@@ -4,3 +4,4 @@ sandbox
 .aider*
 data
 models
+ssh*.json

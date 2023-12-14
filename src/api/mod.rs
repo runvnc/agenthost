@@ -30,6 +30,7 @@ use flume::*;
 use rhai::Engine;
 use tokio::runtime::Runtime;
 
+use crate::llamacppchat::{init_llama_cpp_chat};
 use crate::agent::Agent;
 use crate::agentmgr;
 use crate::agentmgr::{agent_mgr, init, AgentManager};
@@ -155,6 +156,7 @@ async fn chat_events(
 pub async fn server() -> Result<(), hyper::Error> {
     pretty_env_logger::init();
 
+    init_llama_cpp_chat().await;
     agentmgr::init();
 
     let connected_users = ConnectedUsers {

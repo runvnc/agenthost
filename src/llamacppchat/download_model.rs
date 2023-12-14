@@ -1,17 +1,28 @@
-use std::fs::File;
-use std::io::Write;
 use std::path::Path;
-use reqwest;
+use std::process::{Command, Stdio};
+use std::io::{self, Write};
 
 pub async fn download_model_if_not_exists(url: &str, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
     if !Path::new(file_path).exists() {
         println!("File does not exist. Downloading from {}", url);
+        
+    let mut child = Command::new("wget")
+        .arg(url)
+        .arg(format!("-O {}", file_path))
+        .stdout(Stdio::inherit()) // Inherit the stdout to display in console
+        .stderr(Stdio::inherit()) // Inherit the stderr to display in console
+        .spawn()
+        .expect("Failed to start wget command");
 
-        let response = reqwest::get(url).await?;
-        let mut file = File::create(file_path)?;
-        let content = response.bytes().await?;
-        file.write_all(&content)?;
+    // Wait for wget to finish
+    let result = child.wait().expect("Failed to wait on child");
 
+    // Check the result
+    if result.success() {
+        println!("Download completed successfully.");
+    } else {
+        eprintln!("Error occurred during download.");
+    }
         println!("Download complete.");
     } else {
         println!("File already exists. No download needed.");

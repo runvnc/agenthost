@@ -8,7 +8,7 @@ use crate::scripts::{call_function, get_actions, goto_stage, Handler};
 
 use crate::scripts;
 
-use crate::llamacppchat::{LlamaCppChat};
+use crate::llamacppchat::{llama_cpp_chat};
 
 use crate::openai_chat::{chat_fn, OpenAIChat};
 use chrono::{DateTime, Utc};
@@ -52,8 +52,7 @@ pub struct Agent {
     functions: Vec<ChatCompletionFunctions>,
     session_id: usize,
     log: ChatLog,
-    model: String,
-    chat: LlamaCppChat,
+    //model: String,
     handler: Handler,
     receiver: flume::Receiver<String>,
     reply_sender: flume::Sender<ChatUIMessage>,
@@ -70,10 +69,9 @@ impl Agent {
         println!("AgentHost 0.1 Startup agent..");
         chatlog::init();
         //let model = s!("gpt-3.5-turbo");
-        let model = s!("gpt-4-1106-preview");
+        //let model = s!("gpt-4-1106-preview");
         let mut log = ChatLog::new(username.clone(), session_id);
         //let chat = OpenAIChat::new(model.clone());
-        let chat = LlamaCppChat::new_default_model().await;
         let mut handler = scripts::init(&script_path, session_id, &username)?;
 
         let mut instance = Self {
@@ -81,8 +79,6 @@ impl Agent {
             functions: Vec::<ChatCompletionFunctions>::new(),
             session_id,
             log,
-            model,
-            chat,
             handler,
             receiver,
             reply_sender,
@@ -235,10 +231,11 @@ impl Agent {
             }
             self.update_sys_msg();
 
-            let msgs = self.log.to_request_msgs(self.model.as_str())?;
+            let msgs = self.log.to_request_msgs("gpt-4")?; //self.model.as_str())?;
             let token = cancellation_token.child_token();
-            let (text, fn_name, fn_args) = self
-                .chat
+            let (text, fn_name, fn_args) = 
+                llama_cpp_chat.get()
+                .expect("Could not access llama_cpp_chat")
                 .generate(
                     msgs.clone(),
                     //self.functions.clone(),

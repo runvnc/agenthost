@@ -30,7 +30,7 @@ pub struct SessionCache {
 
 #[derive(Debug, Clone)]
 pub struct AgentManager {
-    user_cache: Arc<Mutex<HashMap<String, SessionCache>>>,
+    user_cache: Arc<Mutex<HashMap<String, SessionCache>>>
 }
 
 pub fn init() {
@@ -45,7 +45,7 @@ pub fn init() {
 impl AgentManager {
     pub fn new() -> Self {
         AgentManager {
-            user_cache: Arc::new(Mutex::new(HashMap::new())),
+            user_cache: Arc::new(Mutex::new(HashMap::new()))
         }
     }
 

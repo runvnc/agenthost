@@ -15,18 +15,17 @@ const AGENTHOST_MODEL_URL: &str = "https://huggingface.co/TheBloke/Mixtral-8x7B-
 
 pub static llama_cpp_chat: OnceCell<LlamaCppChat> = OnceCell::new();
 
-#[derive(Debug)]
 pub struct LlamaCppChat {
     model_options: ModelOptions,
     model_file: String,
-    llama: Arc<Mutex<LLama>>,
+    llama: LLama,
 }
 
-pub async fn init_llama_cpp_chat() {
+pub fn init_llama_cpp_chat() {
     if !(llama_cpp_chat.get().is_some()) {
         println!("llama_cpp_chat: init..");
         llama_cpp_chat
-            .set(LlamaCppChat::new_default_model().await)
+            .set(LlamaCppChat::new_default_model())
             .expect("Failed to create LlamaCppChat with default model");
     }
 }
@@ -38,7 +37,7 @@ impl LlamaCppChat {
              n_gpu_layers: 25,
              ..Default::default()
          };
-         let llama = Arc::new(Mutex::new(LLama::new(model_file.clone(), &model_options).unwrap()));
+         let llama = LLama::new(model_file.clone(), &model_options).unwrap();
 
          LlamaCppChat {
              model_options,
@@ -77,11 +76,12 @@ impl LlamaCppChat {
         //top_k: 90,
         //top_p: 0.86,
 
-        let llama = self.llama.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        llama.predict(
-            to_instruct_string(&messages),
-            predict_options,
-        ).unwrap();
+        self.llama
+            .predict(
+                to_instruct_string(&messages),
+                predict_options,
+            )
+            .unwrap();
         (s!("ok"), s!(""), s!(""))
     }
 
