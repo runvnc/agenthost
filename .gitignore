@@ -5,3 +5,4 @@ sandbox
 data
 models
 ssh*.json
+dist

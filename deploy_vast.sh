@@ -10,7 +10,6 @@ setip='apt install -y iproute2; export AGENTHOST_HOST=$(ip addr | grep "inet 172
 
 created=$(vastai create instance $firstid --image nvidia/cuda:12.2.2-runtime-ubuntu22.04 --env '-p 3132:3132' --disk 69 --ssh --onstart-cmd="$setip")
 
-
 instanceid=$(vastai show instances | sed -n '2p' | cut -d' ' -f1)
 sshurl=$(vastai ssh-url $instanceid)
 echo sshurl = "$sshurl"
@@ -20,5 +19,4 @@ ssh_port=$(echo "$sshurl" | sed 's/.*://')
 
 echo "SSH port: $ssh_port"
 echo "SSH host: $ssh_host"
-
 
