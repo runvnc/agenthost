@@ -10,8 +10,10 @@ use download_model::*;
 mod mixtral;
 use mixtral::to_instruct_string;
 
-const AGENTHOST_MODEL: &str = "models/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf";
-const AGENTHOST_MODEL_URL: &str = "https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf?download=true";
+//const AGENTHOST_MODEL: &str = "models/mixtral-8x7b-instruct-v0.1.Q4_0.gguf";
+//const AGENTHOST_MODEL_URL: &str = "https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf?download=true";
+const AGENTHOST_MODEL="dolphin-2.5-mixtral-8x7b.Q4_K_M.gguf"
+const AGENTHOST_MODEL_URL="https://huggingface.co/TheBloke/dolphin-2.5-mixtral-8x7b-GGUF/resolve/main/dolphin-2.5-mixtral-8x7b.Q4_K_M.gguf?download=true"
 
 pub static llama_cpp_chat: OnceCell<LlamaCppChat> = OnceCell::new();
 
@@ -48,7 +50,7 @@ impl LlamaCppChat {
      }
 
      pub async fn new_default_model() -> LlamaCppChat {
-         let model_file = env::var("AGENTHOST_MODEL").unwrap_or(AGENTHOST_MODEL.to_string());
+         let model_file = "models/" + env::var("AGENTHOST_MODEL").unwrap_or(AGENTHOST_MODEL.to_string());
          let model_url = env::var("AGENTHOST_MODEL_URL").unwrap_or(AGENTHOST_MODEL_URL.to_string());
 
          download_model_if_not_exists(&model_url, &model_file).await.unwrap();

@@ -8,6 +8,7 @@ mkdir dist
 cp target/release/agenthost dist
 
 cp -r static dist/
+cp -r scripts dist/
 
 mkdir dist/models
 mkdir dist/sessions
