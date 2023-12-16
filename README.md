@@ -53,7 +53,17 @@ Allows anyone to upload/download/rate agents.
 
 ## Task Management
 
+
+### Associating Messages with Tasks
+
 Each message will need to be associated with a session for an existing or new Task. The system needs to handle this, with automatic determination by the LLM in cases where the user does not or cannot specify the task clearly. For example, a WhatsApp client won't necessarily have a convenient way for a user to select a different session/task, such as is typical with web-based chat interfaces.
+
+### Determining Task Completion
+
+The system needs a mechanism to handle long-running tasks. This might involve some kind of supervisor agent or prompt that determines
+whether the task has really been completed. Or it might be sufficient to continue the session as long as more functions are being called,
+or until the agent indicates it has finished.
+
 
 # Front Ends
 
