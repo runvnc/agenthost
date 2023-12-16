@@ -5,7 +5,7 @@ front-ends, as well as plugins and agents (again, some open source, some proprie
 
 ![AgentHost Diagram](agenthostdiagram2.png)
 
-## AgentHost Backend
+# AgentHost Backend
 
 This is the core program running LLM-based chat agents capable of executing functions, running scripts, and accessing data.
 
@@ -23,11 +23,32 @@ This is the core program running LLM-based chat agents capable of executing func
 
 **llama.cpp Integration**: This allows the AgentHost to run on local computers with specific new hardware, enhancing its capabilities.
 
-**Plugins and Agents**: Plugins add new functionalities to the system, while Agents, with different prompts and script configurations, leverage these Plugins.
+## Plugins and Agents / Registries
 
-**Task Management**: Each message is associated with a session for an existing or new Task. The system needs to handle this, with automatic determination by the LLM in cases where the user does not specify the task.
+Plugins add new functionalities to the system, while Agents, with different prompts and script configurations, leverage these Plugins.
 
-## Front Ends
+AgentHost back end has HTTP endpoints for installing plugins, installing agents, removing. 
+
+Installation involves:
+
+- download and uncompress files
+
+- optionally run Rhai install script
+
+### Plugin Registry
+ 
+ Allows anyone to upload/download/rate plugins.
+
+### Agent Registry
+
+Allows anyone to upload/download/rate agents.
+ 
+
+## Task Management
+
+Each message is associated with a session for an existing or new Task. The system needs to handle this, with automatic determination by the LLM in cases where the user does not specify the task.
+
+# Front Ends
 
 Various types of front ends interface with the AgentHost:
 
@@ -39,7 +60,7 @@ Various types of front ends interface with the AgentHost:
 
 Other potential front ends using the HTTP API.
 
-## Waker/Proxy
+# Waker/Proxy
 
 This is responsible for: 
 
