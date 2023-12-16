@@ -21,7 +21,7 @@ This is the core program running LLM-based chat agents capable of executing func
   C++ libraries like llama.cpp, stablediffusion.cpp, bark.cpp (text-to-speech) etc.
   (until Rust libraries are ready)
 
-- going with the flow: trend is for many languages to try to be more likeRust 
+- going with the flow: trend is for many languages to try to be more like Rust 
   (e.g. increasing use of types in Python, use of TS and disdain for JS)
 
 
