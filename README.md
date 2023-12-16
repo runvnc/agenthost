@@ -12,16 +12,23 @@ This is the core program running LLM-based chat agents capable of executing func
 **Rust**: Building the core with Rust because:
 
 - very efficient
+
 - Rhai scripting integrated
+
 - memory safe
+
 - can integrate ML libraries in Rust like candle or 
   C++ libraries like llama.cpp, stablediffusion.cpp, bark.cpp (text-to-speech) etc.
   (until Rust libraries are ready)
-- trend is for all languages to try to be Rust
+
+- going with the flow: trend is for many languages to try to be more likeRust 
+  (e.g. increasing use of types in Python, use of TS and disdain for JS)
+
 
 **HTTP API**
 
-**llama.cpp Integration**: This allows the AgentHost to run on local computers with specific new hardware, enhancing its capabilities.
+**llama.cpp Integration**: This allows the AgentHost to run Mixtral/llava quantized on local computers if they have good acceleration 
+(such as new Macs, 4090, etc.).
 
 ## Plugins and Agents / Registries
 
