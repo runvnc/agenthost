@@ -3,7 +3,7 @@
 The goal is to create a fully open source agent hosting platform. This will support custom (open source or proprietary) 
 front-ends, as well as plugins and agents (again, some open source, some proprietary).
 
-[!AgentHost Diagram](agenthostdiagram2.png)
+![AgentHost Diagram](agenthostdiagram2.png)
 
 ## AgentHost Backend
 
