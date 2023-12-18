@@ -12,10 +12,12 @@ use axum::{
 use http::header;
 use hyper::http;
 use std::collections::HashMap;
+use std::env;
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
     Arc, Mutex,
 };
+use tracing::{error, info, instrument};
 
 use serde_urlencoded::*;
 
@@ -32,6 +34,7 @@ use crate::agent::Agent;
 use crate::agentmgr;
 use crate::agentmgr::{agent_mgr, init, AgentManager};
 use crate::jwt_util::{create_token, verify_token, Claims};
+use crate::llamacppchat::init_llama_cpp_chat;
 use crate::s;
 use flume::Receiver;
 use futures::{
@@ -153,6 +156,7 @@ async fn chat_events(
 pub async fn server() -> Result<(), hyper::Error> {
     pretty_env_logger::init();
 
+    init_llama_cpp_chat().await;
     agentmgr::init();
 
     let connected_users = ConnectedUsers {
@@ -178,11 +182,13 @@ pub async fn server() -> Result<(), hyper::Error> {
             },
         ));
 
-    println!("Listening at https://hostdev.padhub.xyz/");
-
-    axum::Server::bind(&"127.0.0.1:3132".parse().unwrap())
+    let port = env::var("AGENTHOST_PORT").unwrap_or(s!("3132"));
+    let host = env::var("AGENTHOST_HOST").unwrap_or(s!("[::0]"));
+    println!("Listening at {}:{}", host, port);
+    let host = axum::Server::bind(&format!("{}:{}", host, port).parse().unwrap())
         .serve(app.into_make_service_with_connect_info::<std::net::SocketAddr>())
-        .await
+        .await?;
+    Ok(())
 }
 
 async fn index_handler() -> Result<Html<String>, StatusCode> {
@@ -318,12 +324,17 @@ async fn auth_middleware(mut req: Request<Body>, next: Next<Body>) -> impl IntoR
     Ok(Response::from_parts(parts, body)) */
 }
 
-// https://github.com/hyperium/hyper/issues/707 detect client disconnected
-
 async fn logging_middleware(req: Request<Body>, next: Next<Body>) -> impl IntoResponse {
     println!("Request URI: {}", req.uri());
     println!("Headers: {:?}", req.headers());
-    next.run(req).await
+    let response = next.run(req).await;
+    match response.status() {
+        StatusCode::INTERNAL_SERVER_ERROR => {
+            error!("Internal Server Error occurred: {:?}", response);
+        }
+        _ => info!("Request processed with status: {}", response.status()),
+    }
+    response
 
     /*
     let (parts, body) = response.into_parts();

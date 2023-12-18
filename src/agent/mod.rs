@@ -8,6 +8,8 @@ use crate::scripts::{call_function, get_actions, goto_stage, Handler};
 
 use crate::scripts;
 
+use crate::llamacppchat::llama_cpp_chat;
+
 use crate::openai_chat::{chat_fn, OpenAIChat};
 use chrono::{DateTime, Utc};
 use serde_json::json;
@@ -50,15 +52,14 @@ pub struct Agent {
     functions: Vec<ChatCompletionFunctions>,
     session_id: usize,
     log: ChatLog,
-    model: String,
-    chat: OpenAIChat,
+    //model: String,
     handler: Handler,
     receiver: flume::Receiver<String>,
     reply_sender: flume::Sender<ChatUIMessage>,
 }
 
 impl Agent {
-    pub fn new(
+    pub async fn new(
         username: String,
         session_id: usize,
         script_path: String,
@@ -68,9 +69,9 @@ impl Agent {
         println!("AgentHost 0.1 Startup agent..");
         chatlog::init();
         //let model = s!("gpt-3.5-turbo");
-        let model = s!("gpt-4-1106-preview");
+        //let model = s!("gpt-4-1106-preview");
         let mut log = ChatLog::new(username.clone(), session_id);
-        let chat = OpenAIChat::new(model.clone());
+        //let chat = OpenAIChat::new(model.clone());
         let mut handler = scripts::init(&script_path, session_id, &username)?;
 
         let mut instance = Self {
@@ -78,8 +79,6 @@ impl Agent {
             functions: Vec::<ChatCompletionFunctions>::new(),
             session_id,
             log,
-            model,
-            chat,
             handler,
             receiver,
             reply_sender,
@@ -217,7 +216,6 @@ impl Agent {
         }
     }
 
-
     pub async fn run(&mut self, cancellation_token: CancellationToken) -> Result<()> {
         let mut need_user_input = true;
         while !cancellation_token.is_cancelled() {
@@ -232,17 +230,18 @@ impl Agent {
             }
             self.update_sys_msg();
 
-            let msgs = self.log.to_request_msgs(self.model.as_str())?;
+            let msgs = self.log.to_request_msgs("gpt-4")?; //self.model.as_str())?;
             let token = cancellation_token.child_token();
-            let (text, fn_name, fn_args) = self
-                .chat
-                .send_request(
+            let (text, fn_name, fn_args) = llama_cpp_chat
+                .get()
+                .expect("Could not access llama_cpp_chat")
+                .generate(
                     msgs.clone(),
-                    self.functions.clone(),
+                    //self.functions.clone(),
                     self.reply_sender.clone(),
                     token.clone(),
                 )
-                .await?;
+                .await;
             if fn_name != "" {
                 self.process_fn_call(&fn_name, &fn_args).await?;
                 need_user_input = false;
@@ -264,7 +263,7 @@ impl Agent {
             content: s!(""),
         };
         self.reply_sender.send_async(reply.clone()).await?;
- 
+
         println!("Agent finished running.");
         Ok(())
     }

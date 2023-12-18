@@ -50,7 +50,7 @@ impl OpenAIChat {
         }
     }
 
-    pub async fn send_request(
+    pub async fn generate_text(
         &self,
         messages: Vec<ChatCompletionRequestMessage>,
         functions: Vec<ChatCompletionFunctions>,
