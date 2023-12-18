@@ -1,0 +1,10 @@
+# Town Square
+
+The heart of the village, the town square is always bustling with activity. Villagers go about their daily tasks, children run around playing, and merchants peddle their wares. The cobblestone square is surrounded by various establishments, including Bob's General Store, a lively tavern, and a blacksmith's forge. In the center of the square stands a large, ancient oak tree, providing shade and a meeting spot for the villagers.
+
+## Exits
+
+- Bob's General Store (general_store)
+- Forest (forest)
+- Tavern (tavern)
+- Blacksmith (blacksmith)

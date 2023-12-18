@@ -1,0 +1,7 @@
+# Blacksmith
+
+The blacksmith's forge is a place of hard work and craftsmanship. The air is filled with the sound of hammering and the smell of hot metal. The blacksmith, a muscular man with a serious expression, is often seen working on a piece of armor or a new sword. Shelves lined with various weapons and armor pieces can be seen inside the shop.
+
+## Exits
+
+- Town Square (town_square)

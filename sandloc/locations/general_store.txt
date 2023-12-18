@@ -1,0 +1,12 @@
+This is Bob's General Store, a quaint little shop filled with all sorts of odds and ends. The wooden shelves are lined with various goods, from rope and rations to potions and scrolls. The air is filled with the scent of old parchment and dried herbs. Bob, the owner, is a friendly middle-aged man with a twinkle in his eye.
+
+## Default contents:
+
+- Rope (5 gp)
+- Rations (5 gp)
+- Healing Potion (50 gp)
+- Scroll of Fireball (200 gp)
+
+## Exits
+
+- Town Square (town_square)
