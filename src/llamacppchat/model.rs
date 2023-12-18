@@ -1,21 +1,14 @@
 use async_openai::types::{ChatCompletionRequestMessage};
 
-trait Model {
-    fn type(&self) -> &str {
-      self.type_name
-    }
+struct ModelInfo {
+    type_name: &str,
+    model_file: &str,
+    url: &str,
+    max_context: 2048
+}
 
-    fn file_path(&self) -> &str {
-        "models/" + self.model_file
-    }
+pub trait Model {
+    fn model_info(&self) -> &ModelInfo;
 
-    fn download_url(&self) -> &str {
-        self.url
-    }
-
-    fn context_len(&self) -> &str {
-        self.max_context
-    }
-
-    to_instruct_string(msgs: &Vec<ChatCompletionRequestMessage>) -> String
+    fn to_instruct_string(msgs: &Vec<ChatCompletionRequestMessage>) -> String;
 }

@@ -1,15 +1,23 @@
 use async_openai::types::{ChatCompletionRequestMessage};
 use crate::chatlog::serialize::{AnyChatMessage, to_anychatmessage};
-mod model;
-
-use model::Model;
+use crate::llamacppchat::model::Model;
+use super::model::Model;
 
 #[derive(Default)]
-struct MixtralModel {
-  type_name: "Mixtral",
-  model_file: "mixtral-8x7b-instruct-v0.1.Q4_0.gguf",
-  url: "https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf?download=true",
-  max_context: 32000
+pub struct MixtralModel {
+    model_info: ModelInfo
+}
+
+impl MixtralModel {
+    pub fn new() {
+        let model_info = ModelInfo {
+              type_name: "Mixtral",
+              model_file: "mixtral-8x7b-instruct-v0.1.Q4_0.gguf",
+              url: "https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf?download=true",
+              max_context: 32000
+        }
+        Self { model_info }
+    }
 }
 
 //"dolphin-2.5-mixtral-8x7b.Q4_K_M.gguf";

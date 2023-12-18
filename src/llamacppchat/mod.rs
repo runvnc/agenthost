@@ -7,21 +7,20 @@ use once_cell::sync::OnceCell;
 pub mod download_model;
 use crate::{s, api::chatuimessage::ChatUIMessage};
 use download_model::*;
-mod model;
+pub mod model;
 use model::*;
-mod orca;
-mod mixtral;
+pub mod orca;
+pub mod mixtral;
 use orca::*;
 use mixtral::*;
 
-const AGENTHOST_DEFAULT_MODEL = "orca";
+const AGENTHOST_DEFAULT_MODEL: &str = "orca";
 
 pub static llama_cpp_chat: OnceCell<LlamaCppChat> = OnceCell::new();
 
-#[derive(Debug)]
 pub struct LlamaCppChat {
     model_options: LlamaOptions,
-    model_file: String,
+    model: impl Model,
     llama: Arc<Mutex<LlamaCppSimple>>,
 }
 
@@ -36,10 +35,10 @@ pub async fn init_llama_cpp_chat() {
 
 impl LlamaCppChat {
     pub async fn new(model_name: String) -> LlamaCppChat {
-        let model = match model_name: {
-            "orca" | _ => Orca::default()
-            "mixtral" => Mixtral::default()
-        }
+        let model = match model_name {
+            "orca" | _ => OrcaModel::default(),
+            "mixtral" => MixtralModel::default()
+        };
         download_model_if_not_exists(&model.download_url(), &model.file_path()).await.unwrap();
 
         let model_options = LlamaOptions {
@@ -52,7 +51,7 @@ impl LlamaCppChat {
 
          LlamaCppChat {
              model_options,
-             model_file,
+             model,
              llama
          }
      }
@@ -73,7 +72,7 @@ impl LlamaCppChat {
 
         let llama = self.llama.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         llama.generate_text(
-            to_instruct_string(&messages),
+            self.model.to_instruct_string(&messages),
             512,
             Box::new(move |token| {
                 another_sender.lock().unwrap().send(ChatUIMessage::Fragment(format!("*{}*", token))).unwrap();
