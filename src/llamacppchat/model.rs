@@ -1,6 +1,6 @@
 use async_openai::types::ChatCompletionRequestMessage;
 
-#[derive(Default, Debug)]
+#[derive(Clone, Default, Debug)]
 pub struct ModelInfo {
     pub type_name: String,
     pub model_file: String,

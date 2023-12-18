@@ -57,6 +57,6 @@ impl Model for MixtralModel {
     }
 
     fn model_info(&self) -> ModelInfo {
-        self.info
+        self.info.clone()
     }
 }

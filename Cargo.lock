@@ -1221,7 +1221,7 @@ checksum = "c4cd1a83af159aa67994778be9070f0ae1bd732942279cabb14f86f986a21456"
 [[package]]
 name = "llama_cpp_rs"
 version = "0.3.0"
-source = "git+https://github.com/runvnc/rust-llama.cpp#d2668fd5f4d47211dee6a18986f741160a14f0d9"
+source = "git+https://github.com/runvnc/rust-llama.cpp#a4f0f3c7b5d9c95bf4685b16b2441da1588227ae"
 dependencies = [
  "bindgen",
  "cc",

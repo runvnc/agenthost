@@ -41,6 +41,6 @@ impl Model for OrcaModel {
     }
 
     fn model_info(&self) -> ModelInfo {
-        self.info
+        self.info.clone()
     }
 }

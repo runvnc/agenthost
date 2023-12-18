@@ -22,11 +22,22 @@ const AGENTHOST_DEFAULT_MODEL: &str = "orca";
 
 pub static llama_cpp_chat: OnceCell<LlamaCppChat> = OnceCell::new();
 
-#[derive(Debug)]
+use std::fmt;
+
 pub struct LlamaCppChat {
     model_options: LlamaOptions,
     model: Box<dyn Model>,
     llama: Arc<Mutex<LlamaCppSimple>>,
+}
+
+impl fmt::Debug for LlamaCppChat {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("LlamaCppChat")
+            .field("model_options", &self.model_options)
+            // We skip printing the model field because it's a trait object.
+            .field("llama", &self.llama)
+            .finish()
+    }
 }
 
 pub async fn init_llama_cpp_chat() {
@@ -58,11 +69,12 @@ impl LlamaCppChat {
             ..Default::default()
         };
 
-        let llama_simple = LlamaCppSimple::new(&model_options).unwrap();
+        let model_options_clone = model_options.clone();
+        let llama_simple = LlamaCppSimple::new(model_options_clone).unwrap();
         let llama = Arc::new(Mutex::new(llama_simple));
 
         LlamaCppChat {
-            model_options,
+            model_options, // This now works because we cloned it before the move
             model,
             llama
         }
