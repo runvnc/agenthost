@@ -7,3 +7,5 @@ models
 ssh*.json
 dist
 *.gguf
+sessions
+data
