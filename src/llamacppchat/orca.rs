@@ -1,8 +1,9 @@
 use super::model::{Model, ModelInfo};
 use crate::chatlog::serialize::{to_anychatmessage, AnyChatMessage};
 use async_openai::types::ChatCompletionRequestMessage;
+use crate::s;
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct OrcaModel {
     info: ModelInfo,
 }

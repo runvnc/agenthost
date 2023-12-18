@@ -4,7 +4,7 @@ use async_openai::types::ChatCompletionRequestMessage;
 
 use crate::s;
 
-#[derive(Default)]
+#[derive(Debug,Default)]
 pub struct MixtralModel {
     info: ModelInfo,
 }

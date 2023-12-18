@@ -22,6 +22,7 @@ const AGENTHOST_DEFAULT_MODEL: &str = "orca";
 
 pub static llama_cpp_chat: OnceCell<LlamaCppChat> = OnceCell::new();
 
+#[derive(Debug)]
 pub struct LlamaCppChat {
     model_options: LlamaOptions,
     model: Box<dyn Model>,
@@ -45,8 +46,8 @@ impl LlamaCppChat {
             _ => Box::new(OrcaModel::default()),
         };
         download_model_if_not_exists(
-            &model.model_info().download_url(),
-            &model.model_info().model_file(),
+            &model.model_info().url,
+            &model.model_info().model_file,
         )
         .await
         .unwrap();
@@ -57,12 +58,13 @@ impl LlamaCppChat {
             ..Default::default()
         };
 
-        let llama = Arc::new(Mutex::new(LlamaCppSimple::new(model_options)));
+        let llama_simple = LlamaCppSimple::new(&model_options).unwrap();
+        let llama = Arc::new(Mutex::new(llama_simple));
 
         LlamaCppChat {
             model_options,
             model,
-            llama,
+            llama
         }
     }
 
@@ -86,7 +88,7 @@ impl LlamaCppChat {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         llama.generate_text(
-            self.model.to_instruct_string(&messages),
+            &self.model.to_instruct_string(&messages),
             512,
             Box::new(move |tokenString| {
                 another_sender

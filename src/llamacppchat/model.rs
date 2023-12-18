@@ -1,11 +1,11 @@
 use async_openai::types::ChatCompletionRequestMessage;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ModelInfo {
-    type_name: String,
-    model_file: String,
-    url: String,
-    max_context: i32,
+    pub type_name: String,
+    pub model_file: String,
+    pub url: String,
+    pub max_context: i32,
 }
 
 pub trait Model: Send + Sync {
