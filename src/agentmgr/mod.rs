@@ -30,7 +30,7 @@ pub struct SessionCache {
 
 #[derive(Debug, Clone)]
 pub struct AgentManager {
-    user_cache: Arc<Mutex<HashMap<String, SessionCache>>>
+    user_cache: Arc<Mutex<HashMap<String, SessionCache>>>,
 }
 
 pub fn init() {
@@ -45,7 +45,7 @@ pub fn init() {
 impl AgentManager {
     pub fn new() -> Self {
         AgentManager {
-            user_cache: Arc::new(Mutex::new(HashMap::new()))
+            user_cache: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -112,9 +112,15 @@ impl AgentManager {
         let cancellation_token_clone_for_return = cancellation_token_clone.clone(); // Clone token for return
         thread::spawn(move || {
             let future = async move {
-                let mut agent =
-                    Agent::new(username_clone, session_id, script_path, receiver, reply_sender)
-                        .await.expect("no agent");
+                let mut agent = Agent::new(
+                    username_clone,
+                    session_id,
+                    script_path,
+                    receiver,
+                    reply_sender,
+                )
+                .await
+                .expect("no agent");
                 agent.run(cancellation_token_clone).await;
             };
             let rt = Runtime::new().unwrap();

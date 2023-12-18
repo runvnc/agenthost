@@ -15,10 +15,10 @@ mod chatlog;
 
 //mod errors;
 mod jwt_util;
+mod llamacppchat;
 mod openai_chat;
 mod scripts;
 mod shorthands;
-mod llamacppchat;
 
 use api::server;
 
@@ -31,4 +31,3 @@ async fn main() -> Result<()> {
     api::server().await;
     Ok(())
 }
-

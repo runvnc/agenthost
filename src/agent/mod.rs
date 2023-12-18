@@ -8,7 +8,7 @@ use crate::scripts::{call_function, get_actions, goto_stage, Handler};
 
 use crate::scripts;
 
-use crate::llamacppchat::{llama_cpp_chat};
+use crate::llamacppchat::llama_cpp_chat;
 
 use crate::openai_chat::{chat_fn, OpenAIChat};
 use chrono::{DateTime, Utc};
@@ -216,7 +216,6 @@ impl Agent {
         }
     }
 
-
     pub async fn run(&mut self, cancellation_token: CancellationToken) -> Result<()> {
         let mut need_user_input = true;
         while !cancellation_token.is_cancelled() {
@@ -233,8 +232,8 @@ impl Agent {
 
             let msgs = self.log.to_request_msgs("gpt-4")?; //self.model.as_str())?;
             let token = cancellation_token.child_token();
-            let (text, fn_name, fn_args) = 
-                llama_cpp_chat.get()
+            let (text, fn_name, fn_args) = llama_cpp_chat
+                .get()
                 .expect("Could not access llama_cpp_chat")
                 .generate(
                     msgs.clone(),
@@ -264,7 +263,7 @@ impl Agent {
             content: s!(""),
         };
         self.reply_sender.send_async(reply.clone()).await?;
- 
+
         println!("Agent finished running.");
         Ok(())
     }

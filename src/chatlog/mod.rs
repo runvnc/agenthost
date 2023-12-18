@@ -1,8 +1,8 @@
 use anyhow::Result;
 use once_cell::sync::OnceCell;
-use termion::style;
-use std::collections::HashMap;
 use serde_json::Value;
+use std::collections::HashMap;
+use termion::style;
 
 use crate::s;
 
@@ -48,10 +48,10 @@ impl ChatMessage {
     }
 }
 
+use crate::chatlog::serialize::{deserialize_message, serialize_message};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
-use crate::chatlog::serialize::{serialize_message, deserialize_message};
 
 #[derive(Serialize, Deserialize)]
 pub struct ChatLog {
@@ -110,18 +110,26 @@ impl ChatLog {
         if Path::new(&path).exists() {
             println!("Found json file, loading chat log from {}", path);
             let data = fs::read_to_string(&path).unwrap();
-            let messages: Vec<ChatMessage> = serde_json::from_str::<Vec<HashMap<String, String>>>(&data)
-                .unwrap()
-                .into_iter()
-                .map(|serialized_msg| {
-                    println!("A");
-                    let message = deserialize_message(serialized_msg.clone().into_iter().map(|(k, v)| (k, Value::String(v))).collect()).unwrap();
-                    println!("B");
-                    let length = serialized_msg.len(); // This is a simplification, actual token length should be calculated
-                    println!("C");
-                    ChatMessage::new_with_len(message, length)
-                })
-                .collect();
+            let messages: Vec<ChatMessage> =
+                serde_json::from_str::<Vec<HashMap<String, String>>>(&data)
+                    .unwrap()
+                    .into_iter()
+                    .map(|serialized_msg| {
+                        println!("A");
+                        let message = deserialize_message(
+                            serialized_msg
+                                .clone()
+                                .into_iter()
+                                .map(|(k, v)| (k, Value::String(v)))
+                                .collect(),
+                        )
+                        .unwrap();
+                        println!("B");
+                        let length = serialized_msg.len(); // This is a simplification, actual token length should be calculated
+                        println!("C");
+                        ChatMessage::new_with_len(message, length)
+                    })
+                    .collect();
             Self {
                 username,
                 session_id,
@@ -159,14 +167,16 @@ impl ChatLog {
         let mut outjson = s!("[\n");
         let mut i: u32 = 0;
         for msg in &self.messages {
-            if i > 0 { outjson.push_str(",\n") }
+            if i > 0 {
+                outjson.push_str(",\n")
+            }
             let json = serialize_message(&msg.message);
             outjson.push_str(&json);
             i += 1;
         }
         outjson.push_str("]");
         fs::write(&path, outjson).unwrap();
-        
+
         println!("Saved chat log to {}", path);
     }
 
@@ -203,4 +213,3 @@ pub fn init() {
         BPE.set(cl100k_base().unwrap()).unwrap();
     }
 }
-

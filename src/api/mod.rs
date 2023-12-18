@@ -12,12 +12,12 @@ use axum::{
 use http::header;
 use hyper::http;
 use std::collections::HashMap;
+use std::env;
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
     Arc, Mutex,
 };
-use std::env;
-use tracing::{error, instrument, info};
+use tracing::{error, info, instrument};
 
 use serde_urlencoded::*;
 
@@ -30,11 +30,11 @@ use flume::*;
 use rhai::Engine;
 use tokio::runtime::Runtime;
 
-use crate::llamacppchat::{init_llama_cpp_chat};
 use crate::agent::Agent;
 use crate::agentmgr;
 use crate::agentmgr::{agent_mgr, init, AgentManager};
 use crate::jwt_util::{create_token, verify_token, Claims};
+use crate::llamacppchat::init_llama_cpp_chat;
 use crate::s;
 use flume::Receiver;
 use futures::{
@@ -185,8 +185,7 @@ pub async fn server() -> Result<(), hyper::Error> {
     let port = env::var("AGENTHOST_PORT").unwrap_or(s!("3132"));
     let host = env::var("AGENTHOST_HOST").unwrap_or(s!("[::0]"));
     println!("Listening at {}:{}", host, port);
-    let host =
-    axum::Server::bind( &format!("{}:{}",host, port).parse().unwrap() )
+    let host = axum::Server::bind(&format!("{}:{}", host, port).parse().unwrap())
         .serve(app.into_make_service_with_connect_info::<std::net::SocketAddr>())
         .await?;
     Ok(())
@@ -325,14 +324,13 @@ async fn auth_middleware(mut req: Request<Body>, next: Next<Body>) -> impl IntoR
     Ok(Response::from_parts(parts, body)) */
 }
 
-
 async fn logging_middleware(req: Request<Body>, next: Next<Body>) -> impl IntoResponse {
     println!("Request URI: {}", req.uri());
     println!("Headers: {:?}", req.headers());
     let response = next.run(req).await;
     match response.status() {
         StatusCode::INTERNAL_SERVER_ERROR => {
-            error!("Internal Server Error occurred: {:?}", response);            
+            error!("Internal Server Error occurred: {:?}", response);
         }
         _ => info!("Request processed with status: {}", response.status()),
     }

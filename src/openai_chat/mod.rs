@@ -42,8 +42,6 @@ pub fn chat_fn(
         .build()?)
 }
 
-
-
 impl OpenAIChat {
     pub fn new(model: String) -> Self {
         Self {

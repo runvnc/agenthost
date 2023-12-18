@@ -1,14 +1,15 @@
-use async_openai::types::{ChatCompletionRequestMessage};
+use async_openai::types::ChatCompletionRequestMessage;
 
-struct ModelInfo {
-    type_name: &str,
-    model_file: &str,
-    url: &str,
-    max_context: 2048
+#[derive(Default)]
+pub struct ModelInfo {
+    type_name: String,
+    model_file: String,
+    url: String,
+    max_context: i32,
 }
 
-pub trait Model {
-    fn model_info(&self) -> &ModelInfo;
+pub trait Model: Send + Sync {
+    fn model_info(&self) -> ModelInfo;
 
-    fn to_instruct_string(msgs: &Vec<ChatCompletionRequestMessage>) -> String;
+    fn to_instruct_string(&self, msgs: &Vec<ChatCompletionRequestMessage>) -> String;
 }
