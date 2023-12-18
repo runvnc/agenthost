@@ -1,0 +1,7 @@
+# Hidden Cave
+
+Tucked away in the depths of the forest is a hidden cave. The entrance is covered by thick foliage, making it easy to miss. Inside, the cave is dark and damp, with the sound of dripping water echoing off the stone walls. It's rumored that the cave may hold hidden treasures or dangerous creatures.
+
+## Exits
+
+- Forest (forest)

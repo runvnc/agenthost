@@ -1,0 +1,8 @@
+# Forest
+
+A dense, verdant forest surrounds the village. The air is fresh and filled with the sounds of chirping birds and rustling leaves. The forest is a source of wood for the village and home to various wildlife. A well-trodden path leads deeper into the forest, where a hidden cave can be found.
+
+## Exits
+
+- Town Square (town_square)
+- Hidden Cave (hidden_cave)

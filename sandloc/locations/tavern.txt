@@ -1,0 +1,11 @@
+# Tavern
+
+The village tavern is a warm, welcoming place filled with the sound of laughter and clinking mugs. The air is thick with the smell of roasting meat and sweet ale. The tavern keeper, a burly woman with a hearty laugh, serves patrons with a smile. A large fireplace crackles in the corner, providing warmth and light.
+
+## Game Notes
+
+Remember that if the player buys food or drink, unless they say otherwise, they will be eating it there and not taking it with them. Therefore you should not add it to their inventory.
+
+## Exits
+
+- Town Square (town_square)
