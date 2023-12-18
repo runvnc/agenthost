@@ -1,4 +1,4 @@
-use llama_cpp_rs::{options::{ModelOptions, PredictOptions}, LLama};
+use llama_cpp_rs::{LlamaCppSimple, LlamaOptions};
 use tokio_util::sync::CancellationToken;
 use std::{env, io::{self, Write}, sync::{Arc, Mutex}};
 use async_openai::types::ChatCompletionRequestMessage;
@@ -7,21 +7,22 @@ use once_cell::sync::OnceCell;
 pub mod download_model;
 use crate::{s, api::chatuimessage::ChatUIMessage};
 use download_model::*;
+mod model;
+use model::*;
+mod orca;
 mod mixtral;
-use mixtral::to_instruct_string;
+use orca::*;
+use mixtral::*;
 
-//const AGENTHOST_MODEL: &str = "models/mixtral-8x7b-instruct-v0.1.Q4_0.gguf";
-//const AGENTHOST_MODEL_URL: &str = "https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf?download=true";
-const AGENTHOST_MODEL="dolphin-2.5-mixtral-8x7b.Q4_K_M.gguf"
-const AGENTHOST_MODEL_URL="https://huggingface.co/TheBloke/dolphin-2.5-mixtral-8x7b-GGUF/resolve/main/dolphin-2.5-mixtral-8x7b.Q4_K_M.gguf?download=true"
+const AGENTHOST_DEFAULT_MODEL = "orca";
 
 pub static llama_cpp_chat: OnceCell<LlamaCppChat> = OnceCell::new();
 
 #[derive(Debug)]
 pub struct LlamaCppChat {
-    model_options: ModelOptions,
+    model_options: LlamaOptions,
     model_file: String,
-    llama: Arc<Mutex<LLama>>,
+    llama: Arc<Mutex<LlamaCppSimple>>,
 }
 
 pub async fn init_llama_cpp_chat() {
@@ -34,13 +35,20 @@ pub async fn init_llama_cpp_chat() {
 }
 
 impl LlamaCppChat {
-    pub async fn new(model_file: String) -> LlamaCppChat {
-         let model_options = ModelOptions {
-             context_size: 16096,
-             n_gpu_layers: 25,
-             ..Default::default()
-         };
-         let llama = Arc::new(Mutex::new(LLama::new(model_file.clone(), &model_options).unwrap()));
+    pub async fn new(model_name: String) -> LlamaCppChat {
+        let model = match model_name: {
+            "orca" | _ => Orca::default()
+            "mixtral" => Mixtral::default()
+        }
+        download_model_if_not_exists(&model.download_url(), &model.file_path()).await.unwrap();
+
+        let model_options = LlamaOptions {
+            model_path: model.file_path().to_string(),
+            context: 2048,
+            ..Default::default()
+        };
+
+        let llama = Arc::new(Mutex::new(LlamaCppSimple::new(model_options))).unwrap();
 
          LlamaCppChat {
              model_options,
@@ -50,12 +58,9 @@ impl LlamaCppChat {
      }
 
      pub async fn new_default_model() -> LlamaCppChat {
-         let model_file = "models/" + env::var("AGENTHOST_MODEL").unwrap_or(AGENTHOST_MODEL.to_string());
-         let model_url = env::var("AGENTHOST_MODEL_URL").unwrap_or(AGENTHOST_MODEL_URL.to_string());
+         let model_name = env::var("AGENTHOST_DEFAULT_MODEL").unwrap_or(AGENTHOST_DEFAULT_MODEL.to_string());
 
-         download_model_if_not_exists(&model_url, &model_file).await.unwrap();
-
-         LlamaCppChat::new(model_file).await
+         LlamaCppChat::new(model_name).await
      }
 
 
@@ -65,25 +70,16 @@ impl LlamaCppChat {
                 token: CancellationToken,
        ) -> (String, String, String) {
         let another_sender = Arc::new(Mutex::new(reply_sender.clone()));
-        let predict_options = PredictOptions {
-            tokens: 0,
-            threads: 10,
-            temperature: 0.0001,
-
-            token_callback: Some(Box::new(move |token| {
-                another_sender.lock().unwrap().send(ChatUIMessage::Fragment(format!("*{}*", token))).unwrap();
-                true
-            })),
-            ..Default::default()
-        };
-        //top_k: 90,
-        //top_p: 0.86,
 
         let llama = self.llama.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        llama.predict(
+        llama.generate_text(
             to_instruct_string(&messages),
-            predict_options,
-        ).unwrap();
+            512,
+            Box::new(move |token| {
+                another_sender.lock().unwrap().send(ChatUIMessage::Fragment(format!("*{}*", token))).unwrap();
+                true
+            }) 
+        );
         (s!("ok"), s!(""), s!(""))
     }
 
