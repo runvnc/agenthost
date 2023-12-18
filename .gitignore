@@ -6,3 +6,4 @@ data
 models
 ssh*.json
 dist
+*.gguf
