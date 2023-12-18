@@ -34,7 +34,6 @@ impl fmt::Debug for LlamaCppChat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("LlamaCppChat")
             .field("model_options", &self.model_options)
-            // We skip printing the model field because it's a trait object.
             .field("llama", &self.llama)
             .finish()
     }
@@ -52,19 +51,21 @@ pub async fn init_llama_cpp_chat() {
 impl LlamaCppChat {
     pub async fn new(model_name: &str) -> LlamaCppChat {
         let model: Box<dyn Model> = match model_name {
-            "orca" => Box::new(OrcaModel::default()),
-            "mixtral" => Box::new(MixtralModel::default()),
-            _ => Box::new(OrcaModel::default()),
+            "orca" => Box::new(OrcaModel::new()),
+            "mixtral" => Box::new(MixtralModel::new()),
+            _ => Box::new(OrcaModel::new()),
         };
+        println!("created model. info: {:?}", model.model_info());
+        let full_model_path = format!("models/{}", &model.model_info().model_file);
         download_model_if_not_exists(
             &model.model_info().url,
-            &model.model_info().model_file,
+            &full_model_path,
         )
         .await
         .unwrap();
 
         let model_options = LlamaOptions {
-            model_path: model.model_info().model_file,
+            model_path: full_model_path,
             context: model.model_info().max_context,
             ..Default::default()
         };
@@ -83,7 +84,7 @@ impl LlamaCppChat {
     pub async fn new_default_model() -> LlamaCppChat {
         let model_name =
             env::var("AGENTHOST_DEFAULT_MODEL").unwrap_or(AGENTHOST_DEFAULT_MODEL.to_string());
-
+        println!("new_default_model(), model_name = {}", model_name);
         LlamaCppChat::new(&model_name).await
     }
 
