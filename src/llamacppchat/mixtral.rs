@@ -5,7 +5,7 @@ use super::model::Model;
 
 #[derive(Default)]
 pub struct MixtralModel {
-    model_info: ModelInfo
+    info: ModelInfo
 }
 
 impl MixtralModel {
@@ -16,7 +16,9 @@ impl MixtralModel {
               url: "https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf?download=true",
               max_context: 32000
         }
-        Self { model_info }
+        MixtralModel { 
+            info
+        }
     }
 }
 
@@ -55,6 +57,10 @@ impl Model for MixtralModel {
         }
         outs.push_str("</s>");
         outs
+    }
+
+    model_info(&self) -> ModelInfo {
+        &self.info
     }
 }
 

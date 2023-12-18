@@ -9,13 +9,13 @@ pub struct OrcaModel {
 
 impl OrcaModel {
     pub fn new() {
-        let model_info = ModelInfo {
+        let info = ModelInfo {
             type_name: "Orca",
             model_file: "orca-2-7b.Q4_0.gguf",
             url: "https://huggingface.co/TheBloke/Orca-2-7B-GGUF/resolve/main/orca-2-7b.Q4_0.gguf?download=true",
             max_context: 2048
         };
-        Self { model_info }
+        OraModel { info }
     }
 }
 
@@ -31,5 +31,9 @@ impl Model for OrcaModel {
             outs.push_str(&io_str);
         }
         outs
+    }
+
+    model_info(&self) -> ModelInfo {
+        &self.info
     }
 }
