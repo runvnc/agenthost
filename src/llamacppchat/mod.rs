@@ -98,6 +98,7 @@ impl LlamaCppChat {
         let another_sender = Arc::new(Mutex::new(reply_sender.clone()));
         let reply_str = String::new();
         let reply_str_clone = Arc::new(Mutex::new(reply_str.clone()));
+        let reply_str_clone_for_closure = Arc::clone(&reply_str_clone);
 
         let llama = self
             .llama
@@ -105,12 +106,12 @@ impl LlamaCppChat {
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         let text = &self.model.to_instruct_string(&messages);
         println!("{}", text);
- 
+
         llama.generate_text(
             &self.model.to_instruct_string(&messages),
             512,
             Box::new(move |tokenString| {
-                reply_str_clone
+                reply_str_clone_for_closure
                     .lock()
                     .unwrap()
                     .push_str(&tokenString);
@@ -124,6 +125,7 @@ impl LlamaCppChat {
                 true
             }),
         );
-        (s!(&reply_str), s!(""), s!(""))
+        let result_str = reply_str_clone.lock().unwrap();
+        (result_str.to_string(), s!(""), s!(""))
     }
 }
