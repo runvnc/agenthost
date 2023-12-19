@@ -37,6 +37,7 @@ impl Model for OrcaModel {
             );
             outs.push_str(&io_str);
         }
+        outs.push_str("<|im_start|>assistant\n");
         outs
     }
 

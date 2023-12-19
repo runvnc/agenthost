@@ -55,6 +55,7 @@ impl LlamaCppChat {
             "mixtral" => Box::new(MixtralModel::new()),
             _ => Box::new(OrcaModel::new()),
         };
+        println!("---------------------------------------------------------------------------\n");
         println!("created model. info: {:?}", model.model_info());
         let full_model_path = format!("models/{}", &model.model_info().model_file);
         download_model_if_not_exists(
@@ -95,23 +96,34 @@ impl LlamaCppChat {
         token: CancellationToken,
     ) -> (String, String, String) {
         let another_sender = Arc::new(Mutex::new(reply_sender.clone()));
+        let reply_str = String::new();
+        let reply_str_clone = Arc::new(Mutex::new(reply_str.clone()));
 
         let llama = self
             .llama
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let text = &self.model.to_instruct_string(&messages);
+        println!("{}", text);
+ 
         llama.generate_text(
             &self.model.to_instruct_string(&messages),
             512,
             Box::new(move |tokenString| {
+                reply_str_clone
+                    .lock()
+                    .unwrap()
+                    .push_str(&tokenString);
+
                 another_sender
                     .lock()
                     .unwrap()
                     .send(ChatUIMessage::Fragment(format!("*{}*", tokenString)))
                     .unwrap();
+
                 true
             }),
         );
-        (s!("ok"), s!(""), s!(""))
+        (s!(&reply_str), s!(""), s!(""))
     }
 }
