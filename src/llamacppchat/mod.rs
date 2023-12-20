@@ -19,7 +19,7 @@ use mixtral::*;
 use orca::*;
 
 mod extract_code;
-use extract_code::*'
+use extract_code::*;
 
 const AGENTHOST_DEFAULT_MODEL: &str = "orca";
 
@@ -117,10 +117,10 @@ impl LlamaCppChat {
             &self.model.to_instruct_string(&messages),
             512,
             Box::new(move |tokenString| {
-                reply_str_clone_for_closure
+                let reply = reply_str_clone_for_closure
                     .lock()
-                    .unwrap()
-                    .push_str(&tokenString);
+                    .unwrap();
+                reply.push_str(&tokenString);
 
                 another_sender
                     .lock()
@@ -128,16 +128,15 @@ impl LlamaCppChat {
                     .send(ChatUIMessage::Fragment(format!("*{}*", tokenString)))
                     .unwrap();
 
-                // `HOST rollDice(numSides=4, count=2); `
-                check_for_code(reply_str_clone.clone())               
+                check_for_code(&reply.clone())
             }),
         );
         let result_str = reply_str_clone.lock().unwrap();
-        let code = extract_code(result_str);
-        if Some(code) {
-            (result_str.to_string(), s!("eval"), code)
+        let code = extract_code(&result_str.to_string()).unwrap_or("");
+        if code != "" {
+            (result_str.to_string(), s!("eval"), s!(code))
         } else {
-            (result_str.to_string(), s!(""), s!("")
+            (result_str.to_string(), s!(""), s!(""))
         }
     }
 }
