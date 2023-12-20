@@ -18,6 +18,9 @@ pub mod orca;
 use mixtral::*;
 use orca::*;
 
+mod extract_code;
+use extract_code::*'
+
 const AGENTHOST_DEFAULT_MODEL: &str = "orca";
 
 pub static llama_cpp_chat: OnceCell<LlamaCppChat> = OnceCell::new();
@@ -76,7 +79,7 @@ impl LlamaCppChat {
         let llama = Arc::new(Mutex::new(llama_simple));
 
         LlamaCppChat {
-            model_options, // This now works because we cloned it before the move
+            model_options,
             model,
             llama
         }
@@ -95,8 +98,10 @@ impl LlamaCppChat {
         reply_sender: flume::Sender<ChatUIMessage>,
         token: CancellationToken,
     ) -> (String, String, String) {
+
         let another_sender = Arc::new(Mutex::new(reply_sender.clone()));
         let reply_str = String::new();
+
         let reply_str_clone = Arc::new(Mutex::new(reply_str.clone()));
         let reply_str_clone_for_closure = Arc::clone(&reply_str_clone);
 
@@ -104,6 +109,7 @@ impl LlamaCppChat {
             .llama
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
+
         let text = &self.model.to_instruct_string(&messages);
         println!("{}", text);
 
@@ -122,10 +128,16 @@ impl LlamaCppChat {
                     .send(ChatUIMessage::Fragment(format!("*{}*", tokenString)))
                     .unwrap();
 
-                true
+                // `HOST rollDice(numSides=4, count=2); `
+                check_for_code(reply_str_clone.clone())               
             }),
         );
         let result_str = reply_str_clone.lock().unwrap();
-        (result_str.to_string(), s!(""), s!(""))
+        let code = extract_code(result_str);
+        if Some(code) {
+            (result_str.to_string(), s!("eval"), code)
+        } else {
+            (result_str.to_string(), s!(""), s!("")
+        }
     }
 }
