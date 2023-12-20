@@ -43,3 +43,6 @@ llama_cpp_rs = { git = "https://github.com/runvnc/rust-llama.cpp", features = [ 
 reqwest = "0.11.22"
 tracing = "0.1.40"
 
+
+[profile.release]
+lto = true
