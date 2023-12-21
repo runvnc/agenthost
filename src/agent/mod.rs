@@ -122,8 +122,8 @@ impl Agent {
     }
 
     pub async fn process_fn_call(&mut self, fn_name: &str, fn_args: &str) -> Result<()> {
-        self.log
-            .add(fn_call_msg(&fn_name.to_string(), &fn_args.to_string())?);
+        //self.log
+        //    .add(fn_call_msg(&fn_name.to_string(), &fn_args.to_string())?);
 
         let output = self.call(fn_name, fn_args)?;
         self.log
@@ -244,6 +244,7 @@ impl Agent {
                 .await;
             println!("generate result fn: {}({})", fn_name, fn_args);
             if fn_name != "" {
+                self.log.add(agent_msg(&text)?); 
                 println!("Processing function call!");
                 self.process_fn_call(&fn_name, &fn_args).await?;
                 need_user_input = false;
