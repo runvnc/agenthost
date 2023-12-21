@@ -41,4 +41,12 @@ mod tests {
         assert_eq!(extract_code("I will roll the dice now: `HOST rollDice(sides=20, num=4)`  .."), Some("rollDice(sides=20, num=4)"));
         assert_eq!(extract_code("This string does not contain any code."), None);
     }
+
+    #[test]
+    fn test_extract_code_multiline() {
+        let multiline_input = "This is a multiline string\n\
+                               with a code snippet: `HOST 33+156`\n\
+                               in the middle.";
+        assert_eq!(extract_code(multiline_input), Some("33+156"));
+    }
 }
