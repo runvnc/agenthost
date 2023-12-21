@@ -112,14 +112,14 @@ impl LlamaCppChat {
 
         let last_msg = messages[messages.len() - 1..].to_vec();
 
-        //let text = &self.model.to_instruct_string(&messages);
-        let text = &self.model.to_instruct_string(&last_msg);
+        let text = &self.model.to_instruct_string(&messages);
+        //let text = &self.model.to_instruct_string(&last_msg);
  
         println!("{}", text);
 
         llama.generate_text(
-            //&self.model.to_instruct_string(&messages),
-            &self.model.to_instruct_string(&last_msg),
+            &self.model.to_instruct_string(&messages),
+            //&self.model.to_instruct_string(&last_msg),
             256,
             Box::new(move |tokenString| {
                 let mut reply = reply_str_clone_for_closure
