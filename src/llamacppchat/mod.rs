@@ -139,13 +139,11 @@ impl LlamaCppChat {
         let result_str = reply_str_clone.lock().unwrap();
         let result_str_ = &result_str.to_string(); 
         let code_ = extract_code(result_str_);
-        match code_ {
-            Some(code) => println!("Code extracted: [ {} ]", code),
-            None => println!("Code extracted: [ None ]"),
-        }
+        let code = match code_ {
+            Some(code) => code,
+            None => ""
+        };
 
-        let code = code_.unwrap();
-        println!("Code extracted: [ {} ]", code);
         if code != "" {
             (result_str.to_string(), s!("eval"), s!(code))
         } else {
