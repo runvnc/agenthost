@@ -4,7 +4,7 @@ use anyhow::{anyhow, Context, Result};
 use crate::chatlog;
 use crate::chatlog::{agent_msg, fn_call_msg, fn_result_msg, sys_msg, user_msg, ChatLog};
 
-use crate::scripts::{call_function, get_actions, goto_stage, Handler};
+use crate::scripts::{call_function, get_actions, eval_expr, goto_stage, Handler};
 
 use crate::scripts;
 
@@ -121,7 +121,35 @@ impl Agent {
         call_function(&mut self.handler, fn_name, args_json)
     }
 
+    pub async fn eval_rhai(&mut self, expr: &str) -> Result<()> {
+        let output = eval_expr(&mut self.handler, expr)?;
+        self.log
+            .add(fn_result_msg(&s!("eval"), &output.to_string())?);
+        println!("Trying to send expr call back");
+        self.reply_sender
+            .send_async(ChatUIMessage::FunctionCall {
+                name: s!("result"),
+                params: s!("="),
+                result: output,
+            })
+            .await?;
+        println!("Eval expr: ({})", expr);
+
+        let next_step = self.call_ret_string("evalExitStage", "{}")?;
+        if next_step.contains("Function not found") {
+        } else {
+            if next_step != "" && next_step != "()" {
+                self.next_stage(&next_step).await?;
+            }
+        };
+
+        Ok(())
+    }
+
     pub async fn process_fn_call(&mut self, fn_name: &str, fn_args: &str) -> Result<()> {
+        if fn_name == "eval" {
+            return self.eval_rhai(fn_args).await;
+        }
         //self.log
         //    .add(fn_call_msg(&fn_name.to_string(), &fn_args.to_string())?);
 

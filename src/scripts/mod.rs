@@ -243,6 +243,25 @@ pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) -> Resu
     Ok(output)
 }
 
+pub fn eval_expr(handler: &mut Handler, expr: &str) -> Result<String> {
+    let engine = &handler.engine;
+    let scope = &mut handler.scope; 
+    let result = engine.eval_with_scope::<i64>(scope, expr);
+    let output = match result {
+        Ok(result) => {
+            save_states(handler)?;
+            format!("{:?}", result)
+        }
+        Err(err) => {
+            eprint_error(&handler.script, *err);
+            "Error".to_string()
+        }
+    };
+ 
+    Ok( output )
+}
+ 
+
 fn sandboxed_path(str_path: &str) -> Result<PathBuf, Box<EvalAltResult>> {
     let root_path = PathBuf::from("sandbox").canonicalize().unwrap();
     let mut path = PathBuf::from(str_path);

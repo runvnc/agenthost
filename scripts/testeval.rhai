@@ -20,4 +20,6 @@ fn runCode(args) {
     return eval(args.script);
 }
 
+init()
+
 
