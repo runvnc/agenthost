@@ -74,10 +74,17 @@ async fn user_input(
         println!("************ READ MSG: {} ****************", msg);
     }
 
+    let mut script = s!("scripts/basic.rhai");
+
+    if let Some(script_) = params.get("agent") {
+        script = format!("scripts/{}.rhai", script_.clone());
+        println!("************ READ MSG: {} ****************", msg);
+    }
+
     let (sender, reply_receiver, cancellation_token) = agent_mgr
         .get()
         .expect("Could not access Agent Manager.")
-        .get_or_create_agent(claims.username.clone(), session_id, s!("scripts/dm.rhai"))
+        .get_or_create_agent(claims.username.clone(), session_id, script)
         .await;
 
     sender.send_async(msg).await.unwrap();

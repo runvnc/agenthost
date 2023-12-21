@@ -110,14 +110,19 @@ impl LlamaCppChat {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
 
-        let text = &self.model.to_instruct_string(&messages);
+        let last_msg = messages[messages.len() - 1..].to_vec();
+
+        //let text = &self.model.to_instruct_string(&messages);
+        let text = &self.model.to_instruct_string(&last_msg);
+ 
         println!("{}", text);
 
         llama.generate_text(
-            &self.model.to_instruct_string(&messages),
-            512,
+            //&self.model.to_instruct_string(&messages),
+            &self.model.to_instruct_string(&last_msg),
+            256,
             Box::new(move |tokenString| {
-                let reply = reply_str_clone_for_closure
+                let mut reply = reply_str_clone_for_closure
                     .lock()
                     .unwrap();
                 reply.push_str(&tokenString);
@@ -128,11 +133,14 @@ impl LlamaCppChat {
                     .send(ChatUIMessage::Fragment(format!("*{}*", tokenString)))
                     .unwrap();
 
-                check_for_code(&reply.clone())
+                !check_for_code(&reply.clone())
             }),
         );
         let result_str = reply_str_clone.lock().unwrap();
-        let code = extract_code(&result_str.to_string()).unwrap_or("");
+        let result_str_ = &result_str.to_string(); 
+        let code_ = extract_code(result_str_);
+        let code = code_.unwrap_or("");
+        println!("Code extracted: [ {} ]", code);
         if code != "" {
             (result_str.to_string(), s!("eval"), s!(code))
         } else {
