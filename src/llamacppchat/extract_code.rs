@@ -1,5 +1,13 @@
 use regex::Regex;
 
+// Example: 
+//
+//   Here we calculate the sum: `HOST 33+156` ...
+//
+// Example:
+//
+//   I will roll the dice now: `HOST rollDice(sides=20, num=4)`  ..
+
 pub fn check_for_code(s: &str) -> bool {
     let re = Regex::new(r"`HOST .*; `").unwrap();
     let found = re.is_match(s);
