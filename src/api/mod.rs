@@ -78,7 +78,7 @@ async fn user_input(
 
     if let Some(script_) = params.get("agent") {
         script = format!("scripts/{}.rhai", script_.clone());
-        println!("************ READ MSG: {} ****************", msg);
+        println!("************ READ AGENT: {} ****************", script);
     }
 
     let (sender, reply_receiver, cancellation_token) = agent_mgr
