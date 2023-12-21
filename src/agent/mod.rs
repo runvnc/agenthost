@@ -242,7 +242,9 @@ impl Agent {
                     token.clone(),
                 )
                 .await;
+            println!("generate result fn: {}({})", fn_name, fn_args);
             if fn_name != "" {
+                println!("Processing function call!");
                 self.process_fn_call(&fn_name, &fn_args).await?;
                 need_user_input = false;
             } else {

@@ -76,8 +76,20 @@ pub fn to_anychatmessage(message: &ChatCompletionRequestMessage) -> AnyChatMessa
                 role: s!(role),
                 content: s!(content),
             }
-        }
-        ChatCompletionRequestMessage::Tool(_) | ChatCompletionRequestMessage::Function(_) => {
+        },
+        ChatCompletionRequestMessage::Function(fn_msg) => {
+            let fn_name = fn_msg.name.clone();
+            let content = match &fn_msg.content {
+                Some(result) => result.clone(),
+                None => s!("")
+            };
+            AnyChatMessage {
+                name: fn_name,
+                role: s!("user"),
+                content: s!(content),
+            }
+        }, 
+        ChatCompletionRequestMessage::Tool(_) => {
             AnyChatMessage {
                 name: s!(""),
                 role: s!(""),
