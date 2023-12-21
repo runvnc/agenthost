@@ -55,6 +55,7 @@ use rand::Rng;
 use tokio::fs::read_to_string;
 use tokio::time::{self, Duration};
 
+mod phone_home;
 pub mod chatuimessage;
 use chatuimessage::*;
 
