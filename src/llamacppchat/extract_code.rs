@@ -24,3 +24,21 @@ pub fn extract_code(s: &str) -> Option<&str> {
 }
 
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_check_for_code() {
+        assert_eq!(check_for_code("Here we calculate the sum: `HOST 33+156` ..."), true);
+        assert_eq!(check_for_code("I will roll the dice now: `HOST rollDice(sides=20, num=4)`  .."), true);
+        assert_eq!(check_for_code("This string does not contain any code."), false);
+    }
+
+    #[test]
+    fn test_extract_code() {
+        assert_eq!(extract_code("Here we calculate the sum: `HOST 33+156` ..."), Some("33+156"));
+        assert_eq!(extract_code("I will roll the dice now: `HOST rollDice(sides=20, num=4)`  .."), Some("rollDice(sides=20, num=4)"));
+        assert_eq!(extract_code("This string does not contain any code."), None);
+    }
+}
