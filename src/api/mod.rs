@@ -189,7 +189,7 @@ pub async fn server() -> Result<(), hyper::Error> {
             },
         ));
 
-    let port = env::var("AGENTHOST_PORT").unwrap_or(s!("3132"));
+    let port = env::var("RUNPOD_TCP_PORT_73132").unwrap_or(s!("3132"));
     let host = env::var("AGENTHOST_HOST").unwrap_or(s!("[::0]"));
     println!("Listening at {}:{}", host, port);
     let host = axum::Server::bind(&format!("{}:{}", host, port).parse().unwrap())
