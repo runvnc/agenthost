@@ -1,5 +1,5 @@
 fn renderSysMsg(data) {
-  let examples = "`HOST 2+2` or `HOST call_func1)`";
+  let examples = "`HOST 2+2` or `HOST call_func1()`";
  
   `You are a helpful AI assistant.
 
