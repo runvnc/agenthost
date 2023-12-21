@@ -8,6 +8,5 @@ all=$(curl --request POST \
 public_ip=$(echo $all | jq -r '.data.pod.runtime.ports[] | select(.isIpPublic == true) | .ip' | head -n 1)
 
 # Extract the port where public and private IPs match
-port=$(echo $all | jq -r --arg ip "$public_ip" '.data.pod.runtime.ports[] | select(.isIpPublic == true and .ip == $ip) | "\(.publicPort)"' | head -n 1)
-echo $public_ip
-echo $port
+port=$(echo $all | jq -r --arg ip "$public_ip" '.data.pod.runtime.ports[] | select(.isIpPublic == true and .ip == $ip and .publicPort == .privatePort) | "\(.publicPort)"' | head -n 1)
+echo $public_ip:$port

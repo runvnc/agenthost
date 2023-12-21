@@ -4,19 +4,16 @@ start_time=$(date +%s)
 
 podid=$1
 
-echo "Testing pod $podid.."
+echo "Starting pod $podid.."
+
+runpodctl start pod $podid
 
 while true; do
-    # getpod_ip_port.sh outputs e.g. 100.100.100.100 9999
-    {
-      read -r ip
-      read -r port
-    } < <(
-      ./getpod_ip_port.sh $podid
-    )
-    echo "Read $ip:$port"
+    sleep 1
+    host_port=$(./getpod_ip_port.sh $podid)
+    echo "Read $host_port"
 
-    response=$(curl -s http://$ip:$port/)
+    response=$(curl -s http://$host_port/)
     echo $response
     if [[ $response == *"Agent Chat"* ]]; then
         end_time=$(date +%s)

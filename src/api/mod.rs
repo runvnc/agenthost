@@ -160,6 +160,8 @@ async fn chat_events(
     Sse::new(stream)
 }
 
+use crate::api::phone_home::phone_home;
+
 pub async fn server() -> Result<(), hyper::Error> {
     pretty_env_logger::init();
 
@@ -192,9 +194,13 @@ pub async fn server() -> Result<(), hyper::Error> {
     let port = env::var("RUNPOD_TCP_PORT_73132").unwrap_or(s!("3132"));
     let host = env::var("AGENTHOST_HOST").unwrap_or(s!("[::0]"));
     println!("Listening at {}:{}", host, port);
-    let host = axum::Server::bind(&format!("{}:{}", host, port).parse().unwrap())
-        .serve(app.into_make_service_with_connect_info::<std::net::SocketAddr>())
-        .await?;
+    let server_future = axum::Server::bind(&format!("{}:{}", host, port).parse().unwrap())
+        .serve(app.into_make_service_with_connect_info::<std::net::SocketAddr>());
+
+    tokio::select! {
+        _ = server_future => {},
+        _ = phone_home() => {},
+    }
     Ok(())
 }
 
