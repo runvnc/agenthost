@@ -67,10 +67,15 @@ impl LlamaCppChat {
         )
         .await
         .unwrap();
+        
+        let gpu_layers_str = env::var("AGENTHOST_GPU_LAYERS").unwrap_or(s!("30"));
+
+        let gpu_layers_: i32 = gpu_layers_str.parse().expect("AGENTHOST_GPU_LAYERS needs to be an integer");
 
         let model_options = LlamaOptions {
             model_path: full_model_path,
             context: model.model_info().max_context,
+            gpu_layers: gpu_layers_, 
             ..Default::default()
         };
 
