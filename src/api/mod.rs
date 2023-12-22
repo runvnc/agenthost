@@ -201,7 +201,7 @@ pub async fn server() -> Result<(), hyper::Error> {
     phone_home().await.unwrap_or_else(|e| {
         println!("tried to phone_home (failed)");
     });
-
+    server_future.await?;
     Ok(())
 }
 
