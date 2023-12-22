@@ -198,10 +198,10 @@ pub async fn server() -> Result<(), hyper::Error> {
     let server_future = axum::Server::bind(&format!("{}:{}", host, port).parse().unwrap())
         .serve(app.into_make_service_with_connect_info::<std::net::SocketAddr>());
 
-    tokio::select! {
-        _ = server_future => {},
-        _ = phone_home() => {},
-    }
+    phone_home().await.unwrap_or_else(|e| {
+        println!("tried to phone_home (failed)");
+    });
+
     Ok(())
 }
 

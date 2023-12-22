@@ -47,6 +47,7 @@ dependencies = [
  "serde_plain",
  "serde_urlencoded",
  "smartstring",
+ "tempfile",
  "termimad",
  "termion",
  "tiktoken-rs",
