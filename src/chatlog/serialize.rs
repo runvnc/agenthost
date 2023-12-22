@@ -84,9 +84,9 @@ pub fn to_anychatmessage(message: &ChatCompletionRequestMessage) -> AnyChatMessa
                 None => s!("")
             };
             AnyChatMessage {
-                name: fn_name,
+                name: s!("SYSTEM"),
                 role: s!("user"),
-                content: s!(content),
+                content: format!("`RESULT: {}`", content),
             }
         }, 
         ChatCompletionRequestMessage::Tool(_) => {

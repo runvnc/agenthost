@@ -52,7 +52,7 @@ impl Model for MixtralModel {
             };
             outs.push_str(&io_str);
         }
-        outs.push_str("</s>");
+        //outs.push_str("</s>");
         outs
     }
 
