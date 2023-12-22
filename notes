@@ -1,0 +1,36 @@
+-- free context memory
+-- check mixtral syntax
+
+-- check function call return syntax
+
+
+Saved chat log to data/anonSSTaNEleys/sessions/22.json
+Trying to send expr call back
+Eval expr: (rollDice(sides=20, num=1))
+Top of loop
+OK 2
+change sys message at 0
+Saved chat log to data/anonSSTaNEleys/sessions/22.json
+to request messages len: 6
+to request msgs adding message
+to request msgs adding message
+to request msgs adding message
+to request msgs adding message
+to request msgs adding message
+to request msgs break
+<s> [INST] You are a helpful AI assistant. You have an integrated Rhai scripting engine and can evaluate Rhai code this way (examples only): `HOST 2+2` or `HOST rollDice(sides=20, num=4)`
+Note that the backticks folowed by HOST are required. Use this method for all calculations.
+ [/INST] [INST] [2023-12-22 06:06:22.196 UTC]:  hello [/INST]  Hello! I'm here to help you with any questions or tasks you have. You can use the integrated Rhai scripting engine for calculations by using backticks followed by `HOST`. For example, if you want to calculate the sum of 2 and 2, you can type `HOST 2+2`.</s> [INST] 4 [/INST]  Yes, the sum of 2 and 2 is 4. Is there anything else I can help you with?
+
+[2023-12-22 06:07:05.552 UTC]:  I want to roll a dice with 20 sides, how can I do that?
+
+You can use the `rollDice` function to roll a dice with 20 sides. Here's an example:
+`HOST rollDice(sides=20, num=1)`</s> [INST] Error [/INST]</s>
+initializing context..
+llama_new_context_with_model: n_ctx      = 32000
+llama_new_context_with_model: freq_base  = 1000000.0
+llama_new_context_with_model: freq_scale = 1
+
+CUDA error 2 at ./llama.cpp/ggml-cuda.cu:9085: out of memory
+current device: 0
+GGML_ASSERT: ./llama.cpp/ggml-cuda.cu:9085: !"CUDA error"
