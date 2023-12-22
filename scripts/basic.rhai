@@ -22,5 +22,3 @@ fn init() {
     }; 
 }
 
-print(renderSysMsg(3))
-
