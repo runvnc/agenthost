@@ -63,7 +63,7 @@ async fn user_input(
     params: Query<HashMap<String, String>>,
     Extension(claims): Extension<Claims>,
     Extension(connected_users): Extension<ConnectedUsers>,
-) -> Result<Json<HashMap<&'static str, bool>>, (StatusCode, &'static str)> {
+) -> Result<Json<HashMap<&'static str, &'static str>>, (StatusCode, &'static str)> {
     let mut session_id = 1;
     if let Some(session) = params.get("session_id") {
         session_id = session.parse::<usize>().expect("Invalid session id");
@@ -88,7 +88,11 @@ async fn user_input(
         .get_or_create_agent(claims.username.clone(), session_id, script)
         .await;
 
-    sender.send_async(msg).await.unwrap();
+    let send_result = sender.send_async(msg).await;
+    match send_result {
+        Ok(_) => {}
+        Err(_) => return Err((StatusCode::INTERNAL_SERVER_ERROR, "Error in agent script. See logs."))
+    };
 
     loop {
         println!("Top of loop");
@@ -116,7 +120,7 @@ async fn user_input(
         }
     }
 
-    Ok(Json(hashmap! {"ok" => true}))
+    Ok(Json(hashmap! {"status" => "ok"}))
 }
 
 async fn login_handler(

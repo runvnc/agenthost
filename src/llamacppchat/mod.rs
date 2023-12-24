@@ -15,13 +15,15 @@ pub mod model;
 use model::*;
 pub mod mixtral;
 pub mod orca;
+pub mod mistral;
 use mixtral::*;
+use mistral::*;
 use orca::*;
 
 mod extract_code;
 use extract_code::*;
 
-const AGENTHOST_DEFAULT_MODEL: &str = "orca";
+const AGENTHOST_DEFAULT_MODEL: &str = "mistral";
 
 pub static llama_cpp_chat: OnceCell<LlamaCppChat> = OnceCell::new();
 
@@ -56,7 +58,8 @@ impl LlamaCppChat {
         let model: Box<dyn Model> = match model_name {
             "orca" => Box::new(OrcaModel::new()),
             "mixtral" => Box::new(MixtralModel::new()),
-            _ => Box::new(OrcaModel::new()),
+            "mistral" => Box::new(MistralModel::new()), 
+            _ => Box::new(MistralModel::new()),
         };
         println!("---------------------------------------------------------------------------\n");
         println!("created model. info: {:?}", model.model_info());

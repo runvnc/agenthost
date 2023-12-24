@@ -196,7 +196,6 @@
         console.error('Error sending interrupt:', error);
       }
     }
-
     function sendMsg(msg, show=true) {
         if (xhr) {
           try {
@@ -205,6 +204,23 @@
           }
         }
         xhr = new XMLHttpRequest();
+        xhr.onload = () => {
+          let err = "";
+          try {
+            let data = JSON.parse(xhr.responseText);
+            if (data.error) {
+              err = 'ERROR: '+ data.error 
+            }
+          } catch (e) {
+            err = 'ERROR: script or agent error: ' + xhr.responseText;
+          }
+          message(err, 'Agent');
+        }
+        xhr.onerror = () => {
+          console.log('onerror trap!');
+          message("ERROR: script or other error", 'Agent');
+        }
+
         let paramstr = `?session_id=${window.session_id}&token=${window.token}&msg=${msg}`
         xhr.open("GET", '/send' + paramstr, true);
         xhr.send(msg);

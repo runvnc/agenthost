@@ -84,8 +84,8 @@ pub fn to_anychatmessage(message: &ChatCompletionRequestMessage) -> AnyChatMessa
                 None => s!("")
             };
             AnyChatMessage {
-                name: s!("SYSTEM"),
-                role: s!("user"),
+                name: s!("SYSTEM OUTPUT"),
+                role: s!("assistant"),
                 content: format!("`RESULT: {}`", content),
             }
         }, 
