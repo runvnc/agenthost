@@ -75,6 +75,46 @@ fn eprint_error(input: &str, mut err: EvalAltResult) {
     }
 }
 
+
+fn esprint_error(input: &str, err: EvalAltResult) -> String {
+    fn esprint_line(lines: &[&str], pos: Position, err_msg: &str) -> String {
+        let mut output = String::new();
+
+        let line = pos.line().unwrap();
+        let line_no = format!("{line}: ");
+
+        output += &format!("{line_no}{}\n", lines[line - 1]);
+
+        for (i, err_line) in err_msg.to_string().lines().enumerate() {
+            // Append position marker
+            output += &format!(
+                "{0:>1$}{err_line}\n",
+                if i > 0 { "| " } else { "^ " },
+                line_no.len() + pos.position().unwrap() + 1,
+            );
+        }
+        output += "\n";
+        output
+    }
+
+    let mut output = String::new();
+    let lines: Vec<_> = input.lines().collect();
+
+    // Append error to output
+    let pos = err.position();
+
+    //if let Some(p) = pos {
+        output += &esprint_line(&lines, pos, &err.to_string());
+    //} else {
+    //    output += "No position found in error.\n";
+    //    output += &format!("{err}\n");
+    //}
+
+    output
+}
+
+
+
 use std::ffi::OsStr;
 
 fn get_directory(file_path: &str) -> String {
@@ -253,8 +293,7 @@ pub fn eval_expr(handler: &mut Handler, expr: &str) -> Result<String> {
             format!("{:?}", result)
         }
         Err(err) => {
-            eprint_error(&handler.script, *err);
-            "Error".to_string()
+            esprint_error(&handler.script, *err)
         }
     };
  
