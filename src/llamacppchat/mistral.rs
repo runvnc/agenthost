@@ -13,8 +13,8 @@ impl MistralModel {
     pub fn new() -> MistralModel {
         let info = ModelInfo {
               type_name: s!("Mistral"),
-              model_file: s!("mistral-ft-optimized-1218.Q4_0.gguf"),
-              url: s!("https://huggingface.co/TheBloke/mistral-ft-optimized-1218-GGUF/resolve/main/mistral-ft-optimized-1218.Q4_0.gguf?download=true"),
+              model_file: s!("mistral-7b-instruct-v0.2.Q4_0.gguf"),
+              url: s!("https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q4_0.gguf?download=true"),
               max_context: 4096
         };
         MistralModel { info }
@@ -43,7 +43,8 @@ impl Model for MistralModel {
         for msg in msgs {
             let msg_ = to_anychatmessage(msg);
             let io_str = match msg_.role.as_str() {
-                "user" | "system" => format!(" [INST] {} [/INST]", msg_.content.as_str()),
+                "system" => format!(" [INST] {} [/INST] Understood.</s>", msg_.content.as_str()),
+                "user" => format!(" [INST] {} [/INST]", msg_.content.as_str()),
                 "assistant" => format!(" {}</s>", msg_.content.as_str()),
                 _ => "".to_string(),
             };

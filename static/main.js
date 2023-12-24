@@ -153,7 +153,9 @@
     sse.addEventListener("functionCall", function(fn) {
       console.log({functionCall: fn.data});
       let {name, params, result} = JSON.parse(fn.data);
-      params = JSON.parse(params);
+      //params = JSON.parse(params);
+      params = { result };
+      name = "interpreter";
       let html = showFunctionCall(name, params, result);
       console.log(html);
       message(html, 'Agent', false);

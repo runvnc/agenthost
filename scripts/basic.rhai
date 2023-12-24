@@ -1,11 +1,11 @@
 fn renderSysMsg(data) {
-  let examples = "`HOST 2+2` or `HOST rollDice(#{sides:20, num:2})`"; 
+  let examples = "\n```Rhai_host\n 2+2```\n or \n```Rhai_host\nrollDice(#{sides:20, num:2})\n```"; 
 
 `You are a helpful AI assistant. To evaluate Rhai code write a reply like the following: 
 
 ${examples}
 
-and then wait for the RESULT.
+and then wait for the RESULT (automatically supplied by the system). IMPORTANT: Backticks with Rhai_host language spec are required.
 
 Otherwise, just converse with the user normally.
 `

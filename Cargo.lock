@@ -1222,7 +1222,7 @@ checksum = "c4cd1a83af159aa67994778be9070f0ae1bd732942279cabb14f86f986a21456"
 [[package]]
 name = "llama_cpp_rs"
 version = "0.3.0"
-source = "git+https://github.com/runvnc/rust-llama.cpp#24fcbac04053f04825e6bc054393c19bda0a001a"
+source = "git+https://github.com/runvnc/rust-llama.cpp#76473748714676544110504c308c3dec0ab0476b"
 dependencies = [
  "bindgen",
  "cc",
@@ -1418,9 +1418,9 @@ checksum = "b8f8bdf33df195859076e54ab11ee78a1b208382d3a26ec40d142ffc1ecc49ef"
 
 [[package]]
 name = "object"
-version = "0.32.1"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9cf5f9dd3933bd50a9e1f149ec995f39ae2c496d31fd772c1fd45ebc27e902b0"
+checksum = "a6a622008b6e321afc04970976f62ee297fdbaa6f95318ca343e3eebb9648441"
 dependencies = [
  "memchr",
 ]
