@@ -1,11 +1,11 @@
 use regex::Regex;
 pub fn check_for_code(s: &str) -> bool {
-    let re = Regex::new(r"```Rhai_host\n.*?```").unwrap();
+    let re = Regex::new(r"```Rhai_host\n(?s)(.*?)\n```").unwrap();
     re.is_match(s)
 }
 
 pub fn extract_code(s: &str) -> Option<&str> {
-    let re = Regex::new(r"```Rhai_host\n(.*?)```").unwrap();
+    let re = Regex::new(r"```Rhai_host\n(?s)(.*?)\n```").unwrap();
     re.captures(s).and_then(|cap| cap.get(1).map(|m| m.as_str()))
 }
 /*
@@ -50,5 +50,22 @@ mod tests {
                                with a code snippet: ```Rhai_host\n33+156\n```\n\
                                in the middle.";
         assert_eq!(extract_code(multiline_input), Some("33+156"));
+    }
+
+    #[test]
+    fn test_extract_code_complex() {
+        let complex_code = "Here we have a complex code snippet: ```Rhai_host\n\
+                            let sum = 0;\n\
+                            for i in 5..15 {\n\
+                                sum += i;\n\
+                            }\n\
+                            sum\n\
+                            ``` ...";
+        let expected_code = "let sum = 0;\n\
+                            for i in 5..15 {\n\
+                                sum += i;\n\
+                            }\n\
+                            sum";
+        assert_eq!(extract_code(complex_code), Some(expected_code));
     }
 }
