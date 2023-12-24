@@ -85,8 +85,8 @@ pub fn to_anychatmessage(message: &ChatCompletionRequestMessage) -> AnyChatMessa
             };
             AnyChatMessage {
                 name: s!("SYSTEM OUTPUT"),
-                role: s!("user"),
-                content: format!("`RESULT: {}`", content),
+                role: s!("assistant"),
+                content: format!("[SYS] `RESULT: {}`[/SYS]\n", content),
             }
         }, 
         ChatCompletionRequestMessage::Tool(_) => {

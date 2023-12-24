@@ -42,10 +42,14 @@ impl Model for MistralModel {
         let mut outs = String::from("<s>");
         for msg in msgs {
             let msg_ = to_anychatmessage(msg);
-            let io_str = match msg_.role.as_str() {
-                "system" => format!(" [INST] {} [/INST] Understood.</s>", msg_.content.as_str()),
-                "user" => format!(" [INST] {} [/INST]", msg_.content.as_str()),
-                "assistant" => format!(" {}</s>", msg_.content.as_str()),
+            let role = msg_.role.as_str();
+            let name = msg_.name.as_str();
+            let content = msg_.content.as_str();
+            let io_str = match (role, name) {
+                (_, "SYSTEM OUTPUT") => format!("[INST] {} [/INST] Analyzing result.. ", content),
+                ("system", _) => format!("[INST] {} [/INST] Understood.</s>", content),
+                ("user", _) => format!("[INST] {} [/INST]", content),
+                ("assistant", _) => format!("{}</s>", content),
                 _ => "".to_string(),
             };
             outs.push_str(&io_str);

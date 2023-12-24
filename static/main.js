@@ -131,6 +131,8 @@
         console.log(msg.role)
         console.log({msg, name: msg.name})
         if (msg.name == 'SYSTEM' || !(window.sessionLoaded)) {
+          console.log("********************************************************* ", msg.name);
+          console.log("......................................................... ", window.sessionLoaded);
           message(content, msg.role == 'user' ? 'You' : 'Agent')
         }
         console.log('MESSAGE!', msg)
