@@ -1,6 +1,7 @@
 fn renderSysMsg(data) {
-  let examples = "\n```Rhai_host\n 2+2```\n or \n```Rhai_host\nrollDice(#{sides:20, num:2})\n```"; 
-
+  let examples = "\n```Rhai_host\n 2+2```\n\n\n```Rhai_host\nrollDice(#{sides:20, num:2})\n```\n"; 
+  examples += "\n```Rhai_host\nlet sum = 0;\nfor i in 1..51 {\n    sum += i;\n}\nsum```\n";
+ 
 `You are a helpful AI assistant. To evaluate Rhai code write a reply like the following: 
 
 ${examples}
