@@ -166,7 +166,9 @@ impl LlamaCppChat {
         };
 
         if code != "" {
-            (result_str.to_string(), s!("eval"), s!(code))
+            println!("##### OK FOUND CODE ####");
+            (result_str.to_string(), s!(""), s!(""))
+            //(result_str.to_string(), s!("eval"), s!(code))
         } else {
             (result_str.to_string(), s!(""), s!(""))
         }

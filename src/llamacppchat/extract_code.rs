@@ -1,8 +1,16 @@
 use regex::Regex;
+use std::io::{self, Write};
 
 pub fn check_for_code(s: &str) -> bool {
-    let re = Regex::new(r"```Rhai_host\n(?s)(.*?)\n```").unwrap();
-    re.is_match(s)
+    let re = Regex::new(r"```Rhai_host\n(?s)(.*?)```").unwrap();
+    let found = re.is_match(s);
+    if found {
+        println!("FOUND SOME CODE!!");
+    } else {
+        print!("^");
+        io::stdout().flush().unwrap();
+    }   
+    found
 }
 
 pub fn check_code_started(s: &str) -> bool {

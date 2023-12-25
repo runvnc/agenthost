@@ -95,7 +95,6 @@ async fn user_input(
     };
 
     loop {
-        println!("Top of loop");
         let reply = reply_receiver.recv_async().await.unwrap();
         let mut locked_users = connected_users.user_cache.lock().unwrap();
         let sse_streams = locked_users.get(&claims.username.clone());
