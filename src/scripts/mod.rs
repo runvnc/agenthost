@@ -293,7 +293,7 @@ pub fn eval_expr(handler: &mut Handler, expr: &str) -> Result<String> {
             format!("{:?}", result)
         }
         Err(err) => {
-            esprint_error(&handler.script, *err)
+            esprint_error(&expr, *err)
         }
     };
  

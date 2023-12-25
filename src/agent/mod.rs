@@ -150,8 +150,8 @@ impl Agent {
         if fn_name == "eval" {
             return self.eval_rhai(fn_args).await;
         }
-        //self.log
-        //    .add(fn_call_msg(&fn_name.to_string(), &fn_args.to_string())?);
+        self.log
+            .add(fn_call_msg(&fn_name.to_string(), &fn_args.to_string())?);
 
         let output = self.call(fn_name, fn_args)?;
         self.log

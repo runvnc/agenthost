@@ -133,14 +133,17 @@ impl LlamaCppChat {
                 let mut reply = reply_str_clone_for_closure
                     .lock()
                     .unwrap();
-                reply.push_str(&tokenString);
+                let code_started = check_code_started(&reply.clone());
+                if !code_started {
+                    reply.push_str(&tokenString);
+                }
 
                 another_sender
                     .lock()
                     .unwrap()
                     .send(ChatUIMessage::Fragment(format!("*{}*", tokenString)))
                     .unwrap();
-
+                
                 !check_for_code(&reply.clone())
             }),
         );

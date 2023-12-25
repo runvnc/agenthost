@@ -46,7 +46,7 @@ impl Model for MistralModel {
             let name = msg_.name.as_str();
             let content = msg_.content.as_str();
             let io_str = match (role, name) {
-                (_, "SYSTEM OUTPUT") => format!("[INST] {} [/INST] Analyzing result.. ", content),
+                (_, "SYSTEM OUTPUT") | (_, "eval") => format!("{} Analyzing result.. ", content),
                 ("system", _) => format!("[INST] {} [/INST] Understood.</s>", content),
                 ("user", _) => format!("[INST] {} [/INST]", content),
                 ("assistant", _) => format!("{}</s>", content),
