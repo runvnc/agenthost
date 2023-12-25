@@ -128,10 +128,10 @@ impl LlamaCppChat {
         //let text = &self.model.to_instruct_string(&last_msg);
  
         println!("{}", text);
-
+        println!("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+        println!("                        Calling generate_text");
         llama.generate_text(
             &self.model.to_instruct_string(&messages),
-            //&self.model.to_instruct_string(&last_msg),
             256,
             Box::new(move |tokenString| {
                 let mut reply = reply_str_clone_for_closure
@@ -152,9 +152,17 @@ impl LlamaCppChat {
                     .send(ChatUIMessage::Fragment(format!("*{}*", tokenString)))
                     .unwrap();
                 
-                !check_for_code(&code.clone())
+                let found = check_for_code(&code.clone());
+                if found {
+                    println!("Found code. Exiting generation.");
+                    return false;
+                } else {
+                    print!(" {} ", tokenString);
+                    return true;
+                }
             }),
         );
+        println!("After callback.");
         let result_str = reply_str_clone.lock().unwrap();
         let result_str_ = &result_str.to_string();
    
@@ -167,8 +175,8 @@ impl LlamaCppChat {
 
         if code != "" {
             println!("##### OK FOUND CODE ####");
-            (result_str.to_string(), s!(""), s!(""))
-            //(result_str.to_string(), s!("eval"), s!(code))
+            //(result_str.to_string(), s!(""), s!(""))
+            (result_str.to_string(), s!("eval"), s!(code))
         } else {
             (result_str.to_string(), s!(""), s!(""))
         }

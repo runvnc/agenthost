@@ -6,9 +6,10 @@
     var user_id;
     var currParagraph;
     var rawMarkdown = '';
-    window.sessionLoaded = false;
+    window.sessionLoaded = true;
 
     async function loadSession(session) {
+      window.sessionLoaded = false;
       window.session_id = session
       window.history.pushState({session_id: session}, "", "?session_id=" + session);
       try { 
@@ -133,6 +134,7 @@
         if (msg.name == 'SYSTEM' || !(window.sessionLoaded)) {
           console.log("********************************************************* ", msg.name);
           console.log("......................................................... ", window.sessionLoaded);
+          if (content == "" || msg.name == "__READY__") return;
           message(content, msg.role == 'user' ? 'You' : 'Agent')
         }
         console.log('MESSAGE!', msg)
@@ -141,7 +143,7 @@
     sse.addEventListener("fragment", function(frag) {
       console.log("fragment", frag.data);
         if (rawMarkdown == '__WAITING__') {
-          message('', 'Agent')
+          message('waiting', 'Agent')
           rawMarkdown = ''
         }
         let text = frag.data.substr(1, frag.data.length-2);
