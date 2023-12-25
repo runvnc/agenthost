@@ -152,7 +152,7 @@ impl LlamaCppChat {
                     .send(ChatUIMessage::Fragment(format!("*{}*", tokenString)))
                     .unwrap();
                 
-                !check_for_code(&reply.clone())
+                !check_for_code(&code.clone())
             }),
         );
         let result_str = reply_str_clone.lock().unwrap();

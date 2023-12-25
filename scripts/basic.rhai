@@ -9,8 +9,8 @@ fn tree(n) {
     outs += "\n";
   }
   outs
-};
-  `
+}
+  `;
   let examples = "\n```Rhai_host\n 2+2\n```\n\n\n```Rhai_host\nrollDice(#{sides:20, num:2})\n```\n"; 
   examples += "\n```Rhai_host\nlet sum = 0;\nfor i in 1..51 {\n    sum += i;\n}\nsum\n```\n";
   examples += "\n\n```Rhai_host\n${tree}\n```";

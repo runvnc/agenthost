@@ -13,8 +13,8 @@ impl MistralModel {
     pub fn new() -> MistralModel {
         let info = ModelInfo {
               type_name: s!("Mistral"),
-              model_file: s!("mistral-7b-instruct-v0.2.Q4_0.gguf"),
-              url: s!("https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q4_0.gguf?download=true"),
+              model_file: s!("mistral-7b-instruct-v0.2.Q5_K_M.gguf"),
+              url: s!("https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q5_K_M.gguf?download=true"),
               max_context: 4096
         };
         MistralModel { info }

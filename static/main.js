@@ -160,7 +160,11 @@
       name = "interpreter";
       let html = showFunctionCall(name, params, result);
       console.log(html);
-      message(html, 'Agent', false);
+      chat.innerHTML += html;
+      chat.scrollTop = chat.scrollHeight;
+ 
+      //message(html, 'Agent', false);
+
       rawMarkdown = '__WAITING__';
     });
     sse.onmessage = function(msg) {
