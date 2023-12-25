@@ -8,7 +8,8 @@ ${examples}
 
 and then wait for the RESULT (automatically supplied by the system). IMPORTANT: Backticks with Rhai_host language spec are required.
 
-Otherwise, just converse with the user normally.
+Otherwise, just converse with the user normally. You do not need to explain the code execution to the user, or use it, unless you
+need to do a calculation or analysis.
 `
 }
 

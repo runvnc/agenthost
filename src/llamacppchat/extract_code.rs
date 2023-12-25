@@ -1,13 +1,22 @@
 use regex::Regex;
+
 pub fn check_for_code(s: &str) -> bool {
     let re = Regex::new(r"```Rhai_host\n(?s)(.*?)\n```").unwrap();
     re.is_match(s)
 }
 
+pub fn check_code_started(s: &str) -> bool {
+    let re = Regex::new(r"```Rhai_host\n(.*?)").unwrap();
+    re.is_match(s)
+}
+
+
 pub fn extract_code(s: &str) -> Option<&str> {
     let re = Regex::new(r"```Rhai_host\n(?s)(.*?)\n```").unwrap();
     re.captures(s).and_then(|cap| cap.get(1).map(|m| m.as_str()))
 }
+
+
 /*
 pub fn check_for_code(s: &str) -> bool {
     let re = Regex::new(r"```(?:Rhai\n)?HOST\n.*\n```").unwrap();

@@ -113,6 +113,10 @@ impl LlamaCppChat {
         let reply_str_clone = Arc::new(Mutex::new(reply_str.clone()));
         let reply_str_clone_for_closure = Arc::clone(&reply_str_clone);
 
+        let code_str = String::new();
+        let code_str_clone = Arc::new(Mutex::new(code_str.clone()));
+        let code_str_clone_for_closure = Arc::clone(&code_str_clone); 
+
         let llama = self
             .llama
             .lock()
@@ -134,8 +138,12 @@ impl LlamaCppChat {
                     .lock()
                     .unwrap();
                 let code_started = check_code_started(&reply.clone());
+                let mut code = code_str_clone_for_closure.lock().unwrap();
                 if !code_started {
                     reply.push_str(&tokenString);
+                    code.push_str(&tokenString); 
+                } else {
+                    code.push_str(&tokenString);
                 }
 
                 another_sender
@@ -148,8 +156,10 @@ impl LlamaCppChat {
             }),
         );
         let result_str = reply_str_clone.lock().unwrap();
-        let result_str_ = &result_str.to_string(); 
-        let code_ = extract_code(result_str_);
+        let result_str_ = &result_str.to_string();
+   
+        let code_ = code_str_clone.lock().unwrap();
+        let code_ = extract_code(&code_);
         let code = match code_ {
             Some(code) => code,
             None => ""
