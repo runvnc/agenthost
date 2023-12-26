@@ -1,0 +1,1 @@
+let words = [\"apple\", \"banana\", \"cherry\", \"orange\", \"kiwi\", \"blueberry\", \"grape\", \"pear\", \"pineapple\", \"mango\"];\n\nlet selected_words = [];\nfor _ in 1..4 {\n    let index = rand(0..words.len());\n    selected_words.push(words[index]);\n    words.remove(index);\n}\n\nselected_words\n
