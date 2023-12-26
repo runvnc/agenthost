@@ -286,13 +286,14 @@ pub fn call_function(handler: &mut Handler, func: &str, args_json: &str) -> Resu
 pub fn eval_expr(handler: &mut Handler, expr: &str) -> Result<String> {
     let engine = &handler.engine;
     let scope = &mut handler.scope; 
-    let result = engine.eval_with_scope::<i64>(scope, expr);
+    let result = engine.eval_with_scope::<Dynamic>(scope, expr);
     let output = match result {
         Ok(result) => {
             save_states(handler)?;
             format!("{:?}", result)
         }
         Err(err) => {
+            println!("Error in eval expr: {:?}", err);
             esprint_error(&expr, *err)
         }
     };

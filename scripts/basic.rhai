@@ -11,15 +11,20 @@ fn tree(n) {
   outs
 }
   `;
+
+  let readfile =`open_file(path("test.txt")).read_string()`;
+
   let examples = "\n```Rhai_host\n 2+2\n```\n\n\n```Rhai_host\nrollDice(#{sides:20, num:2})\n```\n"; 
   examples += "\n```Rhai_host\nlet sum = 0;\nfor i in 1..51 {\n    sum += i;\n}\nsum\n```\n";
-  examples += "\n\n```Rhai_host\n${tree}\n```";
+  examples += "\n\n```Rhai_host\n" + tree + "\n```";
+  examples += "\n\n```Rhai_host\nrand(1..20)\n```";
+  examples += "\n\n```Rhai_host\n" + readfile + "\n```";
  
 `You are a helpful AI assistant. You should help answer the user's questions. Only if they need it, you can evaluate Rhai code write a reply like the following: 
 
 ${examples}
 
-and then wait for the RESULT (automatically supplied by the system). IMPORTANT: Backticks with Rhai_host language spec are required.
+and then wait for the RESULT (automatically supplied by the system). IMPORTANT: Backticks with Rhai_host language spec are required. Expression evals do not require print().
 
 Otherwise, just converse with the user normally. Do not explain the code execution to the user, or use it, unless you
 need to do a calculation or analysis.

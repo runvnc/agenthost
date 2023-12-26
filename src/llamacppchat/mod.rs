@@ -139,12 +139,12 @@ impl LlamaCppChat {
                     .unwrap();
                 let code_started = check_code_started(&reply.clone());
                 let mut code = code_str_clone_for_closure.lock().unwrap();
-                if !code_started {
+                //if !code_started {
                     reply.push_str(&tokenString);
                     code.push_str(&tokenString); 
-                } else {
-                    code.push_str(&tokenString);
-                }
+                //} else {
+                //    code.push_str(&tokenString);
+                //}
 
                 another_sender
                     .lock()

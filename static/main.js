@@ -49,7 +49,8 @@
         console.log("Message handler")
         var msgElement = document.createElement('div');
         var avatarElement = document.createElement('img');
-        avatarElement.src = sender == 'You' ? '/user.webp' : '/agent.webp';
+        avatarElement.src = sender == 'You' ? '/user2.webp' : '/agent2.webp';
+        console.log("<<<<<<<<<<<<<<<< SENDER IS ",sender, " src is ", avatarElement.src);
         avatarElement.classList.add('av');
         var nameElement = document.createElement('span');
         nameElement.textContent = sender;

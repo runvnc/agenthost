@@ -1,12 +1,20 @@
-fn tree(n) {
-  let outs = 0;
-  for j in 1..n {
-    for i in 1..j {
-      outs += "*";
-    }
-    outs += "\n";
-  }
-  outs
-};
+fn rand() {
+  4
+}
 
-print(tree(10))
+let adjectives = ["Compassionate", "Intelligent", "Creative", "Ambitious", "Charismatic", "Confident", "Courageous", "Diligent", "Enthusiastic", "Friendly", "Generous", "Humorous", "Imaginative", "Kind", "Loyal", "Motivated", "Optimistic", "Perceptive", "Resilient", "Thoughtful"];
+let randomIndexes = [];
+
+print(adjectives.len());
+
+for i in 0..3 {
+    let randomIndex = rand();
+    randomIndexes.push(randomIndex);
+}
+
+let selectedAdjectives = [];
+
+for index in randomIndexes {
+  print(index)
+
+}
