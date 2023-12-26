@@ -132,7 +132,7 @@ impl LlamaCppChat {
         println!("                        Calling generate_text");
         llama.generate_text(
             &self.model.to_instruct_string(&messages),
-            256,
+            1256,
             Box::new(move |tokenString| {
                 let mut reply = reply_str_clone_for_closure
                     .lock()

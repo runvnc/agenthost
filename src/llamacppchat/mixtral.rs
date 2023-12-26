@@ -13,9 +13,10 @@ impl MixtralModel {
     pub fn new() -> MixtralModel {
         let info = ModelInfo {
               type_name: s!("Mixtral"),
-              model_file: s!("mixtral-8x7b-instruct-v0.1.Q4_0.gguf"),
-              url: s!("https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf?download=true"),
-              max_context: 32000
+              model_file: s!("mixtral-8x7b-instruct-v0.1.Q6_K.gguf"),
+              //url: s!("https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q5_K_M.gguf?download=true"),
+              url: s!("https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q6_K.gguf?download=true"),
+              max_context: 8000
         };
         MixtralModel { info }
     }
@@ -45,14 +46,18 @@ impl Model for MixtralModel {
         let mut outs = String::from("<s>");
         for msg in msgs {
             let msg_ = to_anychatmessage(msg);
-            let io_str = match msg_.role.as_str() {
-                "user" | "system" => format!(" [INST] {} [/INST]", msg_.content.as_str()),
-                "assistant" => format!(" {}</s>", msg_.content.as_str()),
+            let role = msg_.role.as_str();
+            let name = msg_.name.as_str();
+            let content = msg_.content.as_str();
+            let io_str = match (role, name) {
+                (_, "SYSTEM OUTPUT") | (_, "eval") => format!("[INST] {} [/INST]\n Using this system output, ", content),
+                ("system", _) => format!("[INST] {} [/INST] System instructions understood.</s>", content),
+                ("user", _) => format!("[INST] {} [/INST]", content),
+                ("assistant", _) => format!("{}</s>", content),
                 _ => "".to_string(),
             };
             outs.push_str(&io_str);
         }
-        //outs.push_str("</s>");
         outs
     }
 
