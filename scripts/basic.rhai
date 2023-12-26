@@ -12,8 +12,6 @@ fn tree(n) {
 }
   `;
 
-
-
   let readfile =`open_file(path("test.txt")).read_string()`;
 
   let examples = "\n```Rhai_host\n 2+2\n```\n\n\n```Rhai_host\nrollDice(#{sides:20, num:2})\n```\n"; 

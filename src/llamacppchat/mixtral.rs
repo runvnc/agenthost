@@ -15,8 +15,8 @@ impl MixtralModel {
               type_name: s!("Mixtral"),
               model_file: s!("mixtral-8x7b-instruct-v0.1.Q6_K.gguf"),
               //url: s!("https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q5_K_M.gguf?download=true"),
-              url: "https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q6_K.gguf?download=true",
-              max_context: 16000
+              url: s!("https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q6_K.gguf?download=true"),
+              max_context: 8000
         };
         MixtralModel { info }
     }
