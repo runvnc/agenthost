@@ -17,10 +17,11 @@ fn tree(n) {
   let examples = "\n```Rhai_host\n 2+2\n```\n\n\n```Rhai_host\nrollDice(#{sides:20, num:2})\n```\n"; 
   examples += "\n```Rhai_host\nlet sum = 0;\nfor i in 1..51 {\n    sum += i;\n}\nsum\n```\n";
   examples += "\n\n```Rhai_host\n" + tree + "\n```";
-  examples += "\n\n```Rhai_host\nrand(1..20)\n```";
+  examples += "\n\n```Rhai_host\nlet a = rand(1..20); // rand(range);rand(5..50)\n```";
   examples += "\n\n```Rhai_host\nprint(1); print(2);\n```";
   examples += "\n\n```Rhai_host\n" + readfile + "\n```";
- 
+  examples += "\n\n```Rhai_host\nlet nums = [20,10, 1, 100]; nums.len();\n```";
+
 `You are a helpful AI assistant. You should help answer the user's questions. Only if they need it, you can evaluate Rhai code write a reply like the following: 
 
 ${examples}

@@ -20,7 +20,8 @@ function showFunctionCall(funcName, params, result) {
   }
   
   let html = ` 
-   <div>
+  <div></div>
+  <div>
     <div class="av"></div>
     <div class="action block border-2 border-blue-500 p-4 m-2 rounded-lg bg-gray-800" >
       ⚡  <span class="fn_name">${funcName}</span> ${paramshtml}

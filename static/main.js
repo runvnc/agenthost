@@ -50,6 +50,7 @@
         var msgElement = document.createElement('div');
         var avatarElement = document.createElement('img');
         avatarElement.src = sender == 'You' ? '/user2.webp' : '/agent2.webp';
+        if (sender == "Function") avatarElement.src = undefined;
         console.log("<<<<<<<<<<<<<<<< SENDER IS ",sender, " src is ", avatarElement.src);
         avatarElement.classList.add('av');
         var nameElement = document.createElement('span');
@@ -163,10 +164,7 @@
       name = "interpreter";
       let html = showFunctionCall(name, params, result);
       console.log(html);
-      chat.innerHTML += html;
-      chat.scrollTop = chat.scrollHeight;
- 
-      //message(html, 'Agent', false);
+      message(html, 'Function', false);
 
       rawMarkdown = '__WAITING__';
     });
