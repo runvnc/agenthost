@@ -1,0 +1,18 @@
+#!/bin/bash
+echo "(Usage: runsd [model] [prompt])"
+
+cfg=2
+
+type=f16
+model=$1
+prompt="$2"
+
+vae=sdxl_vae.safetensors
+
+w=512
+h=512
+
+
+net="cartoon, ugly, blurry, saggy, chubby, low res, low quality, weird, bizarre, extra limb, old, fat, plain, implants, child"
+
+./sd --type $type --model checkpoints/$model --vae $vae --lora-model-dir loras --cfg-scale $cfg -p "$prompt" -n "$neg" -s -1 --steps 4
